@@ -5,7 +5,7 @@ import { IoSearchOutline, IoNotificationsOutline, IoSettingsOutline } from 'reac
 
 const AppHeader = () => {
   return (
-    <header className="flex h-20 w-full items-center justify-between px-4 md:px-8 sticky top-0 bg-gradient-pastel backdrop-blur z-50">
+    <header className="flex h-20 w-full items-center justify-between px-4 md:px-8 sticky top-0 bg-gradient-pastel backdrop-blur z-40">
       {/* ESPACIO IZQUIERDO (vacío para mantener balance) */}
       <div className="w-10 md:w-1/3" />
 

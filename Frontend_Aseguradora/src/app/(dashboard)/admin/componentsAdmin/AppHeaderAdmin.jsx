@@ -3,9 +3,9 @@ import { IoSearchOutline, IoNotificationsOutline, IoSettingsOutline } from 'reac
 
 const AppHeaderAdmin = () => {
   return (
-    <header className="flex h-20 w-full items-center justify-between px-8 sticky top-0 bg-gradient-pastel backdrop-blur z-50">
+    <header className="flex h-20 w-full items-center justify-between px-8 sticky top-0 bg-gradient-pastel backdrop-blur z-40">
       {/* LEFT: Contexto */}
-      <div className="flex flex-col">
+      <div className="flex flex-col ml-10 mb-2.5 lg:ml-0 lg:mb-0">
         <span className="text-sm font-semibold text-text">Panel de Administración</span>
         <span className="text-xs text-text-soft">Control general del sistema</span>
       </div>

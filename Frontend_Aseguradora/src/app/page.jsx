@@ -102,7 +102,7 @@ export default function Home() {
                 </Link>
 
                 <Link
-                  href="/cotizar"
+                  href="#"
                   onClick={() => setMobileOpen(false)}
                   className="bg-primary hover:bg-primary-hover text-text-inverse text-sm font-semibold px-5 py-2.5 rounded-full text-center transition-all duration-150 shadow-sm"
                 >
