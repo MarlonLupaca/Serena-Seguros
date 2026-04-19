@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }) {
       {/* CONTENIDO */}
       <main className="w-full overflow-y-auto">
         <AppHeaderEmployee />
-        {children}
+        <div className="px-8">{children}</div>
       </main>
     </div>
   );
