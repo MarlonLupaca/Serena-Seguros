@@ -68,18 +68,18 @@ export default function Sidebar() {
       {/* BOTÓN MÓVIL */}
       <button
         onClick={() => setIsOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-primary text-white shadow-lg"
+        className=" lg:hidden fixed top-4 left-4 z-41 p-2 rounded-lg bg-primary text-white shadow-lg"
       >
         <MdMenu size={24} />
       </button>
 
       {/* OVERLAY */}
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsOpen(false)} />}
+      {isOpen && <div className="fixed inset-0 bg-black/50 z-50 lg:hidden" onClick={() => setIsOpen(false)} />}
 
-      <div className="h-full flex bg-bg-soft rounded-2xl">
+      <div className="h-full flex bg-bg-soft rounded-2xl  ">
         <aside
           className={`
-            fixed inset-y-0 left-0 z-50 lg:relative 
+              fixed left-0 z-100 lg:relative h-full 
             flex flex-col bg-bg border-r rounded-2xl border-border transition-all duration-300
             ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
             ${collapsed ? 'lg:w-16' : 'lg:w-60 w-72'}
@@ -100,7 +100,6 @@ export default function Sidebar() {
                 className="h-7 object-contain w-fit shrink-0"
               />
 
-              {/* 🔥 FIX AQUÍ */}
               <span
                 className={`
                   text-text font-bold text-[16px] tracking-wide whitespace-nowrap

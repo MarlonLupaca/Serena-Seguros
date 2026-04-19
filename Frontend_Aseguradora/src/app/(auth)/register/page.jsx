@@ -23,7 +23,7 @@ export default function Register() {
       </Link>
 
       {/* Left: Form */}
-      <div className="w-[50%] mx-auto">
+      <div className="lg:w-[50%] mx-auto px-15 w-full">
         <div className="flex flex-col justify-center w-fit mx-auto bg-bg py-16">
           {/* Logo */}
           <div className="mb-8">

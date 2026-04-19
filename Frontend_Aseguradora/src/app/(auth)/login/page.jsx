@@ -93,8 +93,8 @@ export default function Login() {
       </div>
       {/** Login */}
 
-      <div className=" w-[50%]  mx-auto">
-        <div className="flex flex-col justify-center w-fit h-full mx-auto  bg-bg ">
+      <div className=" lg:w-[50%] w-full px-15 mx-auto ">
+        <div className="flex flex-col justify-center w-fit h-full mx-auto  bg-bg">
           <div className="mb-10 text-xl font-bold text-text flex items-center gap-2">
             <Image src="/img/logo.png" width={500} height={500} alt="logo" className="h-9 object-contain w-fit" />
             <span className="text-text font-bold text-xl tracking-wide whitespace-nowrap">

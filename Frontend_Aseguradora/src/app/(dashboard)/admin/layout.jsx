@@ -5,7 +5,7 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="h-screen w-screen bg-transparent flex overflow-hidden">
       {/* SIDEBAR */}
-      <div className="p-3 h-screen">
+      <div className="h-screen lg:p-3">
         <SidebarAdmin />
       </div>
 
