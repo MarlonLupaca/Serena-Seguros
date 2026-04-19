@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Brand */
+  --color-primary: #21c2b7;
+  --color-primary-hover: #1aa89e;
+
+  /* Background */
+  --color-bg: #ffffff;
+  --color-bg-soft: #f5f7f9;
+
+  /* Text */
+  --color-text: #0b3c5d;
+  --color-text-soft: #4b5563;
+  --color-text-inverse: #ffffff;
+
+  /* Border */
+  --color-border: #e5e7eb;
+}
+
+/* Ancho y alto del scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* Fondo del carril (Track) */
+::-webkit-scrollbar-track {
+  background: var(--color-bg-soft);
+  border-radius: 5px;
+}
+
+/* Barra de desplazamiento (Thumb) */
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 5px;
+  border: 2px solid var(--color-bg-soft); /* Crea un efecto de margen */
+}
+
+/* Estado Hover de la barra */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-hover);
+}
+
+/* Compatibilidad con Firefox (Standard) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) var(--color-bg-soft);
+}
+
+/* Tus utilidades existentes */
+.bg-gradient-pastel {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 15%, white) 0%,
+    color-mix(in srgb, var(--color-primary) 5%, var(--color-bg-soft)) 100%
+  );
+}
