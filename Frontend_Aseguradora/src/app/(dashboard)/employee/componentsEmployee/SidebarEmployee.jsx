@@ -28,7 +28,7 @@ const menu = [
   {
     section: 'Pólizas',
     items: [
-      { label: 'Gestión de pólizas', icon: MdDescription, href: '/employee/polizas' },
+      { label: 'Gestión de pólizas', icon: MdDescription, href: '/employee/gestionPolizas' },
       { label: 'Clientes', icon: MdPerson, href: '/employee/clientes' },
     ],
   },
@@ -41,11 +41,11 @@ const menu = [
   },
   {
     section: 'Documentos',
-    items: [{ label: 'Validar documentos', icon: MdFolder, href: '/employee/documentos' }],
+    items: [{ label: 'Validar documentos', icon: MdFolder, href: '/employee/validarDocumentos' }],
   },
   {
     section: 'Pagos',
-    items: [{ label: 'Pagos y facturación', icon: MdPayment, href: '/employee/pagos' }],
+    items: [{ label: 'Pagos y facturación', icon: MdPayment, href: '/employee/facturacion' }],
   },
 ];
 
