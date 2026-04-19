@@ -50,7 +50,7 @@ const menu = [
   },
 ];
 
-export default function SidebarEmployee() {
+export default function SidebarAdmin() {
   const [collapsed, setCollapsed] = useState(false);
   const [active, setActive] = useState('Ver seguros');
   const [isOpen, setIsOpen] = useState(false);
