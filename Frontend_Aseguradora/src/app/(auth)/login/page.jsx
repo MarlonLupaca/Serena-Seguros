@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff, MdClose, MdInfo } from 'react-icons/md';
-import { FcGoogle } from 'react-icons/fc';
-import { FaGithub } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -73,28 +71,18 @@ export default function Login() {
         <MdClose size={20} />
       </Link>
       {/**Imagen */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-linear-to-br from-primary to-slate-900 ">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-linear-to-br from-primary to-slate-900 pb-5">
         <div className="absolute -top-20 -left-20 w-96 h-96 rounded-full bg-white/5" />
         <div className="absolute -bottom-16 -right-16 w-80 h-80 rounded-full bg-white/5" />
         <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-12 text-center">
-          <div className="w-44 h-44 rounded-3xl flex items-center justify-center mb-8 shadow-2xl bg-white/10 backdrop-blur-lg border border-white/20">
-            <svg width="60" height="60" viewBox="0 0 80 80" fill="none">
-              <rect x="10" y="20" width="60" height="45" rx="8" fill="rgba(255,255,255,0.3)" />
-              <rect x="22" y="10" width="36" height="28" rx="6" fill="rgba(255,255,255,0.5)" />
-              <circle cx="40" cy="24" r="8" fill="white" />
-              <path d="M22 52 C22 44 58 44 58 52 L58 65 L22 65 Z" fill="rgba(255,255,255,0.5)" />
-            </svg>
-          </div>
-          <h2 className="text-4xl font-bold mb-4 text-white">Acceso Multi-Perfil</h2>
-          <p className="text-lg leading-relaxed max-w-sm text-white/70">
-            Explora las diferentes interfaces diseñadas para cada tipo de usuario.
-          </p>
+          <Image src="/img/loginAseguradora.svg" width={500} height={500} alt="login" />
+          <p className="text-2xl font-bold mb-4 text-white">Tu tranquilidad, nuestra prioridad</p>
         </div>
       </div>
       {/** Login */}
 
-      <div className=" lg:w-[50%] w-full px-15 mx-auto ">
-        <div className="flex flex-col justify-center w-fit h-full mx-auto  bg-bg">
+      <div className=" lg:w-[50%] w-full mx-auto  ">
+        <div className="flex flex-col justify-center max-w-xl h-full mx-auto px-15 bg-bg">
           <div className="mb-10 text-xl font-bold text-text flex items-center gap-2">
             <Image src="/img/logo.png" width={500} height={500} alt="logo" className="h-9 object-contain w-fit" />
             <span className="text-text font-bold text-xl tracking-wide whitespace-nowrap">
@@ -107,7 +95,7 @@ export default function Login() {
             <p className="text-sm text-text-soft">Inicia sesión para continuar</p>
           </div>
 
-          <form onSubmit={handleLogin} className="flex flex-col gap-5 max-w-sm">
+          <form onSubmit={handleLogin} className="flex flex-col gap-5">
             {error && (
               <div className="p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">
                 {error}
@@ -125,7 +113,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="ejemplo@test.com"
-                  className="w-90 pl-10 pr-4 py-3 rounded-xl text-sm outline-none bg-bg-soft text-text border border-border focus:border-primary transition-all"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none bg-bg-soft text-text border border-border focus:border-primary transition-all"
                   required
                 />
               </div>
@@ -171,27 +159,6 @@ export default function Login() {
             >
               Iniciar sesión
             </button>
-
-            <div className="flex items-center gap-3 my-1">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-[10px] uppercase tracking-wider text-text-soft font-bold">o continúa con</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-semibold bg-white border border-border hover:bg-gray-50 text-text transition-colors"
-              >
-                <FcGoogle size={18} /> Google
-              </button>
-              <button
-                type="button"
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-semibold bg-white border border-border hover:bg-gray-50 text-text transition-colors"
-              >
-                <FaGithub size={18} /> GitHub
-              </button>
-            </div>
 
             <p className="text-sm text-center mt-2 text-text-soft">
               <span>¿No tienes cuenta? </span>
