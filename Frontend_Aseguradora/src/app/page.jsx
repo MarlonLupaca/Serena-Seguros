@@ -160,7 +160,7 @@ export default function Home() {
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-border h-18">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 py-3 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <div className="h-9 w-9 relative">
@@ -207,7 +207,7 @@ export default function Home() {
 
         {/* Mobile */}
         <div
-          className={`lg:hidden transition-all duration-300 origin-top ${mobileOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}`}
+          className={` lg:hidden transition-all duration-300 origin-top ${mobileOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}`}
         >
           <div className="mx-4 mb-4 rounded-2xl border border-border bg-white shadow-xl overflow-hidden">
             <nav className="flex flex-col p-2">
@@ -240,7 +240,7 @@ export default function Home() {
 
       <main>
         {/* HERO */}
-        <section className="relative overflow-hidden hero-bg text-white">
+        <section className="relative overflow-hidden hero-bg text-white ">
           <span className="hero-blob bg-[#00b5e2] w-[500px] h-[500px] -top-40 -right-32"></span>
           <span className="hero-blob bg-[#ffcb05]/40 w-[360px] h-[360px] bottom-[-80px] left-[30%]"></span>
 
