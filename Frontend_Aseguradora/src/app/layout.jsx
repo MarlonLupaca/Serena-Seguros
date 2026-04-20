@@ -13,8 +13,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="es" className={`${nunito.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-gradient-pastel">{children}</body>
+    <html lang="es" className={`${nunito.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="min-h-full flex flex-col bg-bg" suppressHydrationWarning>{children}</body>
     </html>
   );
 }
