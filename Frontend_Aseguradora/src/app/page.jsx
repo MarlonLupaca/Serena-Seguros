@@ -4,11 +4,31 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import {
-  MdPerson, MdMenu, MdClose, MdDirectionsCar, MdFavorite, MdLocalHospital,
-  MdShield, MdArrowForward, MdCheckCircle, MdLocalOffer, MdFlight, MdHome,
-  MdPets, MdSupportAgent, MdPhoneInTalk, MdWhatsapp, MdStar, MdLock,
-  MdBolt, MdVerified, MdLocationOn, MdEmail, MdArrowOutward,
-  MdFacebook, MdOutlineKeyboardArrowRight,
+  MdPerson,
+  MdMenu,
+  MdClose,
+  MdDirectionsCar,
+  MdFavorite,
+  MdLocalHospital,
+  MdShield,
+  MdArrowForward,
+  MdCheckCircle,
+  MdLocalOffer,
+  MdFlight,
+  MdHome,
+  MdPets,
+  MdSupportAgent,
+  MdPhoneInTalk,
+  MdWhatsapp,
+  MdStar,
+  MdLock,
+  MdBolt,
+  MdVerified,
+  MdLocationOn,
+  MdEmail,
+  MdArrowOutward,
+  MdFacebook,
+  MdOutlineKeyboardArrowRight,
 } from 'react-icons/md';
 import { FaInstagram, FaLinkedin, FaYoutube, FaTiktok, FaApple, FaGooglePlay } from 'react-icons/fa';
 
@@ -21,50 +41,91 @@ const navItems = [
 ];
 
 const quoteTabs = [
-  { id: 'auto',   label: 'Vehicular', icon: MdDirectionsCar },
-  { id: 'soat',   label: 'SOAT',      icon: MdShield },
-  { id: 'vida',   label: 'Vida',      icon: MdFavorite },
-  { id: 'salud',  label: 'Salud',     icon: MdLocalHospital },
-  { id: 'viajes', label: 'Viajes',    icon: MdFlight },
-  { id: 'hogar',  label: 'Hogar',     icon: MdHome },
-  { id: 'mascot', label: 'Mascotas',  icon: MdPets },
+  { id: 'auto', label: 'Vehicular', icon: MdDirectionsCar },
+  { id: 'soat', label: 'SOAT', icon: MdShield },
+  { id: 'vida', label: 'Vida', icon: MdFavorite },
+  { id: 'salud', label: 'Salud', icon: MdLocalHospital },
+  { id: 'viajes', label: 'Viajes', icon: MdFlight },
+  { id: 'hogar', label: 'Hogar', icon: MdHome },
+  { id: 'mascot', label: 'Mascotas', icon: MdPets },
 ];
 
 const services = [
-  { title: 'Seguro Vehicular',  desc: 'Maneja tranquilo con la red más grande de talleres y grúa 24/7.',  icon: MdDirectionsCar, tag: 'Más vendido' },
-  { title: 'SOAT Digital',      desc: 'Compra en 3 minutos y recíbelo al instante en tu correo.',          icon: MdShield,        tag: 'Desde S/47' },
-  { title: 'Seguro de Vida',    desc: 'Protege a los que amas y recibe hasta el 100% de lo pagado.',      icon: MdFavorite },
-  { title: 'Seguro de Salud',   desc: 'Atención en las mejores clínicas del país con copagos bajos.',     icon: MdLocalHospital },
-  { title: 'Viajes',            desc: 'Cobertura internacional con asistencia médica ilimitada.',         icon: MdFlight },
-  { title: 'Hogar',             desc: 'Tu casa protegida ante robo, incendio y desastres naturales.',     icon: MdHome },
-  { title: 'Mascotas',          desc: 'Consultas, vacunas y emergencias para tu engreído.',               icon: MdPets,          tag: 'Nuevo' },
-  { title: 'Empresas',          desc: 'Seguros corporativos hechos a la medida de tu negocio.',           icon: MdVerified },
+  {
+    title: 'Seguro Vehicular',
+    desc: 'Maneja tranquilo con la red más grande de talleres y grúa 24/7.',
+    icon: MdDirectionsCar,
+    tag: 'Más vendido',
+  },
+  {
+    title: 'SOAT Digital',
+    desc: 'Compra en 3 minutos y recíbelo al instante en tu correo.',
+    icon: MdShield,
+    tag: 'Desde S/47',
+  },
+  { title: 'Seguro de Vida', desc: 'Protege a los que amas y recibe hasta el 100% de lo pagado.', icon: MdFavorite },
+  {
+    title: 'Seguro de Salud',
+    desc: 'Atención en las mejores clínicas del país con copagos bajos.',
+    icon: MdLocalHospital,
+  },
+  { title: 'Viajes', desc: 'Cobertura internacional con asistencia médica ilimitada.', icon: MdFlight },
+  { title: 'Hogar', desc: 'Tu casa protegida ante robo, incendio y desastres naturales.', icon: MdHome },
+  { title: 'Mascotas', desc: 'Consultas, vacunas y emergencias para tu engreído.', icon: MdPets, tag: 'Nuevo' },
+  { title: 'Empresas', desc: 'Seguros corporativos hechos a la medida de tu negocio.', icon: MdVerified },
 ];
 
 const stats = [
   { n: '+1.2M', l: 'clientes protegidos' },
-  { n: '+35',   l: 'años de experiencia' },
-  { n: '24/7',  l: 'asistencia inmediata' },
-  { n: '4.8★',  l: 'satisfacción promedio' },
+  { n: '+35', l: 'años de experiencia' },
+  { n: '24/7', l: 'asistencia inmediata' },
+  { n: '4.8★', l: 'satisfacción promedio' },
 ];
 
 const benefits = [
-  { icon: MdBolt,        t: 'Cotización en 3 minutos', d: '100% online, sin papeleos ni llamadas interminables.' },
-  { icon: MdSupportAgent,t: 'Asistencia 24/7',         d: 'Un equipo humano siempre disponible para ayudarte.' },
-  { icon: MdLock,        t: 'Pagos seguros',           d: 'Transacciones encriptadas y múltiples medios de pago.' },
-  { icon: MdVerified,    t: 'Respaldo SBS',            d: 'Regulados por la Superintendencia de Banca y Seguros.' },
+  { icon: MdBolt, t: 'Cotización en 3 minutos', d: '100% online, sin papeleos ni llamadas interminables.' },
+  { icon: MdSupportAgent, t: 'Asistencia 24/7', d: 'Un equipo humano siempre disponible para ayudarte.' },
+  { icon: MdLock, t: 'Pagos seguros', d: 'Transacciones encriptadas y múltiples medios de pago.' },
+  { icon: MdVerified, t: 'Respaldo SBS', d: 'Regulados por la Superintendencia de Banca y Seguros.' },
 ];
 
 const promos = [
-  { badge: 'Hasta 30% OFF', title: 'Seguro Vehicular Full', desc: 'Llantas, lunas y auto sustituto incluidos.', color: 'from-[#0033a0] to-[#00b5e2]' },
-  { badge: 'Desde S/47',    title: 'SOAT Digital 2026',     desc: 'Recíbelo en minutos en tu correo.',           color: 'from-[#00b5e2] to-[#0099c2]' },
-  { badge: '2x1',           title: 'Viajes Internacionales',desc: 'Lleva un acompañante sin costo este verano.', color: 'from-[#001a4d] to-[#0033a0]' },
+  {
+    badge: 'Hasta 30% OFF',
+    title: 'Seguro Vehicular Full',
+    desc: 'Llantas, lunas y auto sustituto incluidos.',
+    color: 'from-[#0033a0] to-[#00b5e2]',
+  },
+  {
+    badge: 'Desde S/47',
+    title: 'SOAT Digital 2026',
+    desc: 'Recíbelo en minutos en tu correo.',
+    color: 'from-[#00b5e2] to-[#0099c2]',
+  },
+  {
+    badge: '2x1',
+    title: 'Viajes Internacionales',
+    desc: 'Lleva un acompañante sin costo este verano.',
+    color: 'from-[#001a4d] to-[#0033a0]',
+  },
 ];
 
 const testimonials = [
-  { name: 'María Gutiérrez', role: 'Cliente vehicular',  text: 'La atención fue rapidísima cuando tuve el choque. En menos de 30 min tenía grúa y taller asignado.' },
-  { name: 'Jorge Ramírez',   role: 'Cliente SOAT',       text: 'Compré mi SOAT desde el celular en el estacionamiento. Increíblemente simple.' },
-  { name: 'Lucía Pérez',     role: 'Cliente de salud',   text: 'La red de clínicas es excelente y nunca he tenido problemas con los reembolsos.' },
+  {
+    name: 'María Gutiérrez',
+    role: 'Cliente vehicular',
+    text: 'La atención fue rapidísima cuando tuve el choque. En menos de 30 min tenía grúa y taller asignado.',
+  },
+  {
+    name: 'Jorge Ramírez',
+    role: 'Cliente SOAT',
+    text: 'Compré mi SOAT desde el celular en el estacionamiento. Increíblemente simple.',
+  },
+  {
+    name: 'Lucía Pérez',
+    role: 'Cliente de salud',
+    text: 'La red de clínicas es excelente y nunca he tenido problemas con los reembolsos.',
+  },
 ];
 
 export default function Home() {
@@ -72,18 +133,28 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('auto');
 
   return (
-    <div className="min-h-screen font-sans bg-bg text-text">
+    <div className="min-h-screen font-sans  text-text">
       {/* Barra superior */}
       <div className="bg-[color:var(--color-bg-deep)] text-white/90 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-between gap-4">
           <div className="hidden md:flex items-center gap-4">
-            <span className="flex items-center gap-1.5"><MdPhoneInTalk size={14}/> (01) 513-5000</span>
-            <span className="flex items-center gap-1.5"><MdWhatsapp size={14}/> 955 511 678</span>
+            <span className="flex items-center gap-1.5">
+              <MdPhoneInTalk size={14} /> (01) 513-5000
+            </span>
+            <span className="flex items-center gap-1.5">
+              <MdWhatsapp size={14} /> 955 511 678
+            </span>
           </div>
           <div className="flex items-center gap-4 ml-auto">
-            <Link href="#" className="hover:text-accent transition-colors">Red de clínicas</Link>
-            <Link href="#" className="hover:text-accent transition-colors">Siniestros</Link>
-            <Link href="#" className="hover:text-accent transition-colors">Pago en línea</Link>
+            <Link href="#" className="hover:text-accent transition-colors">
+              Red de clínicas
+            </Link>
+            <Link href="#" className="hover:text-accent transition-colors">
+              Siniestros
+            </Link>
+            <Link href="#" className="hover:text-accent transition-colors">
+              Pago en línea
+            </Link>
           </div>
         </div>
       </div>
@@ -102,8 +173,11 @@ export default function Home() {
 
           <nav className="hidden lg:flex items-center gap-7">
             {navItems.map((i) => (
-              <Link key={i.label} href={i.href}
-                className="text-sm font-medium text-text-soft hover:text-primary transition-colors relative group">
+              <Link
+                key={i.label}
+                href={i.href}
+                className="text-sm font-medium text-text-soft hover:text-primary transition-colors relative group"
+              >
                 {i.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
               </Link>
@@ -111,34 +185,53 @@ export default function Home() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-3 shrink-0">
-            <Link href="/login" className="flex items-center gap-1.5 text-sm font-semibold text-text hover:text-primary transition-colors">
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 text-sm font-semibold text-text hover:text-primary transition-colors"
+            >
               <MdPerson size={20} /> Iniciar sesión
             </Link>
-            <Link href="/cotizar" className="btn-primary text-sm">Cotizar ahora</Link>
+            <Link href="/cotizar" className="btn-primary text-sm">
+              Cotizar ahora
+            </Link>
           </div>
 
-          <button onClick={() => setMobileOpen(v => !v)} aria-label="Menú"
-            className="lg:hidden p-2 -mr-1 rounded-lg hover:bg-bg-soft text-text">
-            {mobileOpen ? <MdClose size={24}/> : <MdMenu size={24}/>}
+          <button
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="Menú"
+            className="lg:hidden p-2 -mr-1 rounded-lg hover:bg-bg-soft text-text"
+          >
+            {mobileOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
           </button>
         </div>
 
         {/* Mobile */}
-        <div className={`lg:hidden transition-all duration-300 origin-top ${mobileOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}`}>
+        <div
+          className={`lg:hidden transition-all duration-300 origin-top ${mobileOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}`}
+        >
           <div className="mx-4 mb-4 rounded-2xl border border-border bg-white shadow-xl overflow-hidden">
             <nav className="flex flex-col p-2">
-              {navItems.map(i => (
-                <Link key={i.label} href={i.href} onClick={() => setMobileOpen(false)}
-                  className="px-4 py-3 rounded-xl text-text hover:text-primary hover:bg-bg-soft font-medium">
+              {navItems.map((i) => (
+                <Link
+                  key={i.label}
+                  href={i.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-3 rounded-xl text-text hover:text-primary hover:bg-bg-soft font-medium"
+                >
                   {i.label}
                 </Link>
               ))}
               <div className="border-t border-border mt-2 pt-3 px-2 pb-2 flex flex-col gap-2">
-                <Link href="/login" onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-2 py-3 rounded-xl border border-border font-medium">
-                  <MdPerson size={20}/> Iniciar sesión
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 py-3 rounded-xl border border-border font-medium"
+                >
+                  <MdPerson size={20} /> Iniciar sesión
                 </Link>
-                <Link href="/cotizar" onClick={() => setMobileOpen(false)} className="btn-primary text-center">Cotizar ahora</Link>
+                <Link href="/cotizar" onClick={() => setMobileOpen(false)} className="btn-primary text-center">
+                  Cotizar ahora
+                </Link>
               </div>
             </nav>
           </div>
@@ -154,27 +247,34 @@ export default function Home() {
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-28 lg:pt-24 lg:pb-36 grid lg:grid-cols-2 gap-12 items-center">
             <div className="fade-up">
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-semibold tracking-wider uppercase text-[color:var(--color-accent)]">
-                <MdBolt size={14}/> Protección 360°
+                <MdBolt size={14} /> Protección 360°
               </span>
               <h1 className="mt-5 text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight">
-                Protege lo que más <br/>
+                Protege lo que más <br />
                 importa,<span className="text-[color:var(--color-accent)]"> cotiza en minutos.</span>
               </h1>
               <p className="mt-6 text-lg text-white/80 max-w-lg">
-                Seguros vehiculares, de vida, salud, viajes y más. 100% online, con asistencia humana cuando la necesites.
+                Seguros vehiculares, de vida, salud, viajes y más. 100% online, con asistencia humana cuando la
+                necesites.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/cotizar" className="btn-accent flex items-center gap-2">
-                  Cotizar mi seguro <MdArrowForward size={18}/>
+                  Cotizar mi seguro <MdArrowForward size={18} />
                 </Link>
                 <Link href="#seguros" className="btn-ghost flex items-center gap-2">
                   Conoce nuestros planes
                 </Link>
               </div>
               <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/80">
-                <span className="flex items-center gap-2"><MdCheckCircle className="text-[color:var(--color-accent)]" size={20}/> 100% Online</span>
-                <span className="flex items-center gap-2"><MdCheckCircle className="text-[color:var(--color-accent)]" size={20}/> Regulado por SBS</span>
-                <span className="flex items-center gap-2"><MdCheckCircle className="text-[color:var(--color-accent)]" size={20}/> Asistencia 24/7</span>
+                <span className="flex items-center gap-2">
+                  <MdCheckCircle className="text-[color:var(--color-accent)]" size={20} /> 100% Online
+                </span>
+                <span className="flex items-center gap-2">
+                  <MdCheckCircle className="text-[color:var(--color-accent)]" size={20} /> Regulado por SBS
+                </span>
+                <span className="flex items-center gap-2">
+                  <MdCheckCircle className="text-[color:var(--color-accent)]" size={20} /> Asistencia 24/7
+                </span>
               </div>
             </div>
 
@@ -186,12 +286,15 @@ export default function Home() {
                 <p className="text-sm text-text-soft">Elige el tipo de seguro que necesitas</p>
 
                 <div className="mt-5 flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-                  {quoteTabs.map(t => {
+                  {quoteTabs.map((t) => {
                     const Icon = t.icon;
                     return (
-                      <button key={t.id} onClick={() => setActiveTab(t.id)}
-                        className={`tab-pill text-sm ${activeTab === t.id ? 'active' : ''}`}>
-                        <Icon size={18}/> {t.label}
+                      <button
+                        key={t.id}
+                        onClick={() => setActiveTab(t.id)}
+                        className={`tab-pill text-sm ${activeTab === t.id ? 'active' : ''}`}
+                      >
+                        <Icon size={18} /> {t.label}
                       </button>
                     );
                   })}
@@ -200,23 +303,33 @@ export default function Home() {
                 <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label className="flex flex-col">
                     <span className="text-xs font-semibold text-text-soft mb-1.5">DNI</span>
-                    <input type="text" placeholder="Ingresa tu DNI"
-                      className="rounded-xl border border-border px-4 py-3 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"/>
+                    <input
+                      type="text"
+                      placeholder="Ingresa tu DNI"
+                      className="rounded-xl border border-border px-4 py-3 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                    />
                   </label>
                   <label className="flex flex-col">
                     <span className="text-xs font-semibold text-text-soft mb-1.5">Celular</span>
-                    <input type="tel" placeholder="9XX XXX XXX"
-                      className="rounded-xl border border-border px-4 py-3 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"/>
+                    <input
+                      type="tel"
+                      placeholder="9XX XXX XXX"
+                      className="rounded-xl border border-border px-4 py-3 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                    />
                   </label>
                 </div>
 
                 <label className="flex items-start gap-2 mt-4 text-xs text-text-soft">
-                  <input type="checkbox" className="mt-0.5 accent-[color:var(--color-primary)]"/>
-                  Acepto las <Link href="#" className="text-primary underline">políticas de privacidad</Link>.
+                  <input type="checkbox" className="mt-0.5 accent-[color:var(--color-primary)]" />
+                  Acepto las{' '}
+                  <Link href="#" className="text-primary underline">
+                    políticas de privacidad
+                  </Link>
+                  .
                 </label>
 
                 <button className="btn-primary w-full mt-5 flex items-center justify-center gap-2">
-                  Continuar cotización <MdArrowForward size={18}/>
+                  Continuar cotización <MdArrowForward size={18} />
                 </button>
 
                 <p className="mt-3 text-xs text-text-mute text-center">
@@ -228,7 +341,7 @@ export default function Home() {
 
           {/* Onda decorativa */}
           <svg className="block w-full" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden>
-            <path d="M0,48 C360,96 1080,0 1440,48 L1440,80 L0,80 Z" fill="#ffffff"/>
+            <path d="M0,48 C360,96 1080,0 1440,48 L1440,80 L0,80 Z" fill="#ffffff" />
           </svg>
         </section>
 
@@ -236,7 +349,7 @@ export default function Home() {
         <section className="-mt-10 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="bg-white rounded-3xl shadow-[0_30px_60px_-30px_rgba(0,51,160,0.25)] border border-border grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
-              {stats.map((s,i) => (
+              {stats.map((s, i) => (
                 <div key={i} className="py-8 px-4 text-center">
                   <div className="text-3xl md:text-4xl font-extrabold text-primary">{s.n}</div>
                   <div className="text-sm text-text-soft mt-1">{s.l}</div>
@@ -268,12 +381,15 @@ export default function Home() {
                       </span>
                     )}
                     <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-white transition-colors">
-                      <Icon size={28}/>
+                      <Icon size={28} />
                     </div>
                     <h3 className="text-lg font-bold">{s.title}</h3>
                     <p className="mt-2 text-sm text-text-soft flex-grow">{s.desc}</p>
-                    <Link href="#" className="mt-5 text-primary font-semibold text-sm inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                      Cotizar <MdArrowForward size={16}/>
+                    <Link
+                      href="#"
+                      className="mt-5 text-primary font-semibold text-sm inline-flex items-center gap-1 group-hover:gap-2 transition-all"
+                    >
+                      Cotizar <MdArrowForward size={16} />
                     </Link>
                   </div>
                 );
@@ -295,7 +411,7 @@ export default function Home() {
                 return (
                   <div key={b.t} className="card p-7 text-center">
                     <div className="mx-auto w-14 h-14 rounded-full bg-accent/15 text-accent flex items-center justify-center mb-4">
-                      <Icon size={26}/>
+                      <Icon size={26} />
                     </div>
                     <h3 className="font-bold">{b.t}</h3>
                     <p className="text-sm text-text-soft mt-2">{b.d}</p>
@@ -314,22 +430,31 @@ export default function Home() {
                 <span className="eyebrow">Promociones</span>
                 <h2 className="section-title mt-2">Ofertas por tiempo limitado</h2>
               </div>
-              <Link href="#" className="text-primary font-semibold inline-flex items-center gap-1 hover:gap-2 transition-all">
-                Ver todas <MdArrowForward size={18}/>
+              <Link
+                href="#"
+                className="text-primary font-semibold inline-flex items-center gap-1 hover:gap-2 transition-all"
+              >
+                Ver todas <MdArrowForward size={18} />
               </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {promos.map((p) => (
-                <article key={p.title} className={`relative overflow-hidden rounded-3xl p-8 text-white bg-gradient-to-br ${p.color} min-h-[280px] flex flex-col justify-end group`}>
+                <article
+                  key={p.title}
+                  className={`relative overflow-hidden rounded-3xl p-8 text-white bg-gradient-to-br ${p.color} min-h-[280px] flex flex-col justify-end group`}
+                >
                   <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/10 group-hover:scale-110 transition-transform"></div>
                   <span className="relative inline-flex self-start items-center gap-1 px-3 py-1 rounded-full bg-[color:var(--color-yellow)] text-[color:var(--color-text)] text-xs font-bold uppercase tracking-wider mb-4">
-                    <MdLocalOffer size={14}/> {p.badge}
+                    <MdLocalOffer size={14} /> {p.badge}
                   </span>
                   <h3 className="relative text-2xl font-extrabold">{p.title}</h3>
                   <p className="relative mt-1 text-white/85 text-sm">{p.desc}</p>
-                  <Link href="#" className="relative mt-5 inline-flex items-center gap-1 text-sm font-bold group-hover:gap-2 transition-all">
-                    Ver promoción <MdArrowOutward size={16}/>
+                  <Link
+                    href="#"
+                    className="relative mt-5 inline-flex items-center gap-1 text-sm font-bold group-hover:gap-2 transition-all"
+                  >
+                    Ver promoción <MdArrowOutward size={16} />
                   </Link>
                 </article>
               ))}
@@ -338,7 +463,10 @@ export default function Home() {
         </section>
 
         {/* SINIESTROS */}
-        <section id="siniestros" className="py-20 md:py-28 bg-[color:var(--color-bg-deep)] text-white relative overflow-hidden">
+        <section
+          id="siniestros"
+          className="py-20 md:py-28 bg-[color:var(--color-bg-deep)] text-white relative overflow-hidden"
+        >
           <span className="hero-blob bg-[#00b5e2] w-[420px] h-[420px] -top-32 -right-20 opacity-40"></span>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center relative">
             <div>
@@ -348,17 +476,21 @@ export default function Home() {
                 Reporta tu caso en línea o llámanos. Nuestro equipo resolverá tu emergencia lo antes posible.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="#" className="btn-accent inline-flex items-center gap-2">Reportar siniestro <MdArrowForward size={18}/></Link>
-                <Link href="#" className="btn-ghost inline-flex items-center gap-2"><MdPhoneInTalk size={18}/> (01) 415 1515</Link>
+                <Link href="#" className="btn-accent inline-flex items-center gap-2">
+                  Reportar siniestro <MdArrowForward size={18} />
+                </Link>
+                <Link href="#" className="btn-ghost inline-flex items-center gap-2">
+                  <MdPhoneInTalk size={18} /> (01) 415 1515
+                </Link>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
                 { n: '1', t: 'Mantén la calma', d: 'Revisa que todos estén bien y toma fotos del lugar.' },
-                { n: '2', t: 'Llámanos',        d: 'Te guiamos en cada paso desde el primer minuto.' },
-                { n: '3', t: 'Reporta online',  d: 'Sube tus documentos desde la app o el portal.' },
+                { n: '2', t: 'Llámanos', d: 'Te guiamos en cada paso desde el primer minuto.' },
+                { n: '3', t: 'Reporta online', d: 'Sube tus documentos desde la app o el portal.' },
                 { n: '4', t: 'Solución rápida', d: 'Asignamos taller, grúa o atención médica.' },
-              ].map(s => (
+              ].map((s) => (
                 <div key={s.n} className="rounded-2xl bg-white/5 border border-white/10 p-5 backdrop-blur">
                   <div className="text-3xl font-extrabold text-[color:var(--color-accent)]">{s.n}</div>
                   <div className="mt-1 font-bold">{s.t}</div>
@@ -377,10 +509,12 @@ export default function Home() {
               <h2 className="section-title mt-2">Lo que dicen nuestros clientes</h2>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
-              {testimonials.map(t => (
+              {testimonials.map((t) => (
                 <div key={t.name} className="card p-7">
                   <div className="flex gap-0.5 text-[color:var(--color-yellow)] mb-3">
-                    {Array.from({length:5}).map((_,i)=><MdStar key={i} size={20}/>)}
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <MdStar key={i} size={20} />
+                    ))}
                   </div>
                   <p className="text-text-soft">“{t.text}”</p>
                   <div className="mt-5 flex items-center gap-3">
@@ -410,13 +544,25 @@ export default function Home() {
                   Gestiona tus pólizas, reporta siniestros, paga cuotas y accede a tu seguro desde donde estés.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Link href="#" className="inline-flex items-center gap-3 bg-black/80 hover:bg-black text-white px-5 py-3 rounded-2xl transition-colors">
-                    <FaApple size={26}/>
-                    <span className="text-left"><div className="text-[10px] opacity-80">Descarga en</div><div className="font-bold -mt-0.5">App Store</div></span>
+                  <Link
+                    href="#"
+                    className="inline-flex items-center gap-3 bg-black/80 hover:bg-black text-white px-5 py-3 rounded-2xl transition-colors"
+                  >
+                    <FaApple size={26} />
+                    <span className="text-left">
+                      <div className="text-[10px] opacity-80">Descarga en</div>
+                      <div className="font-bold -mt-0.5">App Store</div>
+                    </span>
                   </Link>
-                  <Link href="#" className="inline-flex items-center gap-3 bg-black/80 hover:bg-black text-white px-5 py-3 rounded-2xl transition-colors">
-                    <FaGooglePlay size={22}/>
-                    <span className="text-left"><div className="text-[10px] opacity-80">Disponible en</div><div className="font-bold -mt-0.5">Google Play</div></span>
+                  <Link
+                    href="#"
+                    className="inline-flex items-center gap-3 bg-black/80 hover:bg-black text-white px-5 py-3 rounded-2xl transition-colors"
+                  >
+                    <FaGooglePlay size={22} />
+                    <span className="text-left">
+                      <div className="text-[10px] opacity-80">Disponible en</div>
+                      <div className="font-bold -mt-0.5">Google Play</div>
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -446,9 +592,14 @@ export default function Home() {
             <h2 className="section-title mt-2">Cotiza tu seguro hoy y obtén tu mejor tarifa</h2>
             <p className="mt-4 text-text-soft text-lg">Rápido, simple y sin letras chicas.</p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/cotizar" className="btn-primary inline-flex items-center gap-2">Cotizar ahora <MdArrowForward size={18}/></Link>
-              <Link href="#" className="inline-flex items-center gap-2 font-semibold text-primary hover:text-primary-hover px-5 py-3">
-                <MdWhatsapp size={20}/> Escríbenos por WhatsApp
+              <Link href="/cotizar" className="btn-primary inline-flex items-center gap-2">
+                Cotizar ahora <MdArrowForward size={18} />
+              </Link>
+              <Link
+                href="#"
+                className="inline-flex items-center gap-2 font-semibold text-primary hover:text-primary-hover px-5 py-3"
+              >
+                <MdWhatsapp size={20} /> Escríbenos por WhatsApp
               </Link>
             </div>
           </div>
@@ -461,7 +612,7 @@ export default function Home() {
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-5">
               <div className="h-10 w-10 relative bg-white rounded-full p-1.5">
-                <Image src="/img/logo.png" fill alt="logo" className="object-contain p-1"/>
+                <Image src="/img/logo.png" fill alt="logo" className="object-contain p-1" />
               </div>
               <span className="font-extrabold text-xl text-white">Serena Seguros</span>
             </div>
@@ -470,25 +621,38 @@ export default function Home() {
             </p>
             <div className="flex items-center gap-3 mt-6">
               {[MdFacebook, FaInstagram, FaLinkedin, FaYoutube, FaTiktok].map((Ic, i) => (
-                <Link key={i} href="#" className="w-9 h-9 rounded-full bg-white/10 hover:bg-accent hover:text-[#001a4d] flex items-center justify-center transition-colors">
-                  <Ic size={16}/>
+                <Link
+                  key={i}
+                  href="#"
+                  className="w-9 h-9 rounded-full bg-white/10 hover:bg-accent hover:text-[#001a4d] flex items-center justify-center transition-colors"
+                >
+                  <Ic size={16} />
                 </Link>
               ))}
             </div>
           </div>
 
           {[
-            { h: 'Seguros', items: ['Vehicular','Vida','Salud','SOAT','Viajes','Hogar','Mascotas'] },
-            { h: 'Ayuda',   items: ['Siniestros','Promociones','Red de clínicas','Pago en línea','Facturación electrónica'] },
-            { h: 'Empresa', items: ['Sobre nosotros','Sostenibilidad','Trabaja con nosotros','Transparencia','Prensa'] },
-          ].map(col => (
+            { h: 'Seguros', items: ['Vehicular', 'Vida', 'Salud', 'SOAT', 'Viajes', 'Hogar', 'Mascotas'] },
+            {
+              h: 'Ayuda',
+              items: ['Siniestros', 'Promociones', 'Red de clínicas', 'Pago en línea', 'Facturación electrónica'],
+            },
+            {
+              h: 'Empresa',
+              items: ['Sobre nosotros', 'Sostenibilidad', 'Trabaja con nosotros', 'Transparencia', 'Prensa'],
+            },
+          ].map((col) => (
             <div key={col.h}>
               <h4 className="font-bold text-white mb-4">{col.h}</h4>
               <ul className="space-y-2 text-sm">
-                {col.items.map(it => (
+                {col.items.map((it) => (
                   <li key={it}>
                     <Link href="#" className="hover:text-accent transition-colors inline-flex items-center gap-1 group">
-                      <MdOutlineKeyboardArrowRight className="opacity-0 -ml-3 group-hover:opacity-100 group-hover:ml-0 transition-all" size={16}/>
+                      <MdOutlineKeyboardArrowRight
+                        className="opacity-0 -ml-3 group-hover:opacity-100 group-hover:ml-0 transition-all"
+                        size={16}
+                      />
                       {it}
                     </Link>
                   </li>
@@ -501,8 +665,12 @@ export default function Home() {
         <div className="border-t border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-wrap items-center justify-between gap-4 text-xs text-white/60">
             <div className="flex flex-wrap items-center gap-4">
-              <span className="flex items-center gap-1.5"><MdLocationOn size={14}/> Av. Juan de Arona 830, San Isidro, Lima</span>
-              <span className="flex items-center gap-1.5"><MdEmail size={14}/> contacto@serenaseguros.pe</span>
+              <span className="flex items-center gap-1.5">
+                <MdLocationOn size={14} /> Av. Juan de Arona 830, San Isidro, Lima
+              </span>
+              <span className="flex items-center gap-1.5">
+                <MdEmail size={14} /> contacto@serenaseguros.pe
+              </span>
             </div>
             <span>&copy; {new Date().getFullYear()} Serena Seguros. Todos los derechos reservados.</span>
           </div>
