@@ -28,7 +28,6 @@
 
 /* Base */
 html { scroll-behavior: smooth; }
-body { color: var(--color-text); background: var(--color-bg); }
 
 ::-webkit-scrollbar {
   width: 10px;
