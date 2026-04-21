@@ -81,7 +81,7 @@ export default function Login() {
       </div>
       {/** Login */}
 
-      <div className=" lg:w-[50%] w-full mx-auto  ">
+      <div className=" lg:w-[50%] w-full mx-auto h-screen ">
         <div className="flex flex-col justify-center max-w-xl h-full mx-auto px-15 bg-bg">
           <div className="mb-10 text-xl font-bold text-text flex items-center gap-2">
             <Image src="/img/logo.png" width={500} height={500} alt="logo" className="h-9 object-contain w-fit" />
