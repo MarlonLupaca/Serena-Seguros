@@ -1,0 +1,82 @@
+'use client';
+
+import Sidebar from '../componentsMain/Sidebar';
+import AppHeader from '../componentsMain/AppHeader'; // <-- Actualizado
+
+import {
+  MdHome,
+  MdFactCheck,
+  MdTrendingUp,
+  MdBusinessCenter,
+  MdQueryStats,
+  MdAccountBalance,
+  MdTrackChanges,
+  MdInsights,
+  MdAssessment,
+  MdSettings,
+} from 'react-icons/md';
+
+// 1. Definimos el menú Ejecutivo (Nivel Gerencial / Directorios)
+const adminMenu = [
+  {
+    section: 'Principal',
+    items: [
+      { label: 'Inicio', icon: MdHome, href: '/ejecutivo' },
+      { label: 'Aprobaciones', icon: MdFactCheck, href: '/ejecutivo/aprobaciones' },
+    ],
+  },
+
+  {
+    section: 'Desempeño Core',
+    items: [
+      { label: 'Producción', icon: MdTrendingUp, href: '/ejecutivo/produccion' },
+      { label: 'Comercial', icon: MdBusinessCenter, href: '/ejecutivo/comercial' },
+      { label: 'Siniestralidad', icon: MdQueryStats, href: '/ejecutivo/siniestralidad' },
+    ],
+  },
+  {
+    section: 'Estrategia y Finanzas',
+    items: [
+      { label: 'Financiero', icon: MdAccountBalance, href: '/ejecutivo/financiero' },
+      { label: 'Objetivos', icon: MdTrackChanges, href: '/ejecutivo/objetivos' },
+      { label: 'Simulaciones', icon: MdInsights, href: '/ejecutivo/simulaciones' },
+    ],
+  },
+  {
+    section: 'Administración',
+    items: [
+      { label: 'Informes', icon: MdAssessment, href: '/ejecutivo/informes' },
+      { label: 'Configuración', icon: MdSettings, href: '/ejecutivo/configuracion' },
+    ],
+  },
+];
+
+// 2. Datos del usuario Ejecutivo
+const adminUser = {
+  name: 'Marlon Lupaca',
+  email: 'marlon.lupaca@empresa.com',
+};
+
+export default function DashboardLayout({ children }) {
+  return (
+    <div className="h-screen w-screen bg-transparent flex overflow-hidden">
+      {/* SIDEBAR REUTILIZABLE */}
+      <div className="h-screen lg:p-3">
+        <Sidebar menus={adminMenu} user={adminUser} />
+      </div>
+
+      {/* CONTENIDO */}
+      <main className="w-full overflow-y-auto">
+        {/* HEADER REUTILIZABLE PARA EJECUTIVO */}
+        <AppHeader
+          title="Portal Ejecutivo"
+          subtitle="Gerencia General"
+          searchPlaceholder="Buscar métricas, informes, áreas..."
+          indicatorTitle="Por Aprobar"
+          indicatorValue="5 urgentes"
+        />
+        <div className="px-8">{children}</div>
+      </main>
+    </div>
+  );
+}
