@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------
+  # 1. BD MAESTRO (Independiente por ahora)
+  # ----------------------------------------
+  serena-mysql-master:
+    image: mysql:8.0
+    container_name: mysql-master
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_seguros_pacifico
+    ports:
+      - '3308:3306'
+    networks:
+      - serena_network
+    volumes:
+      # Data persistente
+      - master_data:/var/lib/mysql
+      # Inyección de tu carpeta con los scripts SQL
+      - ./Script_DB:/docker-entrypoint-initdb.d
+
+  # ----------------------------------------
+  # 2. BD RÉPLICA (Independiente por ahora)
+  # ----------------------------------------
+  serena-mysql-replica:
+    image: mysql:8.0
+    container_name: mysql-replica
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_seguros_pacifico
+    ports:
+      - '3309:3306'
+    networks:
+      - serena_network
+    volumes:
+      # Data persistente
+      - replica_data:/var/lib/mysql
+      # OJO: También inyectamos los scripts a la réplica para que tenga la estructura
+      - ./Script_DB:/docker-entrypoint-initdb.d
+
+networks:
+  serena_network:
+    driver: bridge
+
+volumes:
+  master_data:
+  replica_data:

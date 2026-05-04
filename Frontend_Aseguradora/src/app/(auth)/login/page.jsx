@@ -8,27 +8,39 @@ import Image from 'next/image';
 
 const ROLES = [
   {
-    label: 'Admin',
-    email: 'admin@test.com',
-    pass: 'admin123',
-    path: '/admin',
-    url: '/icons/admin.png',
-  },
-  {
-    label: 'Cliente',
+    label: 'Asegurado',
     email: 'cliente@test.com',
     pass: 'cliente123',
-    path: '/client',
+    path: '/asegurado',
     url: '/icons/cliente.png',
-    color: '#0ea5e9',
-    bg: '#e0f2fe',
   },
   {
-    label: 'Empleado',
+    label: 'Comercial',
     email: 'empleado@test.com',
     pass: 'empleado123',
-    path: '/employee',
+    path: '/comercial',
     url: '/icons/empleado.png',
+  },
+  {
+    label: 'Core',
+    email: 'cliente@test.com',
+    pass: 'cliente123',
+    path: '/core',
+    url: '/icons/cliente.png',
+  },
+  {
+    label: 'Operativo',
+    email: 'empleado@test.com',
+    pass: 'empleado123',
+    path: '/operativo',
+    url: '/icons/empleado.png',
+  },
+  {
+    label: 'Ejecutivo',
+    email: 'admin@test.com',
+    pass: 'admin123',
+    path: '/ejecutivo',
+    url: '/icons/admin.png',
   },
 ];
 
