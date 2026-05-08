@@ -375,6 +375,15 @@ Solo `COMERCIAL` y `EJECUTIVO`. Comparte tabla con `lead_cotizacion` — los "le
 | `PATCH /api/v1/cotizaciones/{id}/estado`  | Cambiar `estado_kanban`                              |
 | `PATCH /api/v1/cotizaciones/{id}/asignar` | Reasignar a otro empleado agente                     |
 
+### Clientes (`/api/v1/clientes`)
+Roles `COMERCIAL`, `TECNICO`, `EJECUTIVO`.
+
+| Endpoint                                  | Permite                                                |
+|-------------------------------------------|--------------------------------------------------------|
+| `GET /api/v1/clientes`                    | Listar (filtro `estado_crm=NUEVO\|CONTACTADO\|CLIENTE\|INACTIVO`) |
+| `GET /api/v1/clientes/{id}`               | Detalle del cliente                                    |
+| `PATCH /api/v1/clientes/{id}/estado-crm`  | Cambiar el estado CRM                                  |
+
 ### Errores estándar
 
 Todos los errores del back devuelven JSON con esta forma:
@@ -526,10 +535,11 @@ Sin prefijos tipo `feat:`, `fix:`, `chore:`. Sin emojis. Una línea, primera let
 - **Fase 1** — Catálogo común: productos, proveedores, perfil + cambio de password.
 - **Fase 2** — Portal Asegurado: 9 vistas funcionales (inicio, pólizas, endosos, pagos, siniestros, documentos, seguros, cotizar, perfil).
 - **Fase 3 — parcial**:
-  - 3.1 Cotizaciones y leads del comercial conectados (`/api/v1/cotizaciones`, kanban con cambio de estado).
+  - 3.1 Cotizaciones y leads del comercial (`/api/v1/cotizaciones`, kanban con cambio de estado).
+  - 3.2 Cartera de clientes (`/api/v1/clientes`, lista + cambio de estado CRM).
 
 ### Lo que falta
-- **Fase 3 — restante**: cartera de clientes, comisiones, campañas, simulador, dashboard del comercial, validar documentos, segmentación.
+- **Fase 3 — restante**: comisiones, campañas, simulador, dashboard del comercial, validar documentos, segmentación.
 - **Fase 4** — Portal Core (Técnico): emisión, endosos (gestión), renovaciones, siniestros (asignación), reaseguro, productos.
 - **Fase 5** — Portal Operativo: RRHH, logística, finanzas (cobranza, facturación, tesorería, contabilidad, presupuesto).
 - **Fase 6** — Portal Ejecutivo: aprobaciones críticas, KPIs, objetivos corporativos, simulaciones.
