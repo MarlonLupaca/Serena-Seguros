@@ -4,9 +4,14 @@ import com.serena.modules.auth.entity.Usuario;
 import com.serena.modules.auth.repository.PersonaRepository;
 import com.serena.modules.clientes.entity.Cliente;
 import com.serena.modules.clientes.repository.ClienteRepository;
+import com.serena.modules.empleados.entity.Empleado;
+import com.serena.modules.empleados.repository.EmpleadoRepository;
 import com.serena.modules.polizas.entity.Poliza;
 import com.serena.modules.polizas.repository.PolizaRepository;
+import com.serena.modules.siniestros.dto.AsignarAnalistaRequest;
+import com.serena.modules.siniestros.dto.CambioEstadoSiniestroRequest;
 import com.serena.modules.siniestros.dto.CrearSiniestroRequest;
+import com.serena.modules.siniestros.dto.SiniestroAdminResponse;
 import com.serena.modules.siniestros.dto.SiniestroResponse;
 import com.serena.modules.siniestros.entity.Siniestro;
 import com.serena.modules.siniestros.repository.SiniestroRepository;
@@ -25,6 +30,7 @@ public class SiniestroService {
     private final SiniestroRepository siniestroRepository;
     private final PolizaRepository polizaRepository;
     private final ClienteRepository clienteRepository;
+    private final EmpleadoRepository empleadoRepository;
     private final PersonaRepository personaRepository;
 
     @Transactional(readOnly = true)
@@ -65,6 +71,43 @@ public class SiniestroService {
                 .estadoResolucion(Siniestro.EstadoResolucion.REPORTADO)
                 .build();
         return SiniestroResponse.from(siniestroRepository.save(siniestro));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SiniestroAdminResponse> listarTodos(Siniestro.EstadoResolucion estado) {
+        List<Siniestro> lista = (estado != null)
+                ? siniestroRepository.findByEstadoResolucionOrderByFechaReporteDesc(estado)
+                : siniestroRepository.findAllByOrderByFechaReporteDesc();
+        return lista.stream().map(SiniestroAdminResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public SiniestroAdminResponse obtenerAdmin(Integer id) {
+        return SiniestroAdminResponse.from(buscar(id));
+    }
+
+    @Transactional
+    public SiniestroAdminResponse cambiarEstado(Integer id, CambioEstadoSiniestroRequest request) {
+        Siniestro siniestro = buscar(id);
+        siniestro.setEstadoResolucion(request.estadoResolucion());
+        return SiniestroAdminResponse.from(siniestroRepository.save(siniestro));
+    }
+
+    @Transactional
+    public SiniestroAdminResponse asignarAnalista(Integer id, AsignarAnalistaRequest request) {
+        Siniestro siniestro = buscar(id);
+        Empleado analista = empleadoRepository.findById(request.idEmpleadoAnalista())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", request.idEmpleadoAnalista()));
+        siniestro.setEmpleadoAnalista(analista);
+        if (siniestro.getEstadoResolucion() == Siniestro.EstadoResolucion.REPORTADO) {
+            siniestro.setEstadoResolucion(Siniestro.EstadoResolucion.EN_REVISION);
+        }
+        return SiniestroAdminResponse.from(siniestroRepository.save(siniestro));
+    }
+
+    private Siniestro buscar(Integer id) {
+        return siniestroRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Siniestro", id));
     }
 
     private Cliente clienteDelUsuario(Usuario usuario) {
