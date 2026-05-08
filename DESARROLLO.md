@@ -447,6 +447,48 @@ Roles `TECNICO`, `OPERATIVO`, `EJECUTIVO`.
 |-------------------------|--------------------------------------------------|
 | `GET /api/v1/empleados` | Listar (filtro `area=TECNICO\|COMERCIAL\|...`)   |
 
+### Portal Operativo
+
+#### Activos internos (`/api/v1/activos`)
+Roles `OPERATIVO`, `EJECUTIVO`. Se mapea a la tabla `activo_interno`.
+
+| Endpoint                          | Permite                                                                |
+|-----------------------------------|------------------------------------------------------------------------|
+| `GET /api/v1/activos`             | Listar (filtro `estado=OPERATIVO\|MANTENIMIENTO\|BAJA`)                |
+| `GET /api/v1/activos/{id}`        | Detalle del activo                                                     |
+| `POST /api/v1/activos`            | Registrar nuevo activo                                                 |
+| `PUT /api/v1/activos/{id}`        | Actualizar activo (incluye reasignar empleado)                         |
+| `DELETE /api/v1/activos/{id}`     | Dar de baja (soft-delete cambiando `estado`)                           |
+
+#### Tesoreria (`/api/v1/tesoreria`)
+Roles `OPERATIVO`, `EJECUTIVO`. Tabla `flujo_caja`.
+
+| Endpoint                                      | Permite                                                            |
+|-----------------------------------------------|--------------------------------------------------------------------|
+| `GET /api/v1/tesoreria`                       | Listar movimientos (filtros `tipo=INGRESO\|EGRESO`, `estado_aprobacion=...`) |
+| `GET /api/v1/tesoreria/resumen`               | KPI: total ingresos, egresos, balance, pendientes                  |
+| `POST /api/v1/tesoreria`                      | Registrar nuevo movimiento (queda en `PENDIENTE`)                  |
+| `PATCH /api/v1/tesoreria/{id}/estado`         | Aprobar / ejecutar / rechazar el movimiento                        |
+
+#### Presupuestos (`/api/v1/presupuestos`)
+Roles `OPERATIVO`, `EJECUTIVO`. Tabla `presupuesto_area`.
+
+| Endpoint                              | Permite                                                                  |
+|---------------------------------------|--------------------------------------------------------------------------|
+| `GET /api/v1/presupuestos`            | Listar (calcula `disponible = asignado - ejecutado` y `porcentaje_uso`)  |
+| `POST /api/v1/presupuestos`           | Crear presupuesto para un area / periodo                                 |
+| `PUT /api/v1/presupuestos/{id}`       | Editar montos asignado o ejecutado                                       |
+| `DELETE /api/v1/presupuestos/{id}`    | Borrar registro de presupuesto                                           |
+
+#### Cobranza (`/api/v1/cobranza`)
+Roles `OPERATIVO`, `EJECUTIVO`. Lectura administrativa de la tabla `cuota`.
+
+| Endpoint                                      | Permite                                                            |
+|-----------------------------------------------|--------------------------------------------------------------------|
+| `GET /api/v1/cobranza`                        | Listar todas las cuotas (filtro `estado=PENDIENTE\|PAGADO\|VENCIDO`) |
+| `GET /api/v1/cobranza/resumen`                | KPI: total por cobrar, pagado, vencido, conteos                    |
+| `PATCH /api/v1/cobranza/{id}/marcar-pagada`   | Marcar manualmente una cuota como `PAGADO`                         |
+
 ### Errores estándar
 
 Todos los errores del back devuelven JSON con esta forma:
@@ -616,12 +658,19 @@ Sin prefijos tipo `feat:`, `fix:`, `chore:`. Sin emojis. Una línea, primera let
   - 4.9 Proveedores (UI con CRUD para `TECNICO`/`OPERATIVO`).
   - 4.10 Documentos (vista del usuario actual).
   - 4.11 Dashboard core (KPIs, endosos pendientes, siniestros sin asignar).
+- **Fase 5 — Portal Operativo**:
+  - 5.1 Empleados (lectura y filtros por area sobre `/api/v1/empleados`).
+  - 5.2 Activos internos (`/api/v1/activos`, CRUD con asignación de empleado).
+  - 5.3 Tesorería — flujo de caja (`/api/v1/tesoreria`, resumen + transición de estados).
+  - 5.4 Presupuesto por área (`/api/v1/presupuestos`, alertas por sobreconsumo).
+  - 5.5 Cobranza administrativa (`/api/v1/cobranza`, marcar cuotas como pagadas).
+  - 5.6 Dashboard operativo (KPIs de empleados, activos, balance, por cobrar y comisiones).
+  - 5.7 Vistas placeholder estandarizadas (`PlaceholderPendiente`) para los módulos sin tabla en BD: vacaciones, nomina, evaluaciones, inventario, compras, flota, facturación, contabilidad.
 
 ### Lo que falta
 - Validar documentos y segmentación del comercial — quedan como UI mockeada (deuda Fase 7).
 - Asignar proveedores específicos a un siniestro (tabla `siniestro_proveedor`) — pendiente para extender el módulo de evaluaciones.
-- **Fase 4** — Portal Core (Técnico): emisión, endosos (gestión), renovaciones, siniestros (asignación), reaseguro, productos.
-- **Fase 5** — Portal Operativo: RRHH, logística, finanzas (cobranza, facturación, tesorería, contabilidad, presupuesto).
+- Conectar las vistas placeholder del operativo (vacaciones, nomina, evaluaciones, inventario, compras, flota, facturación, contabilidad) cuando existan sus tablas en la BD.
 - **Fase 6** — Portal Ejecutivo: aprobaciones críticas, KPIs, objetivos corporativos, simulaciones.
 - **Fase 7** — Pulido: permisos finos, auditoría, notificaciones reales, tests automatizados, despliegue.
 
