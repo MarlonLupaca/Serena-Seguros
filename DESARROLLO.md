@@ -365,6 +365,16 @@ Ambos: `GET` listar (con filtros `estado` y `tipo`/`rubro`), `GET /{id}` obtener
 | `GET /api/v1/mis-documentos/{id}/archivo` | Descargar archivo                    |
 | `DELETE /api/v1/mis-documentos/{id}`      | Eliminar (BD + archivo físico)       |
 
+### Portal Comercial (`/api/v1/cotizaciones`)
+Solo `COMERCIAL` y `EJECUTIVO`. Comparte tabla con `lead_cotizacion` — los "leads" del UI son las cotizaciones en estado temprano (`NUEVO`, `CONTACTADO`, `EN_PROPUESTA`).
+
+| Endpoint                                  | Permite                                              |
+|-------------------------------------------|------------------------------------------------------|
+| `GET /api/v1/cotizaciones`                | Listar (filtros: `estado=<EstadoKanban>`, `solo_mias=true`) |
+| `GET /api/v1/cotizaciones/{id}`           | Detalle                                              |
+| `PATCH /api/v1/cotizaciones/{id}/estado`  | Cambiar `estado_kanban`                              |
+| `PATCH /api/v1/cotizaciones/{id}/asignar` | Reasignar a otro empleado agente                     |
+
 ### Errores estándar
 
 Todos los errores del back devuelven JSON con esta forma:
@@ -515,9 +525,11 @@ Sin prefijos tipo `feat:`, `fix:`, `chore:`. Sin emojis. Una línea, primera let
 - **Fase 0** — Fundamentos: JWT filter, autorización por rol, manejo de 401, endpoint `/me`.
 - **Fase 1** — Catálogo común: productos, proveedores, perfil + cambio de password.
 - **Fase 2** — Portal Asegurado: 9 vistas funcionales (inicio, pólizas, endosos, pagos, siniestros, documentos, seguros, cotizar, perfil).
+- **Fase 3 — parcial**:
+  - 3.1 Cotizaciones y leads del comercial conectados (`/api/v1/cotizaciones`, kanban con cambio de estado).
 
 ### Lo que falta
-- **Fase 3** — Portal Comercial: leads, cotizaciones (kanban), cartera de clientes, comisiones, campañas, simulador.
+- **Fase 3 — restante**: cartera de clientes, comisiones, campañas, simulador, dashboard del comercial, validar documentos, segmentación.
 - **Fase 4** — Portal Core (Técnico): emisión, endosos (gestión), renovaciones, siniestros (asignación), reaseguro, productos.
 - **Fase 5** — Portal Operativo: RRHH, logística, finanzas (cobranza, facturación, tesorería, contabilidad, presupuesto).
 - **Fase 6** — Portal Ejecutivo: aprobaciones críticas, KPIs, objetivos corporativos, simulaciones.
