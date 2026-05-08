@@ -1,9 +1,13 @@
 package com.serena.modules.cuotas.controller;
 
 import com.serena.modules.auditoria.service.AuditoriaService;
+import com.serena.modules.auth.entity.Persona;
+import com.serena.modules.auth.repository.PersonaRepository;
 import com.serena.modules.cuotas.dto.CuotaResponse;
 import com.serena.modules.cuotas.entity.Cuota;
 import com.serena.modules.cuotas.repository.CuotaRepository;
+import com.serena.modules.notificaciones.entity.Notificacion;
+import com.serena.modules.notificaciones.service.NotificacionService;
 import com.serena.shared.exception.RecursoNoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +28,8 @@ public class CobranzaController {
 
     private final CuotaRepository cuotaRepository;
     private final AuditoriaService auditoria;
+    private final NotificacionService notificaciones;
+    private final PersonaRepository personaRepository;
 
     @GetMapping
     @Transactional(readOnly = true)
@@ -68,6 +74,14 @@ public class CobranzaController {
         c.setEstadoPago(Cuota.EstadoPago.PAGADO);
         auditoria.registrar("cuota_pagada", "cobranza",
                 "Cuota #" + id + " - poliza " + c.getPoliza().getIdPoliza() + " - monto " + c.getMonto());
+
+        Persona persona = c.getPoliza().getCliente().getPersona();
+        if (persona != null && persona.getUsuario() != null) {
+            notificaciones.crear(persona.getUsuario(), Notificacion.Tipo.COBRANZA,
+                    "Pago confirmado - cuota " + c.getNumeroCuota(),
+                    "Se registro el pago de la cuota #" + c.getNumeroCuota() + " por S/ " + c.getMonto(),
+                    "/asegurado/pagos");
+        }
         return ResponseEntity.ok(CuotaResponse.from(cuotaRepository.save(c)));
     }
 }

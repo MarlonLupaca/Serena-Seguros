@@ -1,8 +1,11 @@
 package com.serena.modules.ejecutivo.controller;
 
 import com.serena.modules.auditoria.service.AuditoriaService;
+import com.serena.modules.auth.entity.Usuario;
 import com.serena.modules.ejecutivo.entity.AprobacionCritica;
 import com.serena.modules.ejecutivo.repository.AprobacionCriticaRepository;
+import com.serena.modules.notificaciones.entity.Notificacion;
+import com.serena.modules.notificaciones.service.NotificacionService;
 import com.serena.shared.exception.RecursoNoEncontradoException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
@@ -28,6 +31,7 @@ public class AprobacionController {
 
     private final AprobacionCriticaRepository repo;
     private final AuditoriaService auditoria;
+    private final NotificacionService notificaciones;
 
     public record AprobacionResponse(
             Integer idAprobacion,
@@ -78,7 +82,13 @@ public class AprobacionController {
                 .estadoGerencial(AprobacionCritica.EstadoGerencial.PENDIENTE)
                 .fechaSolicitud(LocalDateTime.now())
                 .build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(AprobacionResponse.from(repo.save(a)));
+        AprobacionCritica saved = repo.save(a);
+        notificaciones.crearParaPortal(Usuario.PortalAcceso.EJECUTIVO,
+                Notificacion.Tipo.APROBACION,
+                "Nueva aprobacion - " + saved.getModuloOrigen(),
+                "Monto: " + saved.getMontoImpacto() + ". " + (saved.getComentariosPrevios() == null ? "" : saved.getComentariosPrevios()),
+                "/ejecutivo/aprobaciones");
+        return ResponseEntity.status(HttpStatus.CREATED).body(AprobacionResponse.from(saved));
     }
 
     @PatchMapping("/{id}/estado")

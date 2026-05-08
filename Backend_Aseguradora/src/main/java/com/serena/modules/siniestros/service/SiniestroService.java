@@ -1,8 +1,11 @@
 package com.serena.modules.siniestros.service;
 
 import com.serena.modules.auditoria.service.AuditoriaService;
+import com.serena.modules.auth.entity.Persona;
 import com.serena.modules.auth.entity.Usuario;
 import com.serena.modules.auth.repository.PersonaRepository;
+import com.serena.modules.notificaciones.entity.Notificacion;
+import com.serena.modules.notificaciones.service.NotificacionService;
 import com.serena.modules.clientes.entity.Cliente;
 import com.serena.modules.clientes.repository.ClienteRepository;
 import com.serena.modules.empleados.entity.Empleado;
@@ -34,6 +37,7 @@ public class SiniestroService {
     private final EmpleadoRepository empleadoRepository;
     private final PersonaRepository personaRepository;
     private final AuditoriaService auditoria;
+    private final NotificacionService notificaciones;
 
     @Transactional(readOnly = true)
     public List<SiniestroResponse> misSiniestros(Usuario usuario) {
@@ -94,6 +98,14 @@ public class SiniestroService {
         siniestro.setEstadoResolucion(request.estadoResolucion());
         auditoria.registrar("siniestro_estado", "siniestros",
                 "SIN-" + id + " -> " + request.estadoResolucion().name());
+
+        Persona persona = siniestro.getPoliza().getCliente().getPersona();
+        if (persona != null && persona.getUsuario() != null) {
+            notificaciones.crear(persona.getUsuario(), Notificacion.Tipo.SINIESTRO,
+                    "Tu siniestro cambio de estado",
+                    "SIN-" + id + " ahora esta en estado " + request.estadoResolucion().name(),
+                    "/asegurado/siniestros");
+        }
         return SiniestroAdminResponse.from(siniestroRepository.save(siniestro));
     }
 
