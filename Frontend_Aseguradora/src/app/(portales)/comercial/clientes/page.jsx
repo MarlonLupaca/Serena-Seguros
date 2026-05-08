@@ -1,136 +1,239 @@
-"use client";
-import React, { useState } from 'react';
-import { 
-  MdSearch, MdEmail, MdPhone, MdPerson, MdLocationOn,
-  MdFilterList, MdOutlineStar, MdTrendingUp, MdPeopleOutline,
-  MdBusiness, MdChevronRight
+'use client';
+
+import { useEffect, useState } from 'react';
+import {
+  MdSearch,
+  MdEmail,
+  MdPhone,
+  MdPerson,
+  MdPeopleOutline,
+  MdEdit,
+  MdBadge,
+  MdCalendarToday,
 } from 'react-icons/md';
+import { apiGet, apiPatch } from '@/lib/api';
+
+const ESTADO_CRM = {
+  NUEVO: { label: 'Nuevo', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-500' },
+  CONTACTADO: { label: 'Contactado', badge: 'bg-violet-100 text-violet-700', dot: 'bg-violet-500' },
+  CLIENTE: { label: 'Cliente', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+  INACTIVO: { label: 'Inactivo', badge: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' },
+};
+
+function formatearFecha(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+}
 
 export default function ClientesPage() {
-  const [filterType, setFilterType] = useState('Todos');
+  const [clientes, setClientes] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [filtro, setFiltro] = useState('todos');
+  const [actualizandoId, setActualizandoId] = useState(null);
+  const [toast, setToast] = useState(null);
 
-  const stats = [
-    { label: 'Total Clientes', value: '4,521', icon: MdPeopleOutline, color: 'text-blue-600', bg: 'bg-blue-500/10' },
-    { label: 'Clientes VIP (3+ Pólizas)', value: '840', icon: MdOutlineStar, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-    { label: 'Tasa de Retención', value: '94.2%', icon: MdTrendingUp, color: 'text-green-600', bg: 'bg-green-500/10' },
-  ];
+  useEffect(() => {
+    cargar();
+  }, []);
 
-  const clientes = [
-    { id: 1, tipo: 'Natural', nombre: 'Miguel Ángeles', doc: 'DNI: 71234567', email: 'miguel.a@email.com', tel: '+51 987 654 321', polizas: 2, ubicacion: 'Lima, Perú', vip: false },
-    { id: 2, tipo: 'Natural', nombre: 'Sofía Castro', doc: 'DNI: 45678912', email: 'sofia.c@email.com', tel: '+51 912 345 678', polizas: 1, ubicacion: 'Arequipa, Perú', vip: false },
-    { id: 3, tipo: 'Empresa', nombre: 'Empresa Logistics SAC', doc: 'RUC: 20123456789', email: 'contacto@logistics.com', tel: '+51 01 444 5555', polizas: 5, ubicacion: 'Callao, Perú', vip: true },
-    { id: 4, tipo: 'Natural', nombre: 'Carlos Ruiz', doc: 'DNI: 12345678', email: 'carlos.ruiz@email.com', tel: '+51 933 444 555', polizas: 4, ubicacion: 'Trujillo, Perú', vip: true },
-    { id: 5, tipo: 'Empresa', nombre: 'Tech Solutions EIRL', doc: 'RUC: 10445566778', email: 'admin@techsol.pe', tel: '+51 01 222 3333', polizas: 2, ubicacion: 'Cusco, Perú', vip: false },
-  ];
+  const cargar = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const data = await apiGet('/clientes');
+      setClientes(data || []);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudieron cargar los clientes');
+    } finally {
+      setCargando(false);
+    }
+  };
 
-  const filteredClientes = clientes.filter(c => {
-    if (filterType === 'Todos') return true;
-    if (filterType === 'VIP') return c.vip;
-    return c.tipo === filterType;
+  const cambiarEstado = async (id, nuevo) => {
+    setActualizandoId(id);
+    try {
+      const data = await apiPatch(`/clientes/${id}/estado-crm`, { estado_crm: nuevo });
+      setClientes((prev) => prev.map((c) => (c.id_cliente === id ? data : c)));
+      mostrarToast('Estado actualizado');
+    } catch (e) {
+      mostrarToast(e.mensaje || 'No se pudo actualizar');
+    } finally {
+      setActualizandoId(null);
+    }
+  };
+
+  const mostrarToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  const filtrados = clientes.filter((c) => {
+    const texto = busqueda.toLowerCase();
+    const matchBusq =
+      texto === '' ||
+      `${c.nombres} ${c.apellidos}`.toLowerCase().includes(texto) ||
+      (c.email || '').toLowerCase().includes(texto) ||
+      (c.documento_identidad || '').includes(texto);
+    const matchFiltro = filtro === 'todos' || c.estado_crm === filtro;
+    return matchBusq && matchFiltro;
   });
+
+  const counts = Object.keys(ESTADO_CRM).reduce(
+    (acc, k) => ({ ...acc, [k]: clientes.filter((c) => c.estado_crm === k).length }),
+    { total: clientes.length }
+  );
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {/* HEADER COMPACTO */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-text">Directorio de Clientes</h1>
-          <p className="text-[11px] text-text-soft">Búsqueda y gestión de cartera de asegurados.</p>
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
+          {toast}
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative">
-            <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" size={16} />
-            <input type="text" placeholder="Buscar por Nombre, DNI o RUC..." className="pl-9 pr-3 py-1.5 bg-bg border border-border rounded-lg text-xs focus:outline-none focus:border-primary transition-colors w-full md:w-80 shadow-sm" />
-          </div>
-        </div>
+      )}
+
+      <div>
+        <h1 className="text-base font-bold text-text">Cartera de clientes</h1>
+        <p className="text-xs text-text-soft mt-0.5">{counts.total} clientes registrados</p>
       </div>
 
-      {/* MÉTRICAS DE RESUMEN */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <div key={i} className="bg-bg border border-border rounded-xl p-3 flex items-center gap-3 shadow-sm">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${stat.bg}`}>
-                <Icon size={20} className={stat.color} />
-              </div>
-              <div>
-                <p className="text-[11px] text-text-soft font-medium uppercase tracking-wide">{stat.label}</p>
-                <h3 className="text-xl font-bold text-text leading-tight">{stat.value}</h3>
-              </div>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="bg-bg rounded-xl border border-border px-4 py-3 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary/10">
+            <MdPeopleOutline size={18} className="text-primary" />
+          </div>
+          <div>
+            <p className="text-xl font-bold text-text leading-tight">{counts.total}</p>
+            <p className="text-xs text-text-soft">Total</p>
+          </div>
+        </div>
+        {Object.entries(ESTADO_CRM).map(([k, v]) => (
+          <button
+            key={k}
+            onClick={() => setFiltro(filtro === k ? 'todos' : k)}
+            className={`text-left rounded-xl border p-3 transition-colors ${
+              filtro === k ? 'border-primary bg-primary/5' : 'border-border bg-bg hover:bg-bg-soft'
+            }`}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className={`w-1.5 h-1.5 rounded-full ${v.dot}`} />
+              <p className="text-xs text-text-soft">{v.label}</p>
             </div>
-          )
-        })}
-      </div>
-
-      {/* FILTROS Y LISTA DE CLIENTES */}
-      <div className="bg-bg border border-border rounded-xl shadow-sm flex flex-col">
-        {/* FILTROS */}
-        <div className="p-3 border-b border-border bg-bg-soft/50 rounded-t-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex bg-bg border border-border rounded-lg p-0.5">
-            {['Todos', 'Natural', 'Empresa', 'VIP'].map(tab => (
-              <button 
-                key={tab}
-                onClick={() => setFilterType(tab)}
-                className={`px-4 py-1 text-[11px] font-semibold rounded-md transition-all ${filterType === tab ? 'bg-primary text-white shadow-sm' : 'text-text-soft hover:text-text'}`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-          <button className="flex items-center gap-1.5 px-3 py-1 bg-bg border border-border rounded-lg text-xs font-semibold text-text-soft hover:bg-bg-soft hover:text-text transition-colors shadow-sm">
-            <MdFilterList size={16} />
-            Filtros Avanzados
+            <p className="text-lg font-bold text-text">{counts[k] || 0}</p>
           </button>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-2 bg-bg border border-border rounded-xl px-3 py-2">
+        <MdSearch size={14} className="text-text-soft shrink-0" />
+        <input
+          className="flex-1 text-xs text-text placeholder:text-text-soft outline-none bg-transparent"
+          placeholder="Buscar por nombre, email o documento..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+      </div>
+
+      {cargando ? (
+        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
+          Cargando clientes...
         </div>
-
-        {/* LISTA COMPACTA */}
-        <div className="flex flex-col divide-y divide-border/50">
-          {filteredClientes.map((cliente) => (
-            <div key={cliente.id} className="p-4 hover:bg-bg-soft/30 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer">
-              
-              {/* Info Principal */}
-              <div className="flex items-center gap-4 md:w-1/3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${cliente.tipo === 'Empresa' ? 'bg-purple-500/10 text-purple-600' : 'bg-primary/10 text-primary'}`}>
-                  {cliente.tipo === 'Empresa' ? <MdBusiness size={20} /> : <MdPerson size={20} />}
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-text truncate">{cliente.nombre}</h3>
-                    {cliente.vip && <MdOutlineStar size={14} className="text-orange-500 shrink-0" title="Cliente VIP" />}
-                  </div>
-                  <span className="text-[11px] font-semibold text-text-soft mt-0.5">{cliente.doc}</span>
-                </div>
-              </div>
-
-              {/* Contacto */}
-              <div className="flex flex-col gap-1 md:w-1/3">
-                <div className="flex items-center gap-2 text-xs text-text-soft">
-                  <MdEmail size={14} />
-                  <span className="truncate">{cliente.email}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-text-soft">
-                  <MdPhone size={14} />
-                  <span>{cliente.tel}</span>
-                </div>
-              </div>
-
-              {/* Extras y Acción */}
-              <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-2 md:w-1/4">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wider">
-                  {cliente.polizas} Póliza{cliente.polizas > 1 ? 's' : ''}
-                </span>
-                <div className="flex items-center gap-1 text-[11px] text-text-soft">
-                  <MdLocationOn size={12} />
-                  <span className="truncate">{cliente.ubicacion}</span>
-                </div>
-              </div>
-
-              <div className="hidden md:flex text-text-soft group-hover:text-primary transition-colors pl-2">
-                <MdChevronRight size={24} />
-              </div>
-            </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-600 text-center">{error}</div>
+      ) : filtrados.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+          <MdPeopleOutline size={32} className="text-text-soft" />
+          <p className="text-sm font-semibold text-text">Sin resultados</p>
+          <p className="text-xs text-text-soft">Prueba con otro filtro o búsqueda.</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {filtrados.map((c) => (
+            <ClienteCard
+              key={c.id_cliente}
+              cliente={c}
+              actualizando={actualizandoId === c.id_cliente}
+              onCambiarEstado={(estado) => cambiarEstado(c.id_cliente, estado)}
+            />
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ClienteCard({ cliente, onCambiarEstado, actualizando }) {
+  const est = ESTADO_CRM[cliente.estado_crm] || ESTADO_CRM.NUEVO;
+  const [menu, setMenu] = useState(false);
+  const iniciales = ((cliente.nombres || '')[0] || '') + ((cliente.apellidos || '')[0] || '');
+
+  return (
+    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden">
+      <div className="h-1 w-full bg-primary/30" />
+      <div className="p-5 flex items-start gap-4 flex-wrap sm:flex-nowrap">
+        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-sm font-bold text-primary uppercase shrink-0">
+          {iniciales || <MdPerson size={20} />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-bold text-text">
+              {cliente.nombres} {cliente.apellidos}
+            </p>
+            <span
+              className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+              {est.label}
+            </span>
+          </div>
+          <p className="text-xs text-text-soft mt-0.5">CLI-{String(cliente.id_cliente).padStart(6, '0')}</p>
+          <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-text-soft">
+            <span className="flex items-center gap-1">
+              <MdBadge size={11} /> DNI {cliente.documento_identidad}
+            </span>
+            <span className="flex items-center gap-1">
+              <MdEmail size={11} /> {cliente.email}
+            </span>
+            {cliente.telefono && (
+              <span className="flex items-center gap-1">
+                <MdPhone size={11} /> {cliente.telefono}
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <MdCalendarToday size={11} /> Desde {formatearFecha(cliente.fecha_registro)}
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-2 shrink-0 relative">
+          <button
+            onClick={() => setMenu((v) => !v)}
+            disabled={actualizando}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
+          >
+            <MdEdit size={13} /> {actualizando ? 'Actualizando...' : 'Cambiar estado'}
+          </button>
+          {menu && (
+            <div className="absolute right-0 top-full mt-1 w-44 bg-bg border border-border rounded-xl shadow-lg z-10 overflow-hidden">
+              {Object.entries(ESTADO_CRM)
+                .filter(([k]) => k !== cliente.estado_crm)
+                .map(([key, cfg]) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      setMenu(false);
+                      onCambiarEstado(key);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-soft hover:bg-bg-soft transition-colors"
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                    Marcar como {cfg.label}
+                  </button>
+                ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
