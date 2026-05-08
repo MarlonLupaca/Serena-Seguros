@@ -420,6 +420,33 @@ Roles `TECNICO` y `EJECUTIVO`.
 | `GET /api/v1/endosos`               | Listar todos (filtro `estado=PENDIENTE\|APROBADO\|RECHAZADO`) |
 | `PATCH /api/v1/endosos/{id}/estado` | Aprobar / Rechazar un endoso                           |
 
+### Siniestros admin (`/api/v1/siniestros`)
+Roles `TECNICO` y `EJECUTIVO`. No confundir con `/mis-siniestros` del asegurado.
+
+| Endpoint                                | Permite                                                       |
+|-----------------------------------------|---------------------------------------------------------------|
+| `GET /api/v1/siniestros`                | Listar todos (filtro `estado=REPORTADO\|EN_REVISION\|...`)    |
+| `GET /api/v1/siniestros/{id}`           | Detalle admin (incluye cliente y analista asignado)           |
+| `PATCH /api/v1/siniestros/{id}/estado`  | Cambiar `estado_resolucion`                                   |
+| `PATCH /api/v1/siniestros/{id}/asignar` | Asignar analista; auto-promueve a `EN_REVISION`               |
+
+### Reaseguro (`/api/v1/reaseguros`)
+Roles `TECNICO` y `EJECUTIVO`.
+
+| Endpoint                          | Permite                                          |
+|-----------------------------------|--------------------------------------------------|
+| `GET /api/v1/reaseguros`          | Listar contratos                                 |
+| `POST /api/v1/reaseguros`         | Crear contrato                                   |
+| `PUT /api/v1/reaseguros/{id}`     | Actualizar contrato                              |
+| `DELETE /api/v1/reaseguros/{id}`  | Eliminar contrato                                |
+
+### Empleados (`/api/v1/empleados`)
+Roles `TECNICO`, `OPERATIVO`, `EJECUTIVO`.
+
+| Endpoint                | Permite                                          |
+|-------------------------|--------------------------------------------------|
+| `GET /api/v1/empleados` | Listar (filtro `area=TECNICO\|COMERCIAL\|...`)   |
+
 ### Errores estándar
 
 Todos los errores del back devuelven JSON con esta forma:
@@ -577,15 +604,22 @@ Sin prefijos tipo `feat:`, `fix:`, `chore:`. Sin emojis. Una línea, primera let
   - 3.4 Campañas de marketing (`/api/v1/mis-campanas`, crear y registrar envíos).
   - 3.5 Simulador de prima (frontend, calcula sobre productos del back).
   - 3.6 Dashboard del comercial (KPIs, embudo de cotizaciones, últimas, campañas).
-- **Fase 4 — parcial**:
+- **Fase 4 — Portal Core (Técnico)**:
   - 4.1 Productos y tarifas (UI con CRUD para `TECNICO`/`EJECUTIVO`).
   - 4.2 Emisión de pólizas (`/api/v1/polizas` POST, lista, cambio de estado).
   - 4.3 Gestión de endosos (`/api/v1/endosos`, aprobar/rechazar).
   - 4.4 Renovaciones (`/api/v1/polizas/renovaciones`, marcar vencida + emitir nueva).
+  - 4.5 Bandeja de siniestros (`/api/v1/siniestros`, asignar analista, cambiar estado).
+  - 4.6 Evaluaciones (vista filtrada de siniestros para aprobar/rechazar).
+  - 4.7 Reaseguro (`/api/v1/reaseguros`, CRUD).
+  - 4.8 Clientes (vista core, lectura de `/api/v1/clientes`).
+  - 4.9 Proveedores (UI con CRUD para `TECNICO`/`OPERATIVO`).
+  - 4.10 Documentos (vista del usuario actual).
+  - 4.11 Dashboard core (KPIs, endosos pendientes, siniestros sin asignar).
 
 ### Lo que falta
-- **Fase 4 — restante**: bandeja de siniestros del técnico, evaluaciones, reaseguro, proveedores UI, documentos UI core, dashboard core.
 - Validar documentos y segmentación del comercial — quedan como UI mockeada (deuda Fase 7).
+- Asignar proveedores específicos a un siniestro (tabla `siniestro_proveedor`) — pendiente para extender el módulo de evaluaciones.
 - **Fase 4** — Portal Core (Técnico): emisión, endosos (gestión), renovaciones, siniestros (asignación), reaseguro, productos.
 - **Fase 5** — Portal Operativo: RRHH, logística, finanzas (cobranza, facturación, tesorería, contabilidad, presupuesto).
 - **Fase 6** — Portal Ejecutivo: aprobaciones críticas, KPIs, objetivos corporativos, simulaciones.
