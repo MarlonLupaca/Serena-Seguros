@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 public record PolizaResponse(
         Integer idPoliza,
+        Integer idCliente,
         String estadoPoliza,
         BigDecimal primaTotal,
         LocalDate vigenciaInicio,
@@ -18,6 +19,7 @@ public record PolizaResponse(
     public static PolizaResponse from(Poliza p) {
         return new PolizaResponse(
                 p.getIdPoliza(),
+                p.getCliente().getIdCliente(),
                 p.getEstadoPoliza().name(),
                 p.getPrimaTotal(),
                 p.getVigenciaInicio(),

@@ -12,4 +12,8 @@ public interface EndosoPolizaRepository
         extends JpaRepository<EndosoPoliza, Integer> {
 
     List<EndosoPoliza> findByPolizaOrderByFechaSolicitudDesc(Poliza poliza);
+
+    List<EndosoPoliza> findAllByOrderByFechaSolicitudDesc();
+
+    List<EndosoPoliza> findByEstadoAprobacionOrderByFechaSolicitudDesc(EndosoPoliza.EstadoAprobacion estado);
 }
