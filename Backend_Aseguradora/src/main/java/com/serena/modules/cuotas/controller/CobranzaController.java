@@ -1,5 +1,6 @@
 package com.serena.modules.cuotas.controller;
 
+import com.serena.modules.auditoria.service.AuditoriaService;
 import com.serena.modules.cuotas.dto.CuotaResponse;
 import com.serena.modules.cuotas.entity.Cuota;
 import com.serena.modules.cuotas.repository.CuotaRepository;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class CobranzaController {
 
     private final CuotaRepository cuotaRepository;
+    private final AuditoriaService auditoria;
 
     @GetMapping
     @Transactional(readOnly = true)
@@ -64,6 +66,8 @@ public class CobranzaController {
         Cuota c = cuotaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cuota", id));
         c.setEstadoPago(Cuota.EstadoPago.PAGADO);
+        auditoria.registrar("cuota_pagada", "cobranza",
+                "Cuota #" + id + " - poliza " + c.getPoliza().getIdPoliza() + " - monto " + c.getMonto());
         return ResponseEntity.ok(CuotaResponse.from(cuotaRepository.save(c)));
     }
 }

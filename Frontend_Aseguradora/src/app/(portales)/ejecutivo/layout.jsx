@@ -14,6 +14,7 @@ import {
   MdTrackChanges,
   MdInsights,
   MdAssessment,
+  MdHistory,
   MdSettings,
 } from 'react-icons/md';
 
@@ -47,6 +48,7 @@ const adminMenu = [
     section: 'Administración',
     items: [
       { label: 'Informes', icon: MdAssessment, href: '/ejecutivo/informes' },
+      { label: 'Auditoria', icon: MdHistory, href: '/ejecutivo/auditoria' },
       { label: 'Configuración', icon: MdSettings, href: '/ejecutivo/configuracion' },
     ],
   },

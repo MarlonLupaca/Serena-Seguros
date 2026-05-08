@@ -1,5 +1,6 @@
 package com.serena.modules.ejecutivo.controller;
 
+import com.serena.modules.auditoria.service.AuditoriaService;
 import com.serena.modules.ejecutivo.entity.AprobacionCritica;
 import com.serena.modules.ejecutivo.repository.AprobacionCriticaRepository;
 import com.serena.shared.exception.RecursoNoEncontradoException;
@@ -26,6 +27,7 @@ import java.util.List;
 public class AprobacionController {
 
     private final AprobacionCriticaRepository repo;
+    private final AuditoriaService auditoria;
 
     public record AprobacionResponse(
             Integer idAprobacion,
@@ -88,6 +90,9 @@ public class AprobacionController {
         AprobacionCritica a = repo.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Aprobacion", id));
         a.setEstadoGerencial(request.estadoGerencial());
+        auditoria.registrar("aprobacion_" + request.estadoGerencial().name().toLowerCase(),
+                "aprobaciones", "Aprobacion #" + id + " - modulo " + a.getModuloOrigen()
+                        + " - monto " + a.getMontoImpacto());
         return ResponseEntity.ok(AprobacionResponse.from(repo.save(a)));
     }
 }

@@ -1,5 +1,6 @@
 package com.serena.modules.siniestros.service;
 
+import com.serena.modules.auditoria.service.AuditoriaService;
 import com.serena.modules.auth.entity.Usuario;
 import com.serena.modules.auth.repository.PersonaRepository;
 import com.serena.modules.clientes.entity.Cliente;
@@ -32,6 +33,7 @@ public class SiniestroService {
     private final ClienteRepository clienteRepository;
     private final EmpleadoRepository empleadoRepository;
     private final PersonaRepository personaRepository;
+    private final AuditoriaService auditoria;
 
     @Transactional(readOnly = true)
     public List<SiniestroResponse> misSiniestros(Usuario usuario) {
@@ -90,6 +92,8 @@ public class SiniestroService {
     public SiniestroAdminResponse cambiarEstado(Integer id, CambioEstadoSiniestroRequest request) {
         Siniestro siniestro = buscar(id);
         siniestro.setEstadoResolucion(request.estadoResolucion());
+        auditoria.registrar("siniestro_estado", "siniestros",
+                "SIN-" + id + " -> " + request.estadoResolucion().name());
         return SiniestroAdminResponse.from(siniestroRepository.save(siniestro));
     }
 
@@ -102,6 +106,8 @@ public class SiniestroService {
         if (siniestro.getEstadoResolucion() == Siniestro.EstadoResolucion.REPORTADO) {
             siniestro.setEstadoResolucion(Siniestro.EstadoResolucion.EN_REVISION);
         }
+        auditoria.registrar("siniestro_asignar", "siniestros",
+                "SIN-" + id + " analista " + request.idEmpleadoAnalista());
         return SiniestroAdminResponse.from(siniestroRepository.save(siniestro));
     }
 

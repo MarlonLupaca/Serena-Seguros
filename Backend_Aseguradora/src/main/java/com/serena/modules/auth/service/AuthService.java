@@ -1,5 +1,6 @@
 package com.serena.modules.auth.service;
 
+import com.serena.modules.auditoria.service.AuditoriaService;
 import com.serena.modules.auth.dto.request.LoginRequest;
 import com.serena.modules.auth.dto.request.RegistroRequest;
 import com.serena.modules.auth.dto.response.AuthResponse;
@@ -35,6 +36,7 @@ public class AuthService {
     private final UsuarioMapper usuarioMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuditoriaService auditoria;
 
     @Transactional
     public AuthResponse registro(RegistroRequest request) {
@@ -73,6 +75,9 @@ public class AuthService {
         String refreshToken = jwtTokenProvider
                 .generarRefreshToken(usuario.getIdUsuario());
 
+        auditoria.registrar(usuario.getIdUsuario(), usuario.getUsername(),
+                "registro", "auth", "Portal: " + request.portalAcceso());
+
         return usuarioMapper.toAuthResponse(
                 usuario, persona, accessToken, refreshToken
         );
@@ -95,15 +100,21 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         Usuario usuario = usuarioRepository
                 .findByUsername(request.username())
-                .orElseThrow(CredencialesInvalidasException::new);
+                .orElseGet(() -> {
+                    auditoria.registrar(null, request.username(), "login_fail", "auth", "Usuario inexistente");
+                    throw new CredencialesInvalidasException();
+                });
 
         if (usuario.getEstado() != Usuario.Estado.ACTIVO) {
+            auditoria.registrar(usuario.getIdUsuario(), usuario.getUsername(), "login_fail", "auth",
+                    "Estado: " + usuario.getEstado());
             throw new CredencialesInvalidasException();
         }
 
         if (!passwordEncoder.matches(
                 request.password(), usuario.getPasswordHash()
         )) {
+            auditoria.registrar(usuario.getIdUsuario(), usuario.getUsername(), "login_fail", "auth", "Password invalido");
             throw new CredencialesInvalidasException();
         }
 
@@ -117,6 +128,8 @@ public class AuthService {
                 .generarAccessToken(usuario.getIdUsuario(), usuario.getUsername());
         String refreshToken = jwtTokenProvider
                 .generarRefreshToken(usuario.getIdUsuario());
+
+        auditoria.registrar(usuario.getIdUsuario(), usuario.getUsername(), "login_ok", "auth", null);
 
         return usuarioMapper.toAuthResponse(
                 usuario, persona, accessToken, refreshToken
