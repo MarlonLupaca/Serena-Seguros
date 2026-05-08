@@ -8,6 +8,8 @@ import com.serena.modules.clientes.entity.Cliente;
 import com.serena.modules.clientes.repository.ClienteRepository;
 import com.serena.modules.empleados.entity.Empleado;
 import com.serena.modules.empleados.repository.EmpleadoRepository;
+import com.serena.modules.cuotas.entity.Cuota;
+import com.serena.modules.cuotas.repository.CuotaRepository;
 import com.serena.modules.polizas.entity.Poliza;
 import com.serena.modules.polizas.repository.PolizaRepository;
 import com.serena.modules.productos.entity.ProductoSeguro;
@@ -31,6 +33,7 @@ public class DataSeeder implements CommandLineRunner {
     private final EmpleadoRepository empleadoRepository;
     private final PolizaRepository polizaRepository;
     private final ProductoSeguroRepository productoRepository;
+    private final CuotaRepository cuotaRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -43,6 +46,31 @@ public class DataSeeder implements CommandLineRunner {
         crearDemo("ejecutivo_demo", "Elena", "Ejecutiva",  "10000005", Usuario.PortalAcceso.EJECUTIVO);
 
         crearPolizasDemo();
+        crearCuotasDemo();
+    }
+
+    private void crearCuotasDemo() {
+        polizaRepository.findAll().forEach(poliza -> {
+            if (poliza.getEstadoPoliza() != Poliza.EstadoPoliza.ACTIVA) return;
+            if (!cuotaRepository.findByPolizaOrderByNumeroCuotaAsc(poliza).isEmpty()) return;
+
+            BigDecimal montoCuota = poliza.getPrimaTotal()
+                    .divide(BigDecimal.valueOf(12), 2, java.math.RoundingMode.HALF_UP);
+            LocalDate hoy = LocalDate.now();
+            for (int i = 1; i <= 12; i++) {
+                LocalDate vencimiento = poliza.getVigenciaInicio().plusMonths(i - 1);
+                Cuota.EstadoPago estado = vencimiento.isBefore(hoy)
+                        ? Cuota.EstadoPago.PAGADO
+                        : Cuota.EstadoPago.PENDIENTE;
+                cuotaRepository.save(Cuota.builder()
+                        .poliza(poliza)
+                        .numeroCuota(i)
+                        .monto(montoCuota)
+                        .fechaVencimiento(vencimiento)
+                        .estadoPago(estado)
+                        .build());
+            }
+        });
     }
 
     private void crearPolizasDemo() {
