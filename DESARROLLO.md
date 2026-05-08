@@ -391,6 +391,16 @@ Roles `COMERCIAL`, `TECNICO`, `EJECUTIVO`.
 | `GET /api/v1/comisiones`                  | EJECUTIVO, OPERATIVO   | Listar todas las comisiones del sistema                          |
 | `PATCH /api/v1/comisiones/{id}/pagar`     | EJECUTIVO, OPERATIVO   | Marcar comisión como `PAGADA`                                    |
 
+### Campañas de marketing (`/api/v1/mis-campanas`)
+Solo `COMERCIAL`. Cada campaña queda asignada al empleado autenticado.
+
+| Endpoint                                | Permite                                                |
+|-----------------------------------------|--------------------------------------------------------|
+| `GET /api/v1/mis-campanas`              | Listar mis campañas                                    |
+| `GET /api/v1/mis-campanas/{id}`         | Detalle (solo si es del usuario)                       |
+| `POST /api/v1/mis-campanas`             | Crear nueva campaña (asunto + plantilla)               |
+| `PATCH /api/v1/mis-campanas/{id}/envio` | Sumar contadores de `enviados` y `abiertos`            |
+
 ### Errores estándar
 
 Todos los errores del back devuelven JSON con esta forma:
@@ -545,9 +555,10 @@ Sin prefijos tipo `feat:`, `fix:`, `chore:`. Sin emojis. Una línea, primera let
   - 3.1 Cotizaciones y leads del comercial (`/api/v1/cotizaciones`, kanban con cambio de estado).
   - 3.2 Cartera de clientes (`/api/v1/clientes`, lista + cambio de estado CRM).
   - 3.3 Comisiones del agente (`/api/v1/mis-comisiones`, `/api/v1/comisiones`, marcar pagada).
+  - 3.4 Campañas de marketing (`/api/v1/mis-campanas`, crear y registrar envíos).
 
 ### Lo que falta
-- **Fase 3 — restante**: campañas, simulador, dashboard del comercial, validar documentos, segmentación.
+- **Fase 3 — restante**: simulador, dashboard del comercial, validar documentos, segmentación.
 - **Fase 4** — Portal Core (Técnico): emisión, endosos (gestión), renovaciones, siniestros (asignación), reaseguro, productos.
 - **Fase 5** — Portal Operativo: RRHH, logística, finanzas (cobranza, facturación, tesorería, contabilidad, presupuesto).
 - **Fase 6** — Portal Ejecutivo: aprobaciones críticas, KPIs, objetivos corporativos, simulaciones.
