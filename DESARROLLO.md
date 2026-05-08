@@ -489,6 +489,37 @@ Roles `OPERATIVO`, `EJECUTIVO`. Lectura administrativa de la tabla `cuota`.
 | `GET /api/v1/cobranza/resumen`                | KPI: total por cobrar, pagado, vencido, conteos                    |
 | `PATCH /api/v1/cobranza/{id}/marcar-pagada`   | Marcar manualmente una cuota como `PAGADO`                         |
 
+### Portal Ejecutivo
+
+#### KPIs ejecutivos (`/api/v1/ejecutivo`)
+Solo `EJECUTIVO`. Endpoints agregadores de solo lectura.
+
+| Endpoint                              | Permite                                                                    |
+|---------------------------------------|----------------------------------------------------------------------------|
+| `GET /api/v1/ejecutivo/resumen`       | KPI global: polizas activas, siniestros pendientes, recaudacion mes, etc.  |
+| `GET /api/v1/ejecutivo/produccion`    | Total de polizas, prima activa, mix por producto, conteo por estado        |
+| `GET /api/v1/ejecutivo/comercial`     | Embudo de cotizaciones, tasa de conversion, comisiones totales/pagadas     |
+| `GET /api/v1/ejecutivo/siniestralidad`| Indice de siniestralidad, monto reclamado/liquidado, distribucion por estado |
+
+#### Aprobaciones criticas (`/api/v1/aprobaciones`)
+Solo `EJECUTIVO`. Tabla `aprobacion_critica`.
+
+| Endpoint                                  | Permite                                                            |
+|-------------------------------------------|--------------------------------------------------------------------|
+| `GET /api/v1/aprobaciones`                | Listar (filtro `estado=PENDIENTE\|APROBADO\|RECHAZADO`)            |
+| `POST /api/v1/aprobaciones`               | Crear nueva solicitud (queda en `PENDIENTE`)                       |
+| `PATCH /api/v1/aprobaciones/{id}/estado`  | Aprobar / rechazar la solicitud                                    |
+
+#### Objetivos corporativos (`/api/v1/objetivos`)
+Solo `EJECUTIVO`. Tabla `objetivo_corporativo`.
+
+| Endpoint                                  | Permite                                                                  |
+|-------------------------------------------|--------------------------------------------------------------------------|
+| `GET /api/v1/objetivos`                   | Listar (calcula `porcentaje_avance = avance / meta * 100`)               |
+| `POST /api/v1/objetivos`                  | Crear meta asignada a un empleado responsable                            |
+| `PATCH /api/v1/objetivos/{id}/avance`     | Registrar avance (y opcionalmente cambiar `estado`)                      |
+| `DELETE /api/v1/objetivos/{id}`           | Eliminar el objetivo                                                     |
+
 ### Errores estándar
 
 Todos los errores del back devuelven JSON con esta forma:
@@ -666,12 +697,21 @@ Sin prefijos tipo `feat:`, `fix:`, `chore:`. Sin emojis. Una línea, primera let
   - 5.5 Cobranza administrativa (`/api/v1/cobranza`, marcar cuotas como pagadas).
   - 5.6 Dashboard operativo (KPIs de empleados, activos, balance, por cobrar y comisiones).
   - 5.7 Vistas placeholder estandarizadas (`PlaceholderPendiente`) para los módulos sin tabla en BD: vacaciones, nomina, evaluaciones, inventario, compras, flota, facturación, contabilidad.
+- **Fase 6 — Portal Ejecutivo**:
+  - 6.1 KPIs agregadores (`/api/v1/ejecutivo/resumen`, `/produccion`, `/comercial`, `/siniestralidad`).
+  - 6.2 Aprobaciones críticas (`/api/v1/aprobaciones`, listar + aprobar/rechazar + alta).
+  - 6.3 Objetivos corporativos (`/api/v1/objetivos`, listar + crear + registrar avance + eliminar).
+  - 6.4 Producción, Comercial y Siniestralidad — tres vistas KPI conectadas.
+  - 6.5 Financiero (lee tesorería del operativo: resumen + últimos movimientos).
+  - 6.6 Informes consolidados (vista que junta los cuatro endpoints `/ejecutivo/*`).
+  - 6.7 Simulador de escenarios (palancas de crecimiento, descuento y siniestralidad sobre los datos reales).
+  - 6.8 Dashboard ejecutivo (KPIs globales + aprobaciones pendientes + objetivos en curso).
 
 ### Lo que falta
 - Validar documentos y segmentación del comercial — quedan como UI mockeada (deuda Fase 7).
 - Asignar proveedores específicos a un siniestro (tabla `siniestro_proveedor`) — pendiente para extender el módulo de evaluaciones.
 - Conectar las vistas placeholder del operativo (vacaciones, nomina, evaluaciones, inventario, compras, flota, facturación, contabilidad) cuando existan sus tablas en la BD.
-- **Fase 6** — Portal Ejecutivo: aprobaciones críticas, KPIs, objetivos corporativos, simulaciones.
+- Persistir la `Configuración del Sistema` del ejecutivo (hoy es UI local, los toggles no se guardan).
 - **Fase 7** — Pulido: permisos finos, auditoría, notificaciones reales, tests automatizados, despliegue.
 
 ---
