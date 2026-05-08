@@ -4,11 +4,17 @@ import com.serena.modules.auth.entity.Persona;
 import com.serena.modules.auth.entity.Usuario;
 import com.serena.modules.auth.repository.PersonaRepository;
 import com.serena.modules.auth.repository.UsuarioRepository;
+import com.serena.modules.clientes.entity.Cliente;
+import com.serena.modules.clientes.repository.ClienteRepository;
+import com.serena.modules.empleados.entity.Empleado;
+import com.serena.modules.empleados.repository.EmpleadoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 @Component
 @RequiredArgsConstructor
@@ -16,6 +22,8 @@ public class DataSeeder implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository;
     private final PersonaRepository personaRepository;
+    private final ClienteRepository clienteRepository;
+    private final EmpleadoRepository empleadoRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -33,26 +41,42 @@ public class DataSeeder implements CommandLineRunner {
                            String apellidos,
                            String documento,
                            Usuario.PortalAcceso portal) {
-        if (usuarioRepository.existsByUsername(username)) {
-            return;
+        Usuario usuario = usuarioRepository.findByUsername(username).orElseGet(() ->
+                usuarioRepository.save(Usuario.builder()
+                        .username(username)
+                        .passwordHash(passwordEncoder.encode("demo12345"))
+                        .portalAcceso(portal)
+                        .estado(Usuario.Estado.ACTIVO)
+                        .build())
+        );
+
+        Persona persona = personaRepository.findByUsuario(usuario).orElseGet(() ->
+                personaRepository.save(Persona.builder()
+                        .usuario(usuario)
+                        .nombres(nombres)
+                        .apellidos(apellidos)
+                        .documentoIdentidad(documento)
+                        .telefono("999000000")
+                        .email(username + "@serena.com")
+                        .build())
+        );
+
+        if (portal == Usuario.PortalAcceso.ASEGURADO) {
+            if (clienteRepository.findByPersona(persona).isEmpty()) {
+                clienteRepository.save(Cliente.builder()
+                        .persona(persona)
+                        .estadoCrm(Cliente.EstadoCrm.CLIENTE)
+                        .build());
+            }
+        } else {
+            if (empleadoRepository.findByPersona(persona).isEmpty()) {
+                empleadoRepository.save(Empleado.builder()
+                        .persona(persona)
+                        .cargo("Demo " + portal.name().toLowerCase())
+                        .area(portal.name())
+                        .sueldoBase(new BigDecimal("3000.00"))
+                        .build());
+            }
         }
-
-        Usuario usuario = Usuario.builder()
-                .username(username)
-                .passwordHash(passwordEncoder.encode("demo12345"))
-                .portalAcceso(portal)
-                .estado(Usuario.Estado.ACTIVO)
-                .build();
-        usuarioRepository.save(usuario);
-
-        Persona persona = Persona.builder()
-                .usuario(usuario)
-                .nombres(nombres)
-                .apellidos(apellidos)
-                .documentoIdentidad(documento)
-                .telefono("999000000")
-                .email(username + "@serena.com")
-                .build();
-        personaRepository.save(persona);
     }
 }

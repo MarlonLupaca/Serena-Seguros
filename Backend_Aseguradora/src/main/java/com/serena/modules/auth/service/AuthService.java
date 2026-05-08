@@ -9,6 +9,10 @@ import com.serena.modules.auth.entity.Usuario;
 import com.serena.modules.auth.mapper.UsuarioMapper;
 import com.serena.modules.auth.repository.PersonaRepository;
 import com.serena.modules.auth.repository.UsuarioRepository;
+import com.serena.modules.clientes.entity.Cliente;
+import com.serena.modules.clientes.repository.ClienteRepository;
+import com.serena.modules.empleados.entity.Empleado;
+import com.serena.modules.empleados.repository.EmpleadoRepository;
 import com.serena.shared.config.JwtTokenProvider;
 import com.serena.shared.exception.CredencialesInvalidasException;
 import com.serena.shared.exception.UsuarioYaExisteException;
@@ -17,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Service
@@ -25,6 +30,8 @@ public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
     private final PersonaRepository personaRepository;
+    private final ClienteRepository clienteRepository;
+    private final EmpleadoRepository empleadoRepository;
     private final UsuarioMapper usuarioMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -58,6 +65,8 @@ public class AuthService {
                 .email(request.email())
                 .build();
         personaRepository.save(persona);
+
+        crearPerfilSegunPortal(persona, request.portalAcceso());
 
         String accessToken = jwtTokenProvider
                 .generarAccessToken(usuario.getIdUsuario(), usuario.getUsername());
@@ -112,5 +121,23 @@ public class AuthService {
         return usuarioMapper.toAuthResponse(
                 usuario, persona, accessToken, refreshToken
         );
+    }
+
+    private void crearPerfilSegunPortal(Persona persona, Usuario.PortalAcceso portal) {
+        if (portal == Usuario.PortalAcceso.ASEGURADO) {
+            Cliente cliente = Cliente.builder()
+                    .persona(persona)
+                    .estadoCrm(Cliente.EstadoCrm.NUEVO)
+                    .build();
+            clienteRepository.save(cliente);
+        } else {
+            Empleado empleado = Empleado.builder()
+                    .persona(persona)
+                    .cargo("Por asignar")
+                    .area(portal.name())
+                    .sueldoBase(BigDecimal.ZERO)
+                    .build();
+            empleadoRepository.save(empleado);
+        }
     }
 }
