@@ -64,3 +64,63 @@ export const apiGet = (path) => request('GET', path);
 export const apiPut = (path, body) => request('PUT', path, body);
 export const apiPatch = (path, body) => request('PATCH', path, body);
 export const apiDelete = (path) => request('DELETE', path);
+
+export async function apiUploadFile(path, formData) {
+  const headers = {};
+  const token = obtenerToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
+
+  if (res.status === 401) manejarSesionInvalida();
+
+  if (!res.ok) {
+    throw {
+      status: res.status,
+      mensaje: (data && data.mensaje) || 'Error al subir el archivo',
+      errores: (data && data.errores) || null,
+    };
+  }
+  return data;
+}
+
+export async function apiDownloadFile(path, fallbackName = 'archivo') {
+  const headers = {};
+  const token = obtenerToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE_URL}${path}`, { method: 'GET', headers });
+
+  if (res.status === 401) {
+    manejarSesionInvalida();
+    throw { status: 401, mensaje: 'No autenticado' };
+  }
+  if (!res.ok) {
+    throw { status: res.status, mensaje: 'No se pudo descargar el archivo' };
+  }
+
+  const disposition = res.headers.get('content-disposition') || '';
+  const match = /filename="?([^"]+)"?/.exec(disposition);
+  const nombre = match ? match[1] : fallbackName;
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
