@@ -31,6 +31,24 @@ public class GlobalExceptionHandler {
                 .body(buildBody(ex.getMessage(), HttpStatus.UNAUTHORIZED));
     }
 
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    public ResponseEntity<Map<String, Object>> manejarNoEncontrado(
+            RecursoNoEncontradoException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(buildBody(ex.getMessage(), HttpStatus.NOT_FOUND));
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> manejarAccesoDenegado(
+            org.springframework.security.access.AccessDeniedException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(buildBody("No tienes permisos para esta accion", HttpStatus.FORBIDDEN));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> manejarValidacion(
             MethodArgumentNotValidException ex
