@@ -401,6 +401,25 @@ Solo `COMERCIAL`. Cada campaña queda asignada al empleado autenticado.
 | `POST /api/v1/mis-campanas`             | Crear nueva campaña (asunto + plantilla)               |
 | `PATCH /api/v1/mis-campanas/{id}/envio` | Sumar contadores de `enviados` y `abiertos`            |
 
+### Portal Core — Pólizas admin (`/api/v1/polizas`)
+Roles `TECNICO` y `EJECUTIVO`. No confundir con `/mis-polizas` del asegurado.
+
+| Endpoint                                  | Permite                                                          |
+|-------------------------------------------|------------------------------------------------------------------|
+| `GET /api/v1/polizas`                     | Listar todas (filtro `estado=ACTIVA\|PENDIENTE\|VENCIDA\|CANCELADA`) |
+| `GET /api/v1/polizas/{id}`                | Detalle con endosos                                              |
+| `POST /api/v1/polizas`                    | Emitir nueva póliza                                              |
+| `PATCH /api/v1/polizas/{id}/estado`       | Cambiar `estado_poliza`                                          |
+| `GET /api/v1/polizas/renovaciones?dias=N` | Pólizas que vencen en los próximos N días                        |
+
+### Endosos admin (`/api/v1/endosos`)
+Roles `TECNICO` y `EJECUTIVO`.
+
+| Endpoint                            | Permite                                                |
+|-------------------------------------|--------------------------------------------------------|
+| `GET /api/v1/endosos`               | Listar todos (filtro `estado=PENDIENTE\|APROBADO\|RECHAZADO`) |
+| `PATCH /api/v1/endosos/{id}/estado` | Aprobar / Rechazar un endoso                           |
+
 ### Errores estándar
 
 Todos los errores del back devuelven JSON con esta forma:
@@ -558,8 +577,14 @@ Sin prefijos tipo `feat:`, `fix:`, `chore:`. Sin emojis. Una línea, primera let
   - 3.4 Campañas de marketing (`/api/v1/mis-campanas`, crear y registrar envíos).
   - 3.5 Simulador de prima (frontend, calcula sobre productos del back).
   - 3.6 Dashboard del comercial (KPIs, embudo de cotizaciones, últimas, campañas).
+- **Fase 4 — parcial**:
+  - 4.1 Productos y tarifas (UI con CRUD para `TECNICO`/`EJECUTIVO`).
+  - 4.2 Emisión de pólizas (`/api/v1/polizas` POST, lista, cambio de estado).
+  - 4.3 Gestión de endosos (`/api/v1/endosos`, aprobar/rechazar).
+  - 4.4 Renovaciones (`/api/v1/polizas/renovaciones`, marcar vencida + emitir nueva).
 
 ### Lo que falta
+- **Fase 4 — restante**: bandeja de siniestros del técnico, evaluaciones, reaseguro, proveedores UI, documentos UI core, dashboard core.
 - Validar documentos y segmentación del comercial — quedan como UI mockeada (deuda Fase 7).
 - **Fase 4** — Portal Core (Técnico): emisión, endosos (gestión), renovaciones, siniestros (asignación), reaseguro, productos.
 - **Fase 5** — Portal Operativo: RRHH, logística, finanzas (cobranza, facturación, tesorería, contabilidad, presupuesto).
