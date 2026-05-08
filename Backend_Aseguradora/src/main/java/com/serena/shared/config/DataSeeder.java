@@ -8,6 +8,8 @@ import com.serena.modules.clientes.entity.Cliente;
 import com.serena.modules.clientes.repository.ClienteRepository;
 import com.serena.modules.empleados.entity.Empleado;
 import com.serena.modules.empleados.repository.EmpleadoRepository;
+import com.serena.modules.comisiones.entity.ComisionAgente;
+import com.serena.modules.comisiones.repository.ComisionAgenteRepository;
 import com.serena.modules.cuotas.entity.Cuota;
 import com.serena.modules.cuotas.repository.CuotaRepository;
 import com.serena.modules.polizas.entity.Poliza;
@@ -34,6 +36,7 @@ public class DataSeeder implements CommandLineRunner {
     private final PolizaRepository polizaRepository;
     private final ProductoSeguroRepository productoRepository;
     private final CuotaRepository cuotaRepository;
+    private final ComisionAgenteRepository comisionRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -47,6 +50,33 @@ public class DataSeeder implements CommandLineRunner {
 
         crearPolizasDemo();
         crearCuotasDemo();
+        crearComisionesDemo();
+    }
+
+    private void crearComisionesDemo() {
+        Empleado comercial = usuarioRepository.findByUsername("comercial_demo")
+                .flatMap(u -> personaRepository.findByUsuario(u))
+                .flatMap(p -> empleadoRepository.findByPersona(p))
+                .orElse(null);
+        if (comercial == null) return;
+
+        polizaRepository.findAll().forEach(poliza -> {
+            if (comisionRepository.findByPoliza(poliza).isPresent()) return;
+            BigDecimal porcentaje = new BigDecimal("5.00");
+            BigDecimal monto = poliza.getPrimaTotal()
+                    .multiply(porcentaje)
+                    .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
+            ComisionAgente.EstadoPago estado = poliza.getEstadoPoliza() == Poliza.EstadoPoliza.ACTIVA
+                    ? ComisionAgente.EstadoPago.PAGADA
+                    : ComisionAgente.EstadoPago.PENDIENTE;
+            comisionRepository.save(ComisionAgente.builder()
+                    .empleadoAgente(comercial)
+                    .poliza(poliza)
+                    .porcentaje(porcentaje)
+                    .montoGenerado(monto)
+                    .estadoPago(estado)
+                    .build());
+        });
     }
 
     private void crearCuotasDemo() {
