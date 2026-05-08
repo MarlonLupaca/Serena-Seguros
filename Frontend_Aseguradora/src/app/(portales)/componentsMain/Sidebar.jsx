@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/AuthContext';
 
 import { MdChevronLeft, MdChevronRight, MdLogout, MdMenu, MdClose, MdPerson } from 'react-icons/md';
 
@@ -12,9 +13,11 @@ export default function Sidebar({ menus, user }) {
   const [active, setActive] = useState(menus[0]?.items[0]?.label || '');
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    router.push('/login');
+    logout();
+    router.replace('/login');
   };
 
   return (

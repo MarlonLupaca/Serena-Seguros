@@ -1,7 +1,8 @@
 'use client';
 
 import Sidebar from '../componentsMain/Sidebar';
-import AppHeader from '../componentsMain/AppHeader'; // <-- Actualizado
+import AppHeader from '../componentsMain/AppHeader';
+import { useGuard } from '@/lib/useGuard';
 
 import {
   MdHome,
@@ -51,18 +52,21 @@ const adminMenu = [
   },
 ];
 
-// 2. Datos del usuario Ejecutivo
-const adminUser = {
-  name: 'Marlon Lupaca',
-  email: 'marlon.lupaca@empresa.com',
-};
-
 export default function DashboardLayout({ children }) {
+  const { user, autorizado } = useGuard('EJECUTIVO');
+
+  if (!autorizado) return null;
+
+  const sidebarUser = {
+    name: `${user.nombres} ${user.apellidos}`,
+    email: user.username,
+  };
+
   return (
     <div className="h-screen w-screen bg-transparent flex overflow-hidden">
       {/* SIDEBAR REUTILIZABLE */}
       <div className="h-screen lg:p-3">
-        <Sidebar menus={adminMenu} user={adminUser} />
+        <Sidebar menus={adminMenu} user={sidebarUser} />
       </div>
 
       {/* CONTENIDO */}

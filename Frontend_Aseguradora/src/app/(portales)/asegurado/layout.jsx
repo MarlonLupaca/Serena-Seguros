@@ -2,6 +2,7 @@
 
 import Sidebar from '../componentsMain/Sidebar';
 import AppHeader from '../componentsMain/AppHeader';
+import { useGuard } from '@/lib/useGuard';
 
 import { MdShield, MdDescription, MdWarning, MdPayment, MdFolder, MdPerson, MdHome, MdPostAdd } from 'react-icons/md';
 
@@ -34,18 +35,21 @@ const clientMenu = [
   },
 ];
 
-// 2. Datos del usuario cliente
-const clientUser = {
-  name: 'Juan Pérez',
-  email: 'juan@correo.com',
-};
-
 export default function DashboardLayout({ children }) {
+  const { user, autorizado } = useGuard('ASEGURADO');
+
+  if (!autorizado) return null;
+
+  const sidebarUser = {
+    name: `${user.nombres} ${user.apellidos}`,
+    email: user.username,
+  };
+
   return (
     <div className="h-screen w-screen bg-transparent flex overflow-hidden">
       {/* SIDEBAR REUTILIZABLE */}
       <div className="h-screen lg:p-3">
-        <Sidebar menus={clientMenu} user={clientUser} />
+        <Sidebar menus={clientMenu} user={sidebarUser} />
       </div>
 
       {/* CONTENIDO */}

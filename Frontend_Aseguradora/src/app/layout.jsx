@@ -1,5 +1,6 @@
 import { Nunito } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '@/lib/AuthContext';
 
 const nunito = Nunito({
   variable: '--font-nunito',
@@ -15,7 +16,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es" className={`${nunito.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-gradient-pastel" suppressHydrationWarning>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
