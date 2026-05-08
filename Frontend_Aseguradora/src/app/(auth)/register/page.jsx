@@ -17,6 +17,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { registro, PORTAL_TO_PATH, PORTALES } from '@/lib/auth';
+import { useAuth } from '@/lib/AuthContext';
 
 const ESTADO_INICIAL = {
   username: '',
@@ -32,6 +33,7 @@ const ESTADO_INICIAL = {
 
 export default function Register() {
   const router = useRouter();
+  const { setUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [form, setForm] = useState(ESTADO_INICIAL);
@@ -58,6 +60,12 @@ export default function Register() {
       const { confirm, ...payload } = form;
       const data = await registro(payload);
       const path = PORTAL_TO_PATH[data.portal_acceso];
+      setUser({
+        username: data.username,
+        nombres: data.nombres,
+        apellidos: data.apellidos,
+        portal_acceso: data.portal_acceso,
+      });
       router.push(path || '/login');
     } catch (e) {
       if (e.errores) {

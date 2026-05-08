@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { login, PORTAL_TO_PATH } from '@/lib/auth';
+import { useAuth } from '@/lib/AuthContext';
 
 const ACCESOS_RAPIDOS = [
   { label: 'Asegurado', username: 'asegurado_demo', password: 'demo12345', url: '/icons/cliente.png' },
@@ -17,6 +18,7 @@ const ACCESOS_RAPIDOS = [
 
 export default function Login() {
   const router = useRouter();
+  const { setUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -33,6 +35,12 @@ export default function Login() {
         setError('Portal de acceso desconocido');
         return;
       }
+      setUser({
+        username: data.username,
+        nombres: data.nombres,
+        apellidos: data.apellidos,
+        portal_acceso: data.portal_acceso,
+      });
       router.push(path);
     } catch (e) {
       setError(e.mensaje || 'No se pudo iniciar sesion');
