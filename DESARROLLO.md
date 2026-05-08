@@ -551,14 +551,16 @@ Sin prefijos tipo `feat:`, `fix:`, `chore:`. Sin emojis. Una línea, primera let
 - **Fase 0** — Fundamentos: JWT filter, autorización por rol, manejo de 401, endpoint `/me`.
 - **Fase 1** — Catálogo común: productos, proveedores, perfil + cambio de password.
 - **Fase 2** — Portal Asegurado: 9 vistas funcionales (inicio, pólizas, endosos, pagos, siniestros, documentos, seguros, cotizar, perfil).
-- **Fase 3 — parcial**:
+- **Fase 3 — Portal Comercial**:
   - 3.1 Cotizaciones y leads del comercial (`/api/v1/cotizaciones`, kanban con cambio de estado).
   - 3.2 Cartera de clientes (`/api/v1/clientes`, lista + cambio de estado CRM).
   - 3.3 Comisiones del agente (`/api/v1/mis-comisiones`, `/api/v1/comisiones`, marcar pagada).
   - 3.4 Campañas de marketing (`/api/v1/mis-campanas`, crear y registrar envíos).
+  - 3.5 Simulador de prima (frontend, calcula sobre productos del back).
+  - 3.6 Dashboard del comercial (KPIs, embudo de cotizaciones, últimas, campañas).
 
 ### Lo que falta
-- **Fase 3 — restante**: simulador, dashboard del comercial, validar documentos, segmentación.
+- Validar documentos y segmentación del comercial — quedan como UI mockeada (deuda Fase 7).
 - **Fase 4** — Portal Core (Técnico): emisión, endosos (gestión), renovaciones, siniestros (asignación), reaseguro, productos.
 - **Fase 5** — Portal Operativo: RRHH, logística, finanzas (cobranza, facturación, tesorería, contabilidad, presupuesto).
 - **Fase 6** — Portal Ejecutivo: aprobaciones críticas, KPIs, objetivos corporativos, simulaciones.
