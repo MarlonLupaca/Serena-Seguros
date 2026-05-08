@@ -1,5 +1,8 @@
 'use client';
 
-export default function flotaPage() {
-  return <div className="py-4 flex flex-col gap-4 pb-8">flota</div>;
+import { MdDirectionsCar } from 'react-icons/md';
+import PlaceholderPendiente from '@/lib/PlaceholderPendiente';
+
+export default function FlotaPage() {
+  return <PlaceholderPendiente titulo="Flota vehicular" icon={MdDirectionsCar} />;
 }

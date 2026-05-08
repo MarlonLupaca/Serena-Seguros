@@ -1,5 +1,8 @@
 'use client';
 
-export default function contabilidadPage() {
-  return <div className="py-4 flex flex-col gap-4 pb-8">contabilidad</div>;
+import { MdAccountBalance } from 'react-icons/md';
+import PlaceholderPendiente from '@/lib/PlaceholderPendiente';
+
+export default function ContabilidadPage() {
+  return <PlaceholderPendiente titulo="Contabilidad general" icon={MdAccountBalance} />;
 }

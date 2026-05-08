@@ -1,5 +1,8 @@
 'use client';
 
-export default function comprasPage() {
-  return <div className="py-4 flex flex-col gap-4 pb-8">compras</div>;
+import { MdShoppingCart } from 'react-icons/md';
+import PlaceholderPendiente from '@/lib/PlaceholderPendiente';
+
+export default function ComprasPage() {
+  return <PlaceholderPendiente titulo="Compras y ordenes" icon={MdShoppingCart} />;
 }

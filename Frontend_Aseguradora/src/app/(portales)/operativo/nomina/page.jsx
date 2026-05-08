@@ -1,5 +1,8 @@
 'use client';
 
-export default function nominaPage() {
-  return <div className="py-4 flex flex-col gap-4 pb-8">nomina</div>;
+import { MdReceiptLong } from 'react-icons/md';
+import PlaceholderPendiente from '@/lib/PlaceholderPendiente';
+
+export default function NominaPage() {
+  return <PlaceholderPendiente titulo="Nomina y planilla" icon={MdReceiptLong} />;
 }
