@@ -135,6 +135,14 @@ Debes ver `mysql-master` con `0.0.0.0:3308->3306/tcp`.
 
 > El script SQL solo se ejecuta la primera vez (cuando el volumen está vacío). Si necesitas resetear la BD, usa `docker compose down -v && docker compose up -d`.
 
+> **Migración Fase 7**: si tu BD ya estaba creada antes de la Fase 7 (auditoría y notificaciones), aplica el script de migración:
+>
+> ```bash
+> docker exec -i mysql-master mysql -uroot -proot bd_seguros_pacifico < Script_DB/02-fase7-auditoria-notificaciones.sql
+> ```
+>
+> Las nuevas tablas son `auditoria_accion` y `notificacion`. Para BDs nuevas el `01-init.sql` ya las incluye y no hay que hacer nada extra.
+
 #### 4.2. Levantar el backend
 
 ```bash
@@ -520,6 +528,34 @@ Solo `EJECUTIVO`. Tabla `objetivo_corporativo`.
 | `PATCH /api/v1/objetivos/{id}/avance`     | Registrar avance (y opcionalmente cambiar `estado`)                      |
 | `DELETE /api/v1/objetivos/{id}`           | Eliminar el objetivo                                                     |
 
+### Auditoría y notificaciones (Fase 7)
+
+#### Asignación de proveedores a siniestros (`/api/v1/siniestros/{id}/proveedores`)
+Roles `TECNICO`, `EJECUTIVO`. Tabla `siniestro_proveedor`.
+
+| Endpoint                                                  | Permite                                                  |
+|-----------------------------------------------------------|----------------------------------------------------------|
+| `GET /api/v1/siniestros/{id}/proveedores`                 | Listar proveedores asignados al caso                     |
+| `POST /api/v1/siniestros/{id}/proveedores`                | Asignar proveedor + costo del servicio                   |
+| `DELETE /api/v1/siniestros/{id}/proveedores/{idProv}`     | Quitar proveedor del caso                                |
+
+#### Auditoría (`/api/v1/auditoria`)
+Solo `EJECUTIVO`. Tabla `auditoria_accion`. Las acciones se registran automáticamente desde el servicio `AuditoriaService` en login (ok/fail), registro, cambio de estado de cuotas, siniestros y aprobaciones críticas.
+
+| Endpoint                                  | Permite                                                            |
+|-------------------------------------------|--------------------------------------------------------------------|
+| `GET /api/v1/auditoria`                   | Listar (filtros `modulo`, `username`, `limite` máx 500)            |
+
+#### Notificaciones (`/api/v1/notificaciones`)
+Cualquier rol autenticado, cada usuario solo ve las suyas. Tabla `notificacion`. Se generan automáticamente desde el servicio `NotificacionService` cuando: se crea una aprobación crítica (broadcast a todos los `EJECUTIVO`), se marca una cuota como pagada (al asegurado dueño), o se cambia el estado de un siniestro (al asegurado dueño).
+
+| Endpoint                                          | Permite                                                            |
+|---------------------------------------------------|--------------------------------------------------------------------|
+| `GET /api/v1/notificaciones`                      | Mis notificaciones ordenadas por fecha desc                        |
+| `GET /api/v1/notificaciones/conteo`               | Devuelve `{no_leidas: N}` para el badge del header                 |
+| `PATCH /api/v1/notificaciones/{id}/leer`          | Marcar una como leída (sólo si es destinatario)                    |
+| `PATCH /api/v1/notificaciones/leer-todas`         | Marcar todas las pendientes como leídas                            |
+
 ### Errores estándar
 
 Todos los errores del back devuelven JSON con esta forma:
@@ -706,13 +742,18 @@ Sin prefijos tipo `feat:`, `fix:`, `chore:`. Sin emojis. Una línea, primera let
   - 6.6 Informes consolidados (vista que junta los cuatro endpoints `/ejecutivo/*`).
   - 6.7 Simulador de escenarios (palancas de crecimiento, descuento y siniestralidad sobre los datos reales).
   - 6.8 Dashboard ejecutivo (KPIs globales + aprobaciones pendientes + objetivos en curso).
+- **Fase 7 — Pulido**:
+  - 7.1 Asignación de proveedores a siniestros (tabla `siniestro_proveedor`, modal en el portal core).
+  - 7.2 Auditoría de acciones (tabla `auditoria_accion`, `AuditoriaService`, vista `/ejecutivo/auditoria` con filtros). Eventos cubiertos: login (ok/fail), registro, cambio de estado de aprobaciones, siniestros, y marcar cuota pagada.
+  - 7.3 Notificaciones in-app (tabla `notificacion`, bell con badge en el header común, dropdown con marcar leída / marcar todas leídas). Disparadores: nueva aprobación → ejecutivos; cuota pagada → asegurado dueño; cambio de estado de siniestro → asegurado dueño.
 
 ### Lo que falta
-- Validar documentos y segmentación del comercial — quedan como UI mockeada (deuda Fase 7).
-- Asignar proveedores específicos a un siniestro (tabla `siniestro_proveedor`) — pendiente para extender el módulo de evaluaciones.
+- Validar documentos y segmentación del comercial — quedan como UI mockeada.
 - Conectar las vistas placeholder del operativo (vacaciones, nomina, evaluaciones, inventario, compras, flota, facturación, contabilidad) cuando existan sus tablas en la BD.
 - Persistir la `Configuración del Sistema` del ejecutivo (hoy es UI local, los toggles no se guardan).
-- **Fase 7** — Pulido: permisos finos, auditoría, notificaciones reales, tests automatizados, despliegue.
+- **Notificaciones reales** (email/SMS) — la Fase 7 dejó las notificaciones in-app pero no envía por canales externos.
+- **Tests automatizados** — sigue sin haber suite JUnit ni E2E.
+- **Despliegue** — pendiente decidir infraestructura (Render, AWS, Railway, etc.).
 
 ---
 
