@@ -8,6 +8,10 @@ import com.serena.modules.clientes.entity.Cliente;
 import com.serena.modules.clientes.repository.ClienteRepository;
 import com.serena.modules.empleados.entity.Empleado;
 import com.serena.modules.empleados.repository.EmpleadoRepository;
+import com.serena.modules.polizas.entity.Poliza;
+import com.serena.modules.polizas.repository.PolizaRepository;
+import com.serena.modules.productos.entity.ProductoSeguro;
+import com.serena.modules.productos.repository.ProductoSeguroRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Component
 @RequiredArgsConstructor
@@ -24,6 +29,8 @@ public class DataSeeder implements CommandLineRunner {
     private final PersonaRepository personaRepository;
     private final ClienteRepository clienteRepository;
     private final EmpleadoRepository empleadoRepository;
+    private final PolizaRepository polizaRepository;
+    private final ProductoSeguroRepository productoRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -34,6 +41,44 @@ public class DataSeeder implements CommandLineRunner {
         crearDemo("tecnico_demo",   "Tomas", "Tecnico",    "10000003", Usuario.PortalAcceso.TECNICO);
         crearDemo("operativo_demo", "Olga",  "Operativa",  "10000004", Usuario.PortalAcceso.OPERATIVO);
         crearDemo("ejecutivo_demo", "Elena", "Ejecutiva",  "10000005", Usuario.PortalAcceso.EJECUTIVO);
+
+        crearPolizasDemo();
+    }
+
+    private void crearPolizasDemo() {
+        clienteRepository.findAll().forEach(cliente -> {
+            if (!polizaRepository.findByClienteOrderByFechaEmisionDesc(cliente).isEmpty()) return;
+            crearPolizaDemo(cliente, 1, new BigDecimal("1500.00"),
+                    Poliza.EstadoPoliza.ACTIVA,
+                    LocalDate.now().minusMonths(2),
+                    LocalDate.now().plusMonths(10));
+            crearPolizaDemo(cliente, 4, new BigDecimal("3600.00"),
+                    Poliza.EstadoPoliza.ACTIVA,
+                    LocalDate.now().minusMonths(1),
+                    LocalDate.now().plusMonths(11));
+            crearPolizaDemo(cliente, 5, new BigDecimal("250.00"),
+                    Poliza.EstadoPoliza.PENDIENTE,
+                    LocalDate.now().plusDays(3),
+                    LocalDate.now().plusDays(33));
+        });
+    }
+
+    private void crearPolizaDemo(Cliente cliente,
+                                 Integer idProducto,
+                                 BigDecimal primaTotal,
+                                 Poliza.EstadoPoliza estado,
+                                 LocalDate inicio,
+                                 LocalDate fin) {
+        ProductoSeguro producto = productoRepository.findById(idProducto).orElse(null);
+        if (producto == null) return;
+        polizaRepository.save(Poliza.builder()
+                .cliente(cliente)
+                .producto(producto)
+                .primaTotal(primaTotal)
+                .estadoPoliza(estado)
+                .vigenciaInicio(inicio)
+                .vigenciaFin(fin)
+                .build());
     }
 
     private void crearDemo(String username,

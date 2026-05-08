@@ -1,104 +1,85 @@
-import { MdDirectionsCar, MdHealthAndSafety, MdFavorite, MdHome } from 'react-icons/md';
+import {
+  MdDirectionsCar,
+  MdHealthAndSafety,
+  MdFavorite,
+  MdHome,
+  MdFlight,
+  MdBusiness,
+  MdShield,
+} from 'react-icons/md';
 
 export const ESTADO_STYLES = {
-  activa: { dot: 'bg-emerald-500', badge: 'bg-emerald-100 text-emerald-700', label: 'Activa' },
-  vencida: { dot: 'bg-rose-400', badge: 'bg-rose-100 text-rose-600', label: 'Vencida' },
-  'en proceso': { dot: 'bg-amber-400', badge: 'bg-amber-100 text-amber-700', label: 'En proceso' },
+  ACTIVA: {
+    dot: 'bg-emerald-500',
+    badge: 'bg-emerald-100 text-emerald-700',
+    label: 'Activa',
+  },
+  PENDIENTE: {
+    dot: 'bg-amber-400',
+    badge: 'bg-amber-100 text-amber-700',
+    label: 'Pendiente',
+  },
+  VENCIDA: {
+    dot: 'bg-rose-400',
+    badge: 'bg-rose-100 text-rose-600',
+    label: 'Vencida',
+  },
+  CANCELADA: {
+    dot: 'bg-slate-400',
+    badge: 'bg-slate-100 text-slate-600',
+    label: 'Cancelada',
+  },
 };
 
-export const POLIZAS = [
-  {
-    id: 'POL-2024-00182',
-    tipo: 'auto',
-    label: 'Seguro de Auto',
+export const TIPO_STYLES = {
+  VEHICULAR: {
     icon: MdDirectionsCar,
     accentBg: 'bg-primary/10',
     accentText: 'text-primary',
-    estado: 'activa',
-    inicio: '01/01/2024',
-    fin: '31/12/2024',
-    renovacion: '15/12/2024',
-    monto: 'S/ 35,000',
-    plan: 'Full',
-    cobertura: 'Choques, robo total/parcial, daños a terceros, asistencia 24h, gastos médicos a ocupantes.',
-    exclusiones: 'Conducción bajo efectos de alcohol, daños por guerra o catástrofe nuclear.',
-    beneficiarios: null,
-    bien: 'Toyota Corolla 2020 – ABC-123',
-    documentos: ['Póliza PDF', 'Condiciones generales', 'SOAT'],
-    historial: [
-      { fecha: '10/03/2024', tipo: 'Pago', detalle: 'Cuota mensual abonada – S/ 110' },
-      { fecha: '10/02/2024', tipo: 'Pago', detalle: 'Cuota mensual abonada – S/ 110' },
-      { fecha: '01/01/2024', tipo: 'Emisión', detalle: 'Póliza emitida correctamente' },
-    ],
   },
-  {
-    id: 'POL-2023-00891',
-    tipo: 'salud',
-    label: 'Seguro de Salud',
+  SALUD: {
     icon: MdHealthAndSafety,
     accentBg: 'bg-emerald-100',
     accentText: 'text-emerald-600',
-    estado: 'activa',
-    inicio: '15/06/2023',
-    fin: '14/06/2024',
-    renovacion: '01/06/2024',
-    monto: 'S/ 200,000',
-    plan: 'Familiar',
-    cobertura: 'Hospitalización, cirugías, maternidad, pediatría, telemedicina, medicamentos con descuento.',
-    exclusiones: 'Enfermedades preexistentes no declaradas, tratamientos estéticos.',
-    beneficiarios: ['María Pérez (cónyuge)', 'Lucía Pérez (hija, 8 años)'],
-    bien: null,
-    documentos: ['Póliza PDF', 'Carnet de afiliación', 'Guía de clínicas'],
-    historial: [
-      { fecha: '01/04/2024', tipo: 'Uso', detalle: 'Consulta médica – Clínica San Felipe' },
-      { fecha: '10/03/2024', tipo: 'Pago', detalle: 'Cuota mensual abonada – S/ 149' },
-      { fecha: '15/06/2023', tipo: 'Emisión', detalle: 'Póliza emitida correctamente' },
-    ],
   },
-  {
-    id: 'POL-2022-00345',
-    tipo: 'vida',
-    label: 'Seguro de Vida',
+  VIDA: {
     icon: MdFavorite,
     accentBg: 'bg-rose-100',
     accentText: 'text-rose-500',
-    estado: 'vencida',
-    inicio: '01/03/2022',
-    fin: '28/02/2023',
-    renovacion: '—',
-    monto: 'S/ 200,000',
-    plan: 'Plus',
-    cobertura: 'Capital asegurado S/200k, invalidez total, enfermedades graves.',
-    exclusiones: 'Suicidio dentro de los primeros 2 años, actividades de alto riesgo no declaradas.',
-    beneficiarios: ['María Pérez (cónyuge, 60%)', 'Luis Pérez (hijo, 40%)'],
-    bien: null,
-    documentos: ['Póliza PDF', 'Condiciones generales'],
-    historial: [
-      { fecha: '28/02/2023', tipo: 'Vencimiento', detalle: 'Póliza vencida sin renovación' },
-      { fecha: '01/03/2022', tipo: 'Emisión', detalle: 'Póliza emitida correctamente' },
-    ],
   },
-  {
-    id: 'POL-2024-00510',
-    tipo: 'hogar',
-    label: 'Seguro de Hogar',
+  HOGAR: {
     icon: MdHome,
     accentBg: 'bg-amber-100',
     accentText: 'text-amber-600',
-    estado: 'en proceso',
-    inicio: '—',
-    fin: '—',
-    renovacion: '—',
-    monto: 'S/ 250,000',
-    plan: 'Estándar',
-    cobertura: 'Incendio, robo de contenido, fenómenos naturales.',
-    exclusiones: 'Daños por mal uso, humedad crónica.',
-    beneficiarios: null,
-    bien: 'Departamento – Av. Javier Prado 1280, Miraflores',
-    documentos: [],
-    historial: [
-      { fecha: '12/04/2024', tipo: 'Proceso', detalle: 'Documentos en revisión por el área técnica' },
-      { fecha: '10/04/2024', tipo: 'Solicitud', detalle: 'Solicitud de contratación recibida' },
-    ],
   },
-];
+  VIAJE: {
+    icon: MdFlight,
+    accentBg: 'bg-sky-100',
+    accentText: 'text-sky-600',
+  },
+  EMPRESA: {
+    icon: MdBusiness,
+    accentBg: 'bg-violet-100',
+    accentText: 'text-violet-600',
+  },
+};
+
+export function estiloTipo(tipo) {
+  return TIPO_STYLES[tipo] || {
+    icon: MdShield,
+    accentBg: 'bg-bg-soft',
+    accentText: 'text-text-soft',
+  };
+}
+
+export function formatearMoneda(v) {
+  if (v == null) return '—';
+  return `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+export function formatearFecha(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}

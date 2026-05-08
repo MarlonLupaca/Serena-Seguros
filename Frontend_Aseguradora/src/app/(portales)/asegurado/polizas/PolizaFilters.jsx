@@ -13,7 +13,7 @@ export default function PolizaFilters({
       <div className="relative flex-1">
         <MdSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
         <input
-          placeholder="Buscar por nombre o número de póliza…"
+          placeholder="Buscar por número o nombre del seguro..."
           className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none bg-bg text-text border border-border focus:border-primary transition-colors"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
@@ -28,9 +28,10 @@ export default function PolizaFilters({
             onChange={(e) => setFiltroEstado(e.target.value)}
           >
             <option value="todos">Todos los estados</option>
-            <option value="activa">Activa</option>
-            <option value="vencida">Vencida</option>
-            <option value="en proceso">En proceso</option>
+            <option value="ACTIVA">Activa</option>
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="VENCIDA">Vencida</option>
+            <option value="CANCELADA">Cancelada</option>
           </select>
         </div>
         <select
@@ -39,10 +40,12 @@ export default function PolizaFilters({
           onChange={(e) => setFiltroTipo(e.target.value)}
         >
           <option value="todos">Todos los tipos</option>
-          <option value="auto">Auto</option>
-          <option value="salud">Salud</option>
-          <option value="vida">Vida</option>
-          <option value="hogar">Hogar</option>
+          <option value="VEHICULAR">Vehicular</option>
+          <option value="SALUD">Salud</option>
+          <option value="VIDA">Vida</option>
+          <option value="HOGAR">Hogar</option>
+          <option value="VIAJE">Viaje</option>
+          <option value="EMPRESA">Empresa</option>
         </select>
       </div>
     </div>
