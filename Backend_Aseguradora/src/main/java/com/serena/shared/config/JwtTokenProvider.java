@@ -27,12 +27,12 @@ public class JwtTokenProvider {
         this.refreshExpirationMs = refreshExpirationMs;
     }
 
-    public String generarAccessToken(Long userId, String email) {
+    public String generarAccessToken(Integer userId, String username) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + accessExpirationMs);
         return Jwts.builder()
                 .subject(String.valueOf(userId))
-                .claim("email", email)
+                .claim("username", username)
                 .claim("type", "access")
                 .issuedAt(now)
                 .expiration(exp)
@@ -40,7 +40,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String generarRefreshToken(Long userId) {
+    public String generarRefreshToken(Integer userId) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + refreshExpirationMs);
         return Jwts.builder()
