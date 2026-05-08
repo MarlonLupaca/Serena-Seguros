@@ -19,4 +19,8 @@ public interface CuotaRepository extends JpaRepository<Cuota, Integer> {
             Cliente cliente,
             Cuota.EstadoPago estado
     );
+
+    List<Cuota> findAllByOrderByFechaVencimientoAsc();
+
+    List<Cuota> findByEstadoPagoOrderByFechaVencimientoAsc(Cuota.EstadoPago estado);
 }
