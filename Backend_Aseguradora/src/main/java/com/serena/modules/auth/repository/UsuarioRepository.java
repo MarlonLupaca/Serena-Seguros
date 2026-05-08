@@ -1,6 +1,6 @@
-package com.ApiApuesta.auth.repository;
+package com.serena.modules.auth.repository;
 
-import com.ApiApuesta.auth.entity.Usuario;
+import com.serena.modules.auth.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

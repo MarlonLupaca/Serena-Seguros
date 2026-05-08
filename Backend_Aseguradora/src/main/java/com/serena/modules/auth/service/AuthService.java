@@ -1,14 +1,14 @@
-package com.ApiApuesta.auth.service;
+package com.serena.modules.auth.service;
 
-import com.ApiApuesta.auth.dto.request.LoginRequest;
-import com.ApiApuesta.auth.dto.request.RegistroRequest;
-import com.ApiApuesta.auth.dto.response.AuthResponse;
-import com.ApiApuesta.auth.entity.Usuario;
-import com.ApiApuesta.auth.mapper.UsuarioMapper;
-import com.ApiApuesta.auth.repository.UsuarioRepository;
-import com.ApiApuesta.shared.config.JwtTokenProvider;
-import com.ApiApuesta.shared.exception.CredencialesInvalidasException;
-import com.ApiApuesta.shared.exception.UsuarioYaExisteException;
+import com.serena.modules.auth.dto.request.LoginRequest;
+import com.serena.modules.auth.dto.request.RegistroRequest;
+import com.serena.modules.auth.dto.response.AuthResponse;
+import com.serena.modules.auth.entity.Usuario;
+import com.serena.modules.auth.mapper.UsuarioMapper;
+import com.serena.modules.auth.repository.UsuarioRepository;
+import com.serena.shared.config.JwtTokenProvider;
+import com.serena.shared.exception.CredencialesInvalidasException;
+import com.serena.shared.exception.UsuarioYaExisteException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

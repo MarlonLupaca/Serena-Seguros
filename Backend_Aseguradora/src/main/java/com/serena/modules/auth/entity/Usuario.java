@@ -1,4 +1,4 @@
-package com.ApiApuesta.auth.entity;
+package com.serena.modules.auth.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

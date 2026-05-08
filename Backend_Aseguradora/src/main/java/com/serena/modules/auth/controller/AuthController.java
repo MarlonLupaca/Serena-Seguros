@@ -1,9 +1,9 @@
-package com.ApiApuesta.auth.controller;
+package com.serena.modules.auth.controller;
 
-import com.ApiApuesta.auth.dto.request.LoginRequest;
-import com.ApiApuesta.auth.dto.request.RegistroRequest;
-import com.ApiApuesta.auth.dto.response.AuthResponse;
-import com.ApiApuesta.auth.service.AuthService;
+import com.serena.modules.auth.dto.request.LoginRequest;
+import com.serena.modules.auth.dto.request.RegistroRequest;
+import com.serena.modules.auth.dto.response.AuthResponse;
+import com.serena.modules.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

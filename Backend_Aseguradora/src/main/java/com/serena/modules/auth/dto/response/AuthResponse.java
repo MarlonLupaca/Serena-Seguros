@@ -1,4 +1,4 @@
-package com.ApiApuesta.auth.dto.response;
+package com.serena.modules.auth.dto.response;
 
 public record AuthResponse(
         String accessToken,
