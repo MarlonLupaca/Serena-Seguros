@@ -17,8 +17,11 @@ import {
   MdHome,
   MdFlight,
   MdBusiness,
+  MdHandyman,
+  MdAdd,
+  MdDeleteOutline,
 } from 'react-icons/md';
-import { apiGet, apiPatch } from '@/lib/api';
+import { apiGet, apiPatch, apiPost, apiDelete } from '@/lib/api';
 
 const ESTADOS = {
   REPORTADO: { label: 'Reportado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
@@ -62,6 +65,7 @@ export default function SiniestrosCorePage() {
   const [busq, setBusq] = useState('');
   const [actualizandoId, setActualizandoId] = useState(null);
   const [modalAsignar, setModalAsignar] = useState(null);
+  const [modalProveedores, setModalProveedores] = useState(null);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -174,6 +178,7 @@ export default function SiniestrosCorePage() {
               actualizando={actualizandoId === s.id_siniestro}
               onCambiarEstado={(estado) => cambiarEstado(s.id_siniestro, estado)}
               onAsignar={() => setModalAsignar(s)}
+              onProveedores={() => setModalProveedores(s)}
             />
           ))}
         </div>
@@ -190,11 +195,19 @@ export default function SiniestrosCorePage() {
           }}
         />
       )}
+
+      {modalProveedores && (
+        <ModalProveedores
+          siniestro={modalProveedores}
+          onClose={() => setModalProveedores(null)}
+          onToast={mostrarToast}
+        />
+      )}
     </div>
   );
 }
 
-function SiniestroRow({ s, onCambiarEstado, onAsignar, actualizando }) {
+function SiniestroRow({ s, onCambiarEstado, onAsignar, onProveedores, actualizando }) {
   const tipoStyle = estiloTipo(s.poliza_tipo);
   const Icon = tipoStyle.icon;
   const est = ESTADOS[s.estado_resolucion] || ESTADOS.REPORTADO;
@@ -243,6 +256,13 @@ function SiniestroRow({ s, onCambiarEstado, onAsignar, actualizando }) {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors disabled:opacity-50"
           >
             <MdAssignmentInd size={13} /> {s.id_empleado_analista ? 'Reasignar' : 'Asignar'}
+          </button>
+          <button
+            onClick={onProveedores}
+            disabled={actualizando}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
+          >
+            <MdHandyman size={13} /> Proveedores
           </button>
           <button
             onClick={() => setMenu((v) => !v)}
@@ -354,6 +374,158 @@ function ModalAsignar({ siniestro, onClose, onSuccess }) {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function ModalProveedores({ siniestro, onClose, onToast }) {
+  const [asignados, setAsignados] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [seleccionado, setSeleccionado] = useState('');
+  const [costo, setCosto] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+
+  const cargar = async () => {
+    setCargando(true);
+    try {
+      const [a, p] = await Promise.all([
+        apiGet(`/siniestros/${siniestro.id_siniestro}/proveedores`),
+        apiGet('/proveedores?estado=ACTIVO'),
+      ]);
+      setAsignados(a || []);
+      setProveedores(p || []);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo cargar');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    cargar();
+  }, []);
+
+  const asignar = async (e) => {
+    e.preventDefault();
+    if (!seleccionado || !costo) return;
+    setEnviando(true);
+    setError('');
+    try {
+      await apiPost(`/siniestros/${siniestro.id_siniestro}/proveedores`, {
+        id_proveedor: Number(seleccionado),
+        costo_servicio: Number(costo),
+      });
+      setSeleccionado('');
+      setCosto('');
+      onToast('Proveedor asignado');
+      cargar();
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo asignar');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const quitar = async (idProveedor) => {
+    if (!confirm('Quitar este proveedor del caso?')) return;
+    try {
+      await apiDelete(`/siniestros/${siniestro.id_siniestro}/proveedores/${idProveedor}`);
+      onToast('Proveedor quitado');
+      cargar();
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo quitar');
+    }
+  };
+
+  const yaAsignados = new Set(asignados.map((a) => a.id_proveedor));
+  const disponibles = proveedores.filter((p) => !yaAsignados.has(p.id_proveedor));
+  const totalCosto = asignados.reduce((acc, a) => acc + Number(a.costo_servicio || 0), 0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-bg w-full max-w-lg rounded-2xl border border-border shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div>
+            <p className="text-sm font-bold text-text">Proveedores asignados</p>
+            <p className="text-[11px] text-text-soft">SIN-{String(siniestro.id_siniestro).padStart(6, '0')} - {siniestro.tipo_incidente}</p>
+          </div>
+          <button onClick={onClose} className="text-text-soft hover:text-text">
+            <MdClose size={18} />
+          </button>
+        </div>
+
+        <div className="p-5 flex flex-col gap-4">
+          {error && (
+            <div className="p-2.5 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">{error}</div>
+          )}
+
+          <div>
+            <p className="text-xs font-bold text-text mb-2">En el caso ({asignados.length})</p>
+            {cargando ? (
+              <p className="text-xs text-text-soft">Cargando...</p>
+            ) : asignados.length === 0 ? (
+              <p className="text-xs text-text-soft">Aun no hay proveedores asignados.</p>
+            ) : (
+              <div className="flex flex-col divide-y divide-border">
+                {asignados.map((a) => (
+                  <div key={a.id_proveedor} className="py-2 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-bg-soft flex items-center justify-center shrink-0">
+                      <MdHandyman size={14} className="text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-text truncate">{a.nombre}</p>
+                      <p className="text-[11px] text-text-soft">{a.rubro} - {a.ciudad}</p>
+                    </div>
+                    <p className="text-sm font-bold text-text">{formatearMoneda(a.costo_servicio)}</p>
+                    <button onClick={() => quitar(a.id_proveedor)} className="text-rose-600 hover:bg-rose-50 rounded-lg p-1.5">
+                      <MdDeleteOutline size={16} />
+                    </button>
+                  </div>
+                ))}
+                <div className="pt-2 flex justify-between text-xs">
+                  <span className="font-semibold text-text-soft">Costo total</span>
+                  <span className="font-bold text-text">{formatearMoneda(totalCosto)}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={asignar} className="flex flex-col gap-2 border-t border-border pt-3">
+            <p className="text-xs font-bold text-text">Asignar nuevo</p>
+            <select
+              value={seleccionado}
+              onChange={(e) => setSeleccionado(e.target.value)}
+              className="border border-border rounded-lg px-3 py-2 text-sm bg-bg-soft"
+              required
+            >
+              <option value="">Selecciona un proveedor...</option>
+              {disponibles.map((p) => (
+                <option key={p.id_proveedor} value={p.id_proveedor}>
+                  {p.nombre} - {p.rubro} - {p.ciudad}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Costo del servicio"
+              value={costo}
+              onChange={(e) => setCosto(e.target.value)}
+              className="border border-border rounded-lg px-3 py-2 text-sm bg-bg-soft"
+              required
+            />
+            <button
+              type="submit"
+              disabled={enviando || disponibles.length === 0}
+              className="bg-primary text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-primary-hover disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              <MdAdd size={14} /> {enviando ? 'Guardando...' : 'Agregar al caso'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
