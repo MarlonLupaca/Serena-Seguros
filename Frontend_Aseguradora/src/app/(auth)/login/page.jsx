@@ -47,7 +47,9 @@ export default function Login() {
   };
 
   const accesoRapido = (acceso) => {
-    ingresar(acceso.username, acceso.password);
+    setError('');
+    setUsername(acceso.username);
+    setPassword(acceso.password);
   };
 
   return (
