@@ -1,10 +1,11 @@
+'use client';
+
 import { useState } from 'react';
 import { MdCheckCircle, MdContentCopy, MdSchedule } from 'react-icons/md';
-import { POLIZAS } from './data';
 
-export default function SuccessScreen({ data, ticket, onReset }) {
+export default function SuccessScreen({ siniestro, onReset }) {
   const [copied, setCopied] = useState(false);
-  const pol = POLIZAS.find((p) => p.id === data.poliza);
+  const ticket = `SIN-${String(siniestro.id_siniestro).padStart(6, '0')}`;
 
   const handleCopy = () => {
     navigator.clipboard?.writeText(ticket);
@@ -13,10 +14,9 @@ export default function SuccessScreen({ data, ticket, onReset }) {
   };
 
   const steps = [
-    'Recibirás un correo con los detalles de tu caso en los próximos minutos.',
-    'Un ajustador se contactará contigo en 24–48 horas hábiles.',
-    'Podrás hacer seguimiento desde la sección Mis pólizas.',
-    'Si tienes más documentos, puedes adjuntarlos usando tu número de caso.',
+    'Tu reporte fue registrado y un analista será asignado en las próximas 48 horas.',
+    'Podrás hacer seguimiento del caso desde la sección de seguimiento más abajo.',
+    'Si tienes documentos de respaldo, súbelos en la pestaña Documentos.',
   ];
 
   return (
@@ -42,13 +42,13 @@ export default function SuccessScreen({ data, ticket, onReset }) {
         </button>
       </div>
       <div className="flex items-center gap-2 flex-wrap justify-center">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          En revisión
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+          {siniestro.estado_resolucion}
         </span>
-        {pol && <span className="text-xs text-text-soft">· {pol.label}</span>}
+        <span className="text-xs text-text-soft">· {siniestro.poliza_nombre}</span>
         <span className="inline-flex items-center gap-1 text-xs text-text-soft">
-          <MdSchedule size={13} /> Procesando…
+          <MdSchedule size={13} /> Procesando...
         </span>
       </div>
       <div className="w-full bg-bg rounded-2xl border border-border p-4">
@@ -68,7 +68,7 @@ export default function SuccessScreen({ data, ticket, onReset }) {
         onClick={onReset}
         className="w-full py-2.5 rounded-xl border border-border hover:bg-bg-soft text-sm font-medium text-text-soft transition-colors"
       >
-        Volver a Mis pólizas
+        Reportar otro siniestro
       </button>
     </div>
   );

@@ -1,17 +1,21 @@
+'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { MdSearch, MdFilterList, MdKeyboardArrowDown, MdCheck } from 'react-icons/md';
+
+const OPCIONES = [
+  { value: 'todos', label: 'Todos los estados' },
+  { value: 'REPORTADO', label: 'Reportado' },
+  { value: 'EN_REVISION', label: 'En revisión' },
+  { value: 'INSPECCION', label: 'Inspección' },
+  { value: 'APROBADO', label: 'Aprobado' },
+  { value: 'RECHAZADO', label: 'Rechazado' },
+  { value: 'LIQUIDADO', label: 'Liquidado' },
+];
 
 export default function SiniestrosFilters({ busqueda, setBusqueda, filtro, setFiltro }) {
   const [abierto, setAbierto] = useState(false);
   const ref = useRef(null);
-
-  const opciones = [
-    { value: 'todos', label: 'Todos los estados' },
-    { value: 'enviado', label: 'Enviado' },
-    { value: 'evaluacion', label: 'En evaluación' },
-    { value: 'aprobado', label: 'Aprobado' },
-    { value: 'rechazado', label: 'Rechazado' },
-  ];
 
   useEffect(() => {
     const handler = (e) => {
@@ -26,7 +30,7 @@ export default function SiniestrosFilters({ busqueda, setBusqueda, filtro, setFi
       <div className="relative flex-1">
         <MdSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
         <input
-          placeholder="Buscar por número, tipo o póliza…"
+          placeholder="Buscar por número, tipo o póliza..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary transition-colors"
@@ -38,7 +42,7 @@ export default function SiniestrosFilters({ busqueda, setBusqueda, filtro, setFi
           className="flex items-center gap-2 pl-3 pr-3 py-2.5 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary transition-colors outline-none"
         >
           <MdFilterList size={14} className="text-text-soft" />
-          <span>{opciones.find((o) => o.value === filtro)?.label}</span>
+          <span>{OPCIONES.find((o) => o.value === filtro)?.label}</span>
           <MdKeyboardArrowDown
             size={14}
             className={`text-text-soft transition-transform duration-200 ${abierto ? 'rotate-180' : ''}`}
@@ -47,7 +51,7 @@ export default function SiniestrosFilters({ busqueda, setBusqueda, filtro, setFi
 
         {abierto && (
           <ul className="absolute z-50 mt-1 w-full min-w-max rounded-xl border border-border bg-bg shadow-lg py-1">
-            {opciones.map((opcion) => (
+            {OPCIONES.map((opcion) => (
               <li
                 key={opcion.value}
                 onClick={() => {
