@@ -3,6 +3,7 @@ package com.serena.modules.auth.service;
 import com.serena.modules.auth.dto.request.LoginRequest;
 import com.serena.modules.auth.dto.request.RegistroRequest;
 import com.serena.modules.auth.dto.response.AuthResponse;
+import com.serena.modules.auth.dto.response.MeResponse;
 import com.serena.modules.auth.entity.Persona;
 import com.serena.modules.auth.entity.Usuario;
 import com.serena.modules.auth.mapper.UsuarioMapper;
@@ -65,6 +66,19 @@ public class AuthService {
 
         return usuarioMapper.toAuthResponse(
                 usuario, persona, accessToken, refreshToken
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public MeResponse me(Usuario usuario) {
+        Persona persona = personaRepository
+                .findByUsuario(usuario)
+                .orElseThrow(CredencialesInvalidasException::new);
+        return new MeResponse(
+                usuario.getUsername(),
+                persona.getNombres(),
+                persona.getApellidos(),
+                usuario.getPortalAcceso().name()
         );
     }
 
