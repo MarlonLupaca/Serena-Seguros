@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 public record CotizacionResponse(
         Integer idCotizacion,
+        Integer idEmpleadoAgente,
         String productoInteres,
         String estadoKanban,
         BigDecimal primaEstimada,
@@ -17,6 +18,7 @@ public record CotizacionResponse(
         var persona = l.getEmpleadoAgente().getPersona();
         return new CotizacionResponse(
                 l.getIdCotizacion(),
+                l.getEmpleadoAgente().getIdEmpleado(),
                 l.getProductoInteres().name(),
                 l.getEstadoKanban().name(),
                 l.getPrimaEstimada(),

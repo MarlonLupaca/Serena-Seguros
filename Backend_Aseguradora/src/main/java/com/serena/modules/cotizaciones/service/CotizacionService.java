@@ -1,6 +1,9 @@
 package com.serena.modules.cotizaciones.service;
 
 import com.serena.modules.auth.entity.Usuario;
+import com.serena.modules.auth.repository.PersonaRepository;
+import com.serena.modules.cotizaciones.dto.AsignarAgenteRequest;
+import com.serena.modules.cotizaciones.dto.CambioEstadoCotizacionRequest;
 import com.serena.modules.cotizaciones.dto.CotizacionResponse;
 import com.serena.modules.cotizaciones.dto.CrearCotizacionRequest;
 import com.serena.modules.cotizaciones.entity.LeadCotizacion;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +26,7 @@ public class CotizacionService {
 
     private final LeadCotizacionRepository cotizacionRepository;
     private final EmpleadoRepository empleadoRepository;
+    private final PersonaRepository personaRepository;
     private final ProductoSeguroRepository productoRepository;
 
     @Transactional
@@ -46,5 +51,56 @@ public class CotizacionService {
                 .primaEstimada(prima)
                 .build();
         return CotizacionResponse.from(cotizacionRepository.save(lead));
+    }
+
+    @Transactional(readOnly = true)
+    public List<CotizacionResponse> listar(LeadCotizacion.EstadoKanban estado, Boolean soloMias, Usuario usuario) {
+        Empleado agenteActual = soloMias != null && soloMias
+                ? empleadoActual(usuario)
+                : null;
+
+        List<LeadCotizacion> leads;
+        if (agenteActual != null && estado != null) {
+            leads = cotizacionRepository.findByEmpleadoAgenteAndEstadoKanbanOrderByFechaIngresoDesc(agenteActual, estado);
+        } else if (agenteActual != null) {
+            leads = cotizacionRepository.findByEmpleadoAgenteOrderByFechaIngresoDesc(agenteActual);
+        } else if (estado != null) {
+            leads = cotizacionRepository.findByEstadoKanbanOrderByFechaIngresoDesc(estado);
+        } else {
+            leads = cotizacionRepository.findAllByOrderByFechaIngresoDesc();
+        }
+        return leads.stream().map(CotizacionResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CotizacionResponse obtener(Integer id) {
+        return CotizacionResponse.from(buscar(id));
+    }
+
+    @Transactional
+    public CotizacionResponse cambiarEstado(Integer id, CambioEstadoCotizacionRequest request) {
+        LeadCotizacion lead = buscar(id);
+        lead.setEstadoKanban(request.estadoKanban());
+        return CotizacionResponse.from(cotizacionRepository.save(lead));
+    }
+
+    @Transactional
+    public CotizacionResponse asignarAgente(Integer id, AsignarAgenteRequest request) {
+        LeadCotizacion lead = buscar(id);
+        Empleado agente = empleadoRepository.findById(request.idEmpleadoAgente())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", request.idEmpleadoAgente()));
+        lead.setEmpleadoAgente(agente);
+        return CotizacionResponse.from(cotizacionRepository.save(lead));
+    }
+
+    private LeadCotizacion buscar(Integer id) {
+        return cotizacionRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cotizacion", id));
+    }
+
+    private Empleado empleadoActual(Usuario usuario) {
+        return personaRepository.findByUsuario(usuario)
+                .flatMap(p -> empleadoRepository.findByPersona(p))
+                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado del usuario", usuario.getIdUsuario()));
     }
 }
