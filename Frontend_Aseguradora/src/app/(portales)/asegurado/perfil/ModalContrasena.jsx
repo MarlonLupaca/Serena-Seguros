@@ -1,5 +1,8 @@
+'use client';
+
 import { useState } from 'react';
 import { MdLock, MdClose, MdVisibility, MdVisibilityOff, MdCheckCircle } from 'react-icons/md';
+import { apiPatch } from '@/lib/api';
 
 export default function ModalContrasena({ onClose, onGuardar }) {
   const [actual, setActual] = useState('');
@@ -9,6 +12,7 @@ export default function ModalContrasena({ onClose, onGuardar }) {
   const [showNueva, setShowNueva] = useState(false);
   const [showConfirmar, setShowConfirmar] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const reglas = [
     { label: 'Mínimo 8 caracteres', ok: nueva.length >= 8 },
@@ -18,12 +22,20 @@ export default function ModalContrasena({ onClose, onGuardar }) {
   ];
   const valida = reglas.every((r) => r.ok) && actual.length > 0;
 
-  const handleGuardar = () => {
+  const handleGuardar = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setError('');
+    try {
+      await apiPatch('/perfil/password', {
+        password_actual: actual,
+        password_nueva: nueva,
+      });
       onGuardar();
-    }, 1400);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo cambiar la contrasena');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,6 +54,12 @@ export default function ModalContrasena({ onClose, onGuardar }) {
           </button>
         </div>
         <div className="p-5 flex flex-col gap-4">
+          {error && (
+            <div className="p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">
+              {error}
+            </div>
+          )}
+
           {[
             {
               label: 'Contraseña actual',
@@ -77,6 +95,7 @@ export default function ModalContrasena({ onClose, onGuardar }) {
                 />
                 <button
                   onClick={toggleShow}
+                  type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-text-soft hover:text-text transition-colors"
                 >
                   {show ? <MdVisibilityOff size={16} /> : <MdVisibility size={16} />}
@@ -116,7 +135,8 @@ export default function ModalContrasena({ onClose, onGuardar }) {
             </button>
             <button
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors"
+              disabled={loading}
+              className="flex-1 py-2.5 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>

@@ -4,8 +4,8 @@ export default function PolizaKPIs({ counts }) {
   const kpis = [
     { label: 'Total pólizas', val: counts.total, color: 'text-text' },
     { label: 'Activas', val: counts.activas, color: 'text-emerald-600' },
+    { label: 'Pendientes', val: counts.pendientes, color: 'text-amber-600' },
     { label: 'Vencidas', val: counts.vencidas, color: 'text-rose-500' },
-    { label: 'En proceso', val: counts.proceso, color: 'text-amber-600' },
   ];
 
   return (

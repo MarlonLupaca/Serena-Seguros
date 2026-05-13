@@ -1,958 +1,532 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  MdArrowBack,
-  MdWarningAmber,
-  MdCheckCircle,
-  MdCancel,
+  MdSearch,
+  MdWarning,
   MdPerson,
-  MdPolicy,
-  MdSchedule,
   MdCalendarToday,
+  MdAttachMoney,
+  MdAssignmentInd,
+  MdEdit,
   MdClose,
-  MdSend,
-  MdBlock,
   MdShield,
   MdDirectionsCar,
   MdHealthAndSafety,
+  MdFavorite,
+  MdHome,
+  MdFlight,
   MdBusiness,
-  MdLocalFireDepartment,
-  MdChevronRight,
-  MdAssignment,
-  MdPictureAsPdf,
-  MdArrowUpward,
-  MdMyLocation,
-  MdPeople,
-  MdAttachMoney,
-  MdGavel,
-  MdNotificationsActive,
-  MdDone,
-  MdHourglassEmpty,
-  MdErrorOutline,
+  MdHandyman,
+  MdAdd,
+  MdDeleteOutline,
 } from 'react-icons/md';
+import { apiGet, apiPatch, apiPost, apiDelete } from '@/lib/api';
 
-// ─── CONSTANTES ───────────────────────────────────────────────────────────────
-
-const UMBRAL_BAJO = 3000;
-const UMBRAL_MEDIO = 15000;
-
-const TIPO_POLIZA_ICON = {
-  hogar: MdShield,
-  auto: MdDirectionsCar,
-  vida: MdHealthAndSafety,
-  empresa: MdBusiness,
-  incendio: MdLocalFireDepartment,
+const ESTADOS = {
+  REPORTADO: { label: 'Reportado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
+  EN_REVISION: { label: 'En revisión', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
+  INSPECCION: { label: 'Inspección', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-400' },
+  APROBADO: { label: 'Aprobado', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+  RECHAZADO: { label: 'Rechazado', badge: 'bg-rose-100 text-rose-600', dot: 'bg-rose-400' },
+  LIQUIDADO: { label: 'Liquidado', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
 };
 
-const ESTADO_CONFIG = {
-  nuevo: { label: 'Nuevo', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-500' },
-  validando: { label: 'Validando', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
-  asignado: { label: 'Asignado', badge: 'bg-violet-100 text-violet-700', dot: 'bg-violet-500' },
-  'en-evaluacion': { label: 'En evaluación', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
-  'escala-operativo': { label: 'Escalado Operativo', badge: 'bg-orange-100 text-orange-700', dot: 'bg-orange-500' },
-  'escala-ejecutivo': { label: 'Escalado Ejecutivo', badge: 'bg-rose-100 text-rose-600', dot: 'bg-rose-500' },
-  liquidado: { label: 'Liquidado', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
-  rechazado: { label: 'Rechazado', badge: 'bg-zinc-100 text-zinc-600', dot: 'bg-zinc-400' },
+const TIPO_STYLES = {
+  VEHICULAR: { icon: MdDirectionsCar, accentBg: 'bg-primary/10', accentText: 'text-primary' },
+  SALUD: { icon: MdHealthAndSafety, accentBg: 'bg-emerald-100', accentText: 'text-emerald-600' },
+  VIDA: { icon: MdFavorite, accentBg: 'bg-rose-100', accentText: 'text-rose-500' },
+  HOGAR: { icon: MdHome, accentBg: 'bg-amber-100', accentText: 'text-amber-600' },
+  VIAJE: { icon: MdFlight, accentBg: 'bg-sky-100', accentText: 'text-sky-600' },
+  EMPRESA: { icon: MdBusiness, accentBg: 'bg-violet-100', accentText: 'text-violet-600' },
 };
 
-const SLA_CONFIG = {
-  verde: { color: 'text-emerald-600', bg: 'bg-emerald-100', bar: 'bg-emerald-500', label: 'En tiempo' },
-  amarillo: { color: 'text-amber-600', bg: 'bg-amber-100', bar: 'bg-amber-400', label: 'Por vencer' },
-  rojo: { color: 'text-rose-600', bg: 'bg-rose-100', bar: 'bg-rose-500', label: 'Vencido' },
-};
-
-const EVALUADORES_MOCK = [
-  { id: 'EV-01', nombre: 'Jorge Quispe', zona: 'Lima Norte', tipo: ['auto', 'hogar'], disponible: true },
-  { id: 'EV-02', nombre: 'Ana Flores', zona: 'Lima Sur', tipo: ['hogar', 'incendio'], disponible: true },
-  { id: 'EV-03', nombre: 'Luis Paredes', zona: 'Lima Este', tipo: ['empresa', 'incendio'], disponible: false },
-  { id: 'EV-04', nombre: 'Carmen Ríos', zona: 'Lima Centro', tipo: ['auto', 'vida'], disponible: true },
-];
-
-const SINIESTROS_MOCK = [
-  {
-    id: 'SIN-2025-001',
-    tipo: 'auto',
-    poliza: 'POL-AUT-00456',
-    cliente: 'Carlos Mendoza Ríos',
-    descripcion: 'Choque lateral en Av. Javier Prado. Daño en puerta delantera y guardafango.',
-    fechaSiniestro: '24/04/2025',
-    fechaReporte: '25/04/2025',
-    zona: 'Lima Este',
-    estado: 'nuevo',
-    slaHoras: 72,
-    slaTranscurrido: 8,
-    vigente: true,
-    cubierto: true,
-    montoEstimado: null,
-    evaluadorAsignado: null,
-    informeEvaluador: null,
-    recuperacion: null,
-    accentBg: 'bg-sky-100',
-    accentText: 'text-sky-600',
-    accentBar: 'bg-sky-400',
-  },
-  {
-    id: 'SIN-2025-002',
-    tipo: 'hogar',
-    poliza: 'POL-HOG-00123',
-    cliente: 'María García López',
-    descripcion: 'Inundación por rotura de tubería en cocina. Daño en paredes y mobiliario.',
-    fechaSiniestro: '22/04/2025',
-    fechaReporte: '23/04/2025',
-    zona: 'Lima Norte',
-    estado: 'en-evaluacion',
-    slaHoras: 72,
-    slaTranscurrido: 52,
-    vigente: true,
-    cubierto: true,
-    montoEstimado: 8500,
-    evaluadorAsignado: { id: 'EV-02', nombre: 'Ana Flores', zona: 'Lima Sur' },
-    informeEvaluador: 'Daño en 3 paredes y mobiliario de cocina. Requiere demolición parcial y reposición.',
-    recuperacion: null,
-    accentBg: 'bg-amber-100',
-    accentText: 'text-amber-600',
-    accentBar: 'bg-amber-400',
-  },
-  {
-    id: 'SIN-2025-003',
-    tipo: 'incendio',
-    poliza: 'POL-INC-00567',
-    cliente: 'Roberto Salas Díaz',
-    descripcion: 'Incendio en almacén. Pérdida total de mercadería sector B.',
-    fechaSiniestro: '20/04/2025',
-    fechaReporte: '20/04/2025',
-    zona: 'Lima Este',
-    estado: 'escala-ejecutivo',
-    slaHoras: 48,
-    slaTranscurrido: 120,
-    vigente: true,
-    cubierto: true,
-    montoEstimado: 48000,
-    evaluadorAsignado: { id: 'EV-03', nombre: 'Luis Paredes', zona: 'Lima Este' },
-    informeEvaluador:
-      'Pérdida total de mercadería en sector B. Estructura comprometida parcialmente. Monto valorizado según inventario auditado.',
-    recuperacion: { monto: 12000, descripcion: 'Subrogación contra empresa transportista por negligencia' },
-    accentBg: 'bg-rose-100',
-    accentText: 'text-rose-600',
-    accentBar: 'bg-rose-400',
-  },
-  {
-    id: 'SIN-2025-004',
-    tipo: 'auto',
-    poliza: 'POL-AUT-00789',
-    cliente: 'Lucía Torres Vega',
-    descripcion: 'Robo total del vehículo estacionado en vía pública.',
-    fechaSiniestro: '23/04/2025',
-    fechaReporte: '24/04/2025',
-    zona: 'Lima Centro',
-    estado: 'asignado',
-    slaHoras: 72,
-    slaTranscurrido: 24,
-    vigente: true,
-    cubierto: true,
-    montoEstimado: null,
-    evaluadorAsignado: { id: 'EV-04', nombre: 'Carmen Ríos', zona: 'Lima Centro' },
-    informeEvaluador: null,
-    recuperacion: null,
-    accentBg: 'bg-violet-100',
-    accentText: 'text-violet-600',
-    accentBar: 'bg-violet-400',
-  },
-  {
-    id: 'SIN-2025-005',
-    tipo: 'vida',
-    poliza: 'POL-VID-00321',
-    cliente: 'Pedro Huanca',
-    descripcion: 'Invalidez permanente por accidente laboral. Solicitud de indemnización.',
-    fechaSiniestro: '15/04/2025',
-    fechaReporte: '18/04/2025',
-    zona: 'Lima Sur',
-    estado: 'nuevo',
-    slaHoras: 96,
-    slaTranscurrido: 170,
-    vigente: false,
-    cubierto: false,
-    montoEstimado: null,
-    evaluadorAsignado: null,
-    informeEvaluador: null,
-    recuperacion: null,
-    accentBg: 'bg-zinc-100',
-    accentText: 'text-zinc-500',
-    accentBar: 'bg-zinc-300',
-  },
-];
-
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
-
-function getSLA(transcurrido, total) {
-  const pct = (transcurrido / total) * 100;
-  if (pct >= 100) return { ...SLA_CONFIG.rojo, pct: 100 };
-  if (pct >= 70) return { ...SLA_CONFIG.amarillo, pct };
-  return { ...SLA_CONFIG.verde, pct };
+function estiloTipo(tipo) {
+  return TIPO_STYLES[tipo] || { icon: MdShield, accentBg: 'bg-bg-soft', accentText: 'text-text-soft' };
 }
 
-function nivelMonto(monto) {
-  if (!monto) return null;
-  if (monto <= UMBRAL_BAJO)
-    return {
-      nivel: 'bajo',
-      label: 'Bajo',
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-50 border-emerald-200',
-      action: 'Aprobar liquidación directa',
-    };
-  if (monto <= UMBRAL_MEDIO)
-    return {
-      nivel: 'medio',
-      label: 'Medio',
-      color: 'text-amber-600',
-      bg: 'bg-amber-50 border-amber-200',
-      action: 'Escalar a Portal Operativo',
-    };
-  return {
-    nivel: 'alto',
-    label: 'Alto',
-    color: 'text-rose-600',
-    bg: 'bg-rose-50 border-rose-200',
-    action: 'Escalar a Portal Ejecutivo',
-  };
+function formatearMoneda(v) {
+  if (v == null) return '—';
+  return `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-// ─── MODALES ──────────────────────────────────────────────────────────────────
-
-function ModalRechazar({ siniestro, onConfirm, onClose }) {
-  const [motivo, setMotivo] = useState('');
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-bg rounded-2xl border border-border w-full max-w-md overflow-hidden shadow-xl">
-        <div className="h-1 w-full bg-rose-400" />
-        <div className="p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-sm font-bold text-text">Rechazar siniestro</p>
-              <p className="text-xs text-text-soft mt-0.5">
-                {siniestro.id} · {siniestro.cliente}
-              </p>
-            </div>
-            <button onClick={onClose} className="text-text-soft hover:text-text">
-              <MdClose size={18} />
-            </button>
-          </div>
-          <div className="bg-bg-soft rounded-xl p-3.5 mb-4">
-            <p className="text-xs text-text-soft mb-1.5">
-              Motivo <span className="text-rose-500">*</span>
-            </p>
-            <textarea
-              className="w-full bg-transparent text-xs text-text resize-none outline-none placeholder:text-text-soft min-h-[80px]"
-              placeholder="Describe el motivo para notificar al cliente..."
-              value={motivo}
-              onChange={(e) => setMotivo(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-border text-xs font-medium text-text-soft hover:bg-bg-soft transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => motivo.trim() && onConfirm(motivo)}
-              disabled={!motivo.trim()}
-              className="flex-1 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-40 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
-            >
-              <MdBlock size={13} /> Rechazar y notificar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+function formatearFecha(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function ModalAsignar({ siniestro, onConfirm, onClose }) {
-  const [seleccionado, setSeleccionado] = useState(null);
-  const compatibles = EVALUADORES_MOCK.filter((e) => e.tipo.includes(siniestro.tipo));
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-bg rounded-2xl border border-border w-full max-w-md overflow-hidden shadow-xl">
-        <div className="h-1 w-full bg-violet-400" />
-        <div className="p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-sm font-bold text-text">Asignar evaluador</p>
-              <p className="text-xs text-text-soft mt-0.5">
-                {siniestro.id} · Zona: {siniestro.zona}
-              </p>
-            </div>
-            <button onClick={onClose} className="text-text-soft hover:text-text">
-              <MdClose size={18} />
-            </button>
-          </div>
-          <div className="flex flex-col gap-2 mb-4">
-            {compatibles.map((ev) => (
-              <button
-                key={ev.id}
-                onClick={() => ev.disponible && setSeleccionado(ev)}
-                className={`flex items-center justify-between p-3 rounded-xl border transition-colors text-left ${
-                  !ev.disponible
-                    ? 'opacity-40 cursor-not-allowed border-border'
-                    : seleccionado?.id === ev.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:bg-bg-soft'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-bg-soft flex items-center justify-center">
-                    <MdPerson size={16} className="text-text-soft" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-text">{ev.nombre}</p>
-                    <p className="text-xs text-text-soft">{ev.zona}</p>
-                  </div>
-                </div>
-                <span
-                  className={`text-xs font-medium px-2 py-0.5 rounded-full ${ev.disponible ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-500'}`}
-                >
-                  {ev.disponible ? 'Disponible' : 'Ocupado'}
-                </span>
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-border text-xs font-medium text-text-soft hover:bg-bg-soft transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => seleccionado && onConfirm(seleccionado)}
-              disabled={!seleccionado}
-              className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-40 text-text-inverse text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
-            >
-              <MdDone size={13} /> Asignar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ModalInforme({ siniestro, onConfirm, onClose }) {
-  const [monto, setMonto] = useState('');
-  const [informe, setInforme] = useState('');
-  const nivel = nivelMonto(Number(monto));
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-bg rounded-2xl border border-border w-full max-w-md overflow-hidden shadow-xl">
-        <div className="h-1 w-full bg-amber-400" />
-        <div className="p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-sm font-bold text-text">Registrar informe del evaluador</p>
-              <p className="text-xs text-text-soft mt-0.5">{siniestro.id}</p>
-            </div>
-            <button onClick={onClose} className="text-text-soft hover:text-text">
-              <MdClose size={18} />
-            </button>
-          </div>
-          <div className="flex flex-col gap-3 mb-4">
-            <div className="bg-bg-soft rounded-xl p-3.5">
-              <p className="text-xs text-text-soft mb-1.5">
-                Monto estimado (S/) <span className="text-rose-500">*</span>
-              </p>
-              <input
-                type="number"
-                className="w-full bg-transparent text-sm font-bold text-text outline-none"
-                placeholder="0"
-                value={monto}
-                onChange={(e) => setMonto(e.target.value)}
-              />
-            </div>
-            {monto && nivel && (
-              <div
-                className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-medium ${nivel.bg} ${nivel.color}`}
-              >
-                <MdAttachMoney size={14} />
-                Nivel {nivel.label} → {nivel.action}
-              </div>
-            )}
-            <div className="bg-bg-soft rounded-xl p-3.5">
-              <p className="text-xs text-text-soft mb-1.5">
-                Informe del evaluador <span className="text-rose-500">*</span>
-              </p>
-              <textarea
-                className="w-full bg-transparent text-xs text-text resize-none outline-none placeholder:text-text-soft min-h-[70px]"
-                placeholder="Detalle técnico del daño evaluado..."
-                value={informe}
-                onChange={(e) => setInforme(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-border text-xs font-medium text-text-soft hover:bg-bg-soft transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => monto && informe.trim() && onConfirm(Number(monto), informe)}
-              disabled={!monto || !informe.trim()}
-              className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-40 text-text-inverse text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
-            >
-              <MdSend size={13} /> Registrar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ModalRecuperacion({ siniestro, onConfirm, onClose }) {
-  const [monto, setMonto] = useState('');
-  const [descripcion, setDescripcion] = useState('');
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-bg rounded-2xl border border-border w-full max-w-md overflow-hidden shadow-xl">
-        <div className="h-1 w-full bg-teal-400" />
-        <div className="p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-sm font-bold text-text">Registrar recuperación por subrogación</p>
-              <p className="text-xs text-text-soft mt-0.5">{siniestro.id}</p>
-            </div>
-            <button onClick={onClose} className="text-text-soft hover:text-text">
-              <MdClose size={18} />
-            </button>
-          </div>
-          <div className="flex flex-col gap-3 mb-4">
-            <div className="bg-bg-soft rounded-xl p-3.5">
-              <p className="text-xs text-text-soft mb-1.5">
-                Monto recuperado (S/) <span className="text-rose-500">*</span>
-              </p>
-              <input
-                type="number"
-                className="w-full bg-transparent text-sm font-bold text-text outline-none"
-                placeholder="0"
-                value={monto}
-                onChange={(e) => setMonto(e.target.value)}
-              />
-            </div>
-            <div className="bg-bg-soft rounded-xl p-3.5">
-              <p className="text-xs text-text-soft mb-1.5">
-                Descripción <span className="text-rose-500">*</span>
-              </p>
-              <textarea
-                className="w-full bg-transparent text-xs text-text resize-none outline-none placeholder:text-text-soft min-h-[60px]"
-                placeholder="Contra quién se ejerce la subrogación y por qué..."
-                value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-border text-xs font-medium text-text-soft hover:bg-bg-soft transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => monto && descripcion.trim() && onConfirm(Number(monto), descripcion)}
-              disabled={!monto || !descripcion.trim()}
-              className="flex-1 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-40 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
-            >
-              <MdGavel size={13} /> Registrar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── DETALLE ──────────────────────────────────────────────────────────────────
-
-function DetalleSiniestro({ s, onBack, onRechazar, onAsignar, onInforme, onAprobar, onEscalar, onRecuperacion }) {
-  const est = ESTADO_CONFIG[s.estado];
-  const Icon = TIPO_POLIZA_ICON[s.tipo] || MdPolicy;
-  const sla = getSLA(s.slaTranscurrido, s.slaHoras);
-  const nivel = nivelMonto(s.montoEstimado);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <button
-        onClick={onBack}
-        className="flex items-center gap-1.5 text-xs text-text-soft hover:text-text transition-colors w-fit"
-      >
-        <MdArrowBack size={15} /> Volver a siniestros
-      </button>
-
-      <div className="bg-bg rounded-2xl border border-border overflow-hidden">
-        <div className={`h-1 w-full ${s.accentBar}`} />
-        {/* Header */}
-        <div className="p-5 border-b border-border">
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.accentBg}`}>
-                <Icon size={20} className={s.accentText} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-bold text-text capitalize">{s.tipo}</p>
-                  <span
-                    className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full ${est.badge}`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-                    {est.label}
-                  </span>
-                  {!s.vigente && (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-rose-100 text-rose-600">
-                      <MdErrorOutline size={11} /> Póliza no vigente
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-text-soft mt-0.5">{s.id}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
-            {[
-              { icon: MdPerson, label: 'Cliente', val: s.cliente },
-              { icon: MdPolicy, label: 'Póliza', val: s.poliza },
-              { icon: MdMyLocation, label: 'Zona', val: s.zona },
-              { icon: MdCalendarToday, label: 'Fecha siniestro', val: s.fechaSiniestro },
-              { icon: MdSchedule, label: 'Fecha reporte', val: s.fechaReporte },
-              { icon: MdAssignment, label: 'Cobertura', val: s.cubierto ? 'Cubierto' : 'No cubierto' },
-            ].map(({ icon: Ic, label, val }) => (
-              <div key={label} className="bg-bg-soft rounded-xl p-2.5">
-                <div className="flex items-center gap-1 mb-0.5">
-                  <Ic size={11} className="text-text-soft" />
-                  <p className="text-xs text-text-soft">{label}</p>
-                </div>
-                <p className="text-xs font-semibold text-text truncate">{val}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-3 bg-bg-soft rounded-xl p-3">
-            <p className="text-xs text-text-soft mb-1">Descripción</p>
-            <p className="text-xs text-text">{s.descripcion}</p>
-          </div>
-        </div>
-
-        {/* SLA */}
-        <div className="p-5 border-b border-border">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-text-soft">SLA</p>
-            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${sla.bg} ${sla.color}`}>{sla.label}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-2 bg-bg-soft rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${sla.bar}`}
-                style={{ width: `${Math.min(sla.pct, 100)}%` }}
-              />
-            </div>
-            <span className="text-xs text-text-soft tabular-nums shrink-0">
-              {s.slaTranscurrido}h / {s.slaHoras}h
-            </span>
-          </div>
-        </div>
-
-        {/* Evaluador */}
-        {s.evaluadorAsignado && (
-          <div className="p-5 border-b border-border">
-            <p className="text-xs font-semibold uppercase tracking-wide text-text-soft mb-3">Evaluador asignado</p>
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-soft">
-              <div className="w-8 h-8 rounded-full bg-bg flex items-center justify-center border border-border">
-                <MdPerson size={16} className="text-text-soft" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-text">{s.evaluadorAsignado.nombre}</p>
-                <p className="text-xs text-text-soft">{s.evaluadorAsignado.zona}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Informe */}
-        {s.informeEvaluador && (
-          <div className="p-5 border-b border-border">
-            <p className="text-xs font-semibold uppercase tracking-wide text-text-soft mb-3">Informe del evaluador</p>
-            <p className="text-xs text-text bg-bg-soft rounded-xl p-3">{s.informeEvaluador}</p>
-            {s.montoEstimado && nivel && (
-              <div className={`mt-3 flex items-start gap-3 p-3.5 rounded-xl border ${nivel.bg}`}>
-                <MdAttachMoney size={16} className={`${nivel.color} mt-0.5 shrink-0`} />
-                <div>
-                  <p className={`text-xs font-bold mb-0.5 ${nivel.color}`}>
-                    Monto estimado: S/ {s.montoEstimado.toLocaleString()} — Nivel {nivel.label}
-                  </p>
-                  <p className="text-xs text-text-soft">{nivel.action}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Recuperación por subrogación */}
-        {s.recuperacion && (
-          <div className="p-5 border-b border-border">
-            <p className="text-xs font-semibold uppercase tracking-wide text-text-soft mb-3">
-              Recuperación por subrogación
-            </p>
-            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-teal-50 border border-teal-200">
-              <MdGavel size={15} className="text-teal-600 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-xs font-bold text-teal-700 mb-0.5">S/ {s.recuperacion.monto.toLocaleString()}</p>
-                <p className="text-xs text-teal-600">{s.recuperacion.descripcion}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Acciones */}
-        <div className="p-5 flex flex-col gap-2">
-          {/* Nuevo → validar */}
-          {s.estado === 'nuevo' && (
-            <>
-              {!s.vigente || !s.cubierto ? (
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-start gap-3 p-3.5 rounded-xl bg-rose-50 border border-rose-200">
-                    <MdWarningAmber size={15} className="text-rose-500 mt-0.5 shrink-0" />
-                    <p className="text-xs text-rose-600">
-                      {!s.vigente
-                        ? 'Póliza no vigente a la fecha del siniestro.'
-                        : 'El tipo de siniestro no está cubierto por la póliza.'}{' '}
-                      Procede el rechazo.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => onRechazar(s)}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold transition-colors"
-                  >
-                    <MdBlock size={14} /> Rechazar y notificar cliente
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => onAsignar(s)}
-                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
-                >
-                  <MdPeople size={14} /> Asignar evaluador
-                </button>
-              )}
-            </>
-          )}
-
-          {/* Asignado → registrar informe */}
-          {s.estado === 'asignado' && (
-            <button
-              onClick={() => onInforme(s)}
-              className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
-            >
-              <MdAssignment size={14} /> Registrar informe del evaluador
-            </button>
-          )}
-
-          {/* En evaluación → procesar monto */}
-          {s.estado === 'en-evaluacion' && s.montoEstimado && nivel && (
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => onRechazar(s)}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors"
-              >
-                <MdBlock size={14} /> Rechazar
-              </button>
-              {nivel.nivel === 'bajo' && (
-                <button
-                  onClick={() => onAprobar(s)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
-                >
-                  <MdCheckCircle size={14} /> Aprobar liquidación directa
-                </button>
-              )}
-              {nivel.nivel === 'medio' && (
-                <button
-                  onClick={() => onEscalar(s, 'operativo')}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold transition-colors"
-                >
-                  <MdArrowUpward size={14} /> Escalar a Portal Operativo
-                </button>
-              )}
-              {nivel.nivel === 'alto' && (
-                <button
-                  onClick={() => onEscalar(s, 'ejecutivo')}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold transition-colors"
-                >
-                  <MdArrowUpward size={14} /> Escalar a Portal Ejecutivo
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Liquidado → carta + subrogación */}
-          {s.estado === 'liquidado' && (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-start gap-3 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
-                <MdCheckCircle size={15} className="text-emerald-500 mt-0.5 shrink-0" />
-                <p className="text-xs text-emerald-600">Liquidación aprobada. Carta enviada al cliente.</p>
-              </div>
-              <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors">
-                <MdPictureAsPdf size={14} /> Descargar carta de liquidación
-              </button>
-              {!s.recuperacion && (
-                <button
-                  onClick={() => onRecuperacion(s)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-teal-300 hover:bg-teal-50 text-teal-600 text-xs font-medium transition-colors"
-                >
-                  <MdGavel size={14} /> Registrar recuperación por subrogación
-                </button>
-              )}
-            </div>
-          )}
-
-          {(s.estado === 'escala-operativo' || s.estado === 'escala-ejecutivo') && (
-            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-amber-50 border border-amber-200">
-              <MdHourglassEmpty size={15} className="text-amber-500 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-xs font-bold text-amber-700 mb-0.5">
-                  Esperando aprobación del {s.estado === 'escala-operativo' ? 'Portal Operativo' : 'Portal Ejecutivo'}
-                </p>
-                <p className="text-xs text-amber-600">Recibirás una notificación cuando se resuelva.</p>
-              </div>
-            </div>
-          )}
-
-          {s.estado === 'rechazado' && (
-            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-zinc-50 border border-zinc-200">
-              <MdCancel size={15} className="text-zinc-400 mt-0.5 shrink-0" />
-              <p className="text-xs text-zinc-500">Siniestro rechazado. El cliente fue notificado con el motivo.</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── CARD ─────────────────────────────────────────────────────────────────────
-
-function SiniestroCard({ s, onSelect }) {
-  const est = ESTADO_CONFIG[s.estado];
-  const Icon = TIPO_POLIZA_ICON[s.tipo] || MdPolicy;
-  const sla = getSLA(s.slaTranscurrido, s.slaHoras);
-
-  return (
-    <div
-      className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden cursor-pointer"
-      onClick={() => onSelect(s)}
-    >
-      <div className={`h-1 w-full ${s.accentBar}`} />
-      <div className="p-5">
-        <div className="flex items-start gap-4 flex-wrap sm:flex-nowrap">
-          <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${s.accentBg}`}>
-            <Icon size={22} className={s.accentText} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-bold text-text capitalize">{s.tipo}</p>
-              <span
-                className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} /> {est.label}
-              </span>
-              {(!s.vigente || !s.cubierto) && (
-                <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-rose-100 text-rose-600">
-                  <MdErrorOutline size={11} /> {!s.vigente ? 'No vigente' : 'No cubierto'}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-text-soft mt-0.5">
-              {s.id} · {s.cliente}
-            </p>
-            <p className="text-xs text-text-soft mt-0.5">
-              <MdPolicy size={11} className="inline mr-1" />
-              {s.poliza}
-              <span className="mx-1.5">·</span>
-              <MdMyLocation size={11} className="inline mr-1" />
-              {s.zona}
-            </p>
-            {/* mini SLA */}
-            <div className="flex items-center gap-2 mt-2">
-              <div className="w-20 h-1.5 bg-bg-soft rounded-full overflow-hidden">
-                <div className={`h-full rounded-full ${sla.bar}`} style={{ width: `${Math.min(sla.pct, 100)}%` }} />
-              </div>
-              <span className={`text-xs font-medium ${sla.color}`}>
-                {sla.label} · {s.slaTranscurrido}h/{s.slaHoras}h
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            {s.montoEstimado ? (
-              <p className="text-sm font-bold text-text">S/ {s.montoEstimado.toLocaleString()}</p>
-            ) : (
-              <p className="text-xs text-text-soft">Sin monto</p>
-            )}
-            <button className="flex items-center gap-1 text-xs text-text-soft hover:text-text transition-colors">
-              Ver <MdChevronRight size={13} />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── PAGE ─────────────────────────────────────────────────────────────────────
-
-export default function SiniestrosPage() {
-  const [siniestros, setSiniestros] = useState(SINIESTROS_MOCK);
-  const [seleccionado, setSeleccionado] = useState(null);
+export default function SiniestrosCorePage() {
+  const [siniestros, setSiniestros] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
   const [filtro, setFiltro] = useState('todos');
-  const [modal, setModal] = useState(null); // 'rechazar' | 'asignar' | 'informe' | 'recuperacion'
+  const [busq, setBusq] = useState('');
+  const [actualizandoId, setActualizandoId] = useState(null);
+  const [modalAsignar, setModalAsignar] = useState(null);
+  const [modalProveedores, setModalProveedores] = useState(null);
+  const [toast, setToast] = useState(null);
 
-  const filtros = [
-    { key: 'todos', label: 'Todos' },
-    { key: 'nuevo', label: 'Nuevos' },
-    { key: 'asignado', label: 'Asignados' },
-    { key: 'en-evaluacion', label: 'En evaluación' },
-    { key: 'escala-operativo', label: 'Escala Operativo' },
-    { key: 'escala-ejecutivo', label: 'Escala Ejecutivo' },
-    { key: 'liquidado', label: 'Liquidados' },
-    { key: 'rechazado', label: 'Rechazados' },
-  ];
+  useEffect(() => {
+    cargar();
+  }, []);
 
-  const actualizar = (id, cambios) => {
-    setSiniestros((p) => p.map((s) => (s.id === id ? { ...s, ...cambios } : s)));
-    setSeleccionado((p) => (p ? { ...p, ...cambios } : p));
+  const cargar = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const data = await apiGet('/siniestros');
+      setSiniestros(data || []);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudieron cargar los siniestros');
+    } finally {
+      setCargando(false);
+    }
   };
 
-  const handleRechazar = (motivo) => {
-    const id = seleccionado?.id;
-    setModal(null);
-    if (id) actualizar(id, { estado: 'rechazado' });
+  const mostrarToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
   };
 
-  const handleAsignar = (ev) => {
-    const id = seleccionado?.id;
-    setModal(null);
-    if (id) actualizar(id, { estado: 'asignado', evaluadorAsignado: ev });
+  const cambiarEstado = async (id, estado) => {
+    setActualizandoId(id);
+    try {
+      const data = await apiPatch(`/siniestros/${id}/estado`, { estado_resolucion: estado });
+      setSiniestros((prev) => prev.map((s) => (s.id_siniestro === id ? data : s)));
+      mostrarToast('Estado actualizado');
+    } catch (e) {
+      mostrarToast(e.mensaje || 'No se pudo actualizar');
+    } finally {
+      setActualizandoId(null);
+    }
   };
 
-  const handleInforme = (monto, informe) => {
-    const id = seleccionado?.id;
-    setModal(null);
-    if (id) actualizar(id, { estado: 'en-evaluacion', montoEstimado: monto, informeEvaluador: informe });
-  };
+  const filtrados = siniestros.filter((s) => {
+    const matchEstado = filtro === 'todos' || s.estado_resolucion === filtro;
+    const t = busq.toLowerCase();
+    const matchBusq =
+      t === '' ||
+      String(s.id_siniestro).includes(t) ||
+      (s.tipo_incidente || '').toLowerCase().includes(t) ||
+      (s.cliente_nombre || '').toLowerCase().includes(t);
+    return matchEstado && matchBusq;
+  });
 
-  const handleRecuperacion = (monto, descripcion) => {
-    const id = seleccionado?.id;
-    setModal(null);
-    if (id) actualizar(id, { recuperacion: { monto, descripcion } });
-  };
-  const handleAprobar = (s) => {
-    actualizar(s.id, { estado: 'liquidado' });
-  };
-  const handleEscalar = (s, nivel) => {
-    actualizar(s.id, { estado: nivel === 'operativo' ? 'escala-operativo' : 'escala-ejecutivo' });
-  };
-
-  const filtrados = filtro === 'todos' ? siniestros : siniestros.filter((s) => s.estado === filtro);
-  const nuevos = siniestros.filter((s) => s.estado === 'nuevo').length;
-  const slaVencidos = siniestros.filter(
-    (s) =>
-      getSLA(s.slaTranscurrido, s.slaHoras).color === 'text-rose-600' && !['liquidado', 'rechazado'].includes(s.estado)
-  ).length;
+  const counts = Object.keys(ESTADOS).reduce(
+    (acc, k) => ({ ...acc, [k]: siniestros.filter((s) => s.estado_resolucion === k).length }),
+    {}
+  );
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {modal === 'rechazar' && seleccionado && (
-        <ModalRechazar siniestro={seleccionado} onConfirm={handleRechazar} onClose={() => setModal(null)} />
-      )}
-      {modal === 'asignar' && seleccionado && (
-        <ModalAsignar siniestro={seleccionado} onConfirm={handleAsignar} onClose={() => setModal(null)} />
-      )}
-      {modal === 'informe' && seleccionado && (
-        <ModalInforme siniestro={seleccionado} onConfirm={handleInforme} onClose={() => setModal(null)} />
-      )}
-      {modal === 'recuperacion' && seleccionado && (
-        <ModalRecuperacion siniestro={seleccionado} onConfirm={handleRecuperacion} onClose={() => setModal(null)} />
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
+          {toast}
+        </div>
       )}
 
-      {seleccionado ? (
-        <DetalleSiniestro
-          s={seleccionado}
-          onBack={() => setSeleccionado(null)}
-          onRechazar={() => setModal('rechazar')}
-          onAsignar={() => setModal('asignar')}
-          onInforme={() => setModal('informe')}
-          onAprobar={handleAprobar}
-          onEscalar={handleEscalar}
-          onRecuperacion={() => setModal('recuperacion')}
+      <div>
+        <h1 className="text-base font-bold text-text">Bandeja de siniestros</h1>
+        <p className="text-xs text-text-soft mt-0.5">{siniestros.length} casos en el sistema</p>
+      </div>
+
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+        {Object.entries(ESTADOS).map(([k, v]) => (
+          <button
+            key={k}
+            onClick={() => setFiltro(filtro === k ? 'todos' : k)}
+            className={`text-left rounded-xl border p-3 transition-colors ${
+              filtro === k ? 'border-primary bg-primary/5' : 'border-border bg-bg hover:bg-bg-soft'
+            }`}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className={`w-1.5 h-1.5 rounded-full ${v.dot}`} />
+              <p className="text-xs text-text-soft truncate">{v.label}</p>
+            </div>
+            <p className="text-lg font-bold text-text">{counts[k] || 0}</p>
+          </button>
+        ))}
+      </div>
+
+      <div className="relative">
+        <MdSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
+        <input
+          placeholder="Buscar por ID, tipo o cliente..."
+          value={busq}
+          onChange={(e) => setBusq(e.target.value)}
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary"
         />
+      </div>
+
+      {cargando ? (
+        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">Cargando...</div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-600 text-center">{error}</div>
+      ) : filtrados.length === 0 ? (
+        <div className="bg-bg rounded-2xl border border-border p-12 text-center">
+          <MdWarning size={32} className="text-text-soft mx-auto mb-3 opacity-40" />
+          <p className="text-sm font-medium text-text">Sin siniestros</p>
+        </div>
       ) : (
-        <>
-          <div>
-            <h1 className="text-base font-bold text-text">Siniestros</h1>
-            <p className="text-xs text-text-soft mt-0.5">
-              {nuevos > 0 && (
-                <span className="text-sky-600 font-semibold">
-                  {nuevos} nuevo{nuevos !== 1 ? 's' : ''} ·{' '}
-                </span>
-              )}
-              {slaVencidos > 0 && (
-                <span className="text-rose-500 font-semibold">
-                  {slaVencidos} SLA vencido{slaVencidos !== 1 ? 's' : ''} ·{' '}
-                </span>
-              )}
-              {siniestros.length} casos totales
-            </p>
-          </div>
+        <div className="flex flex-col gap-3">
+          {filtrados.map((s) => (
+            <SiniestroRow
+              key={s.id_siniestro}
+              s={s}
+              actualizando={actualizandoId === s.id_siniestro}
+              onCambiarEstado={(estado) => cambiarEstado(s.id_siniestro, estado)}
+              onAsignar={() => setModalAsignar(s)}
+              onProveedores={() => setModalProveedores(s)}
+            />
+          ))}
+        </div>
+      )}
 
-          <div className="flex gap-2 flex-wrap">
-            {filtros.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setFiltro(f.key)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors border ${
-                  filtro === f.key
-                    ? 'bg-primary text-text-inverse border-primary'
-                    : 'border-border text-text-soft hover:bg-bg-soft'
-                }`}
-              >
-                {f.label}
-                {f.key !== 'todos' && (
-                  <span className="ml-1.5 tabular-nums">({siniestros.filter((s) => s.estado === f.key).length})</span>
-                )}
-              </button>
-            ))}
-          </div>
+      {modalAsignar && (
+        <ModalAsignar
+          siniestro={modalAsignar}
+          onClose={() => setModalAsignar(null)}
+          onSuccess={(actualizada) => {
+            setSiniestros((prev) => prev.map((s) => (s.id_siniestro === actualizada.id_siniestro ? actualizada : s)));
+            setModalAsignar(null);
+            mostrarToast('Analista asignado');
+          }}
+        />
+      )}
 
-          {filtrados.length === 0 ? (
-            <div className="text-center py-12 text-xs text-text-soft">No hay siniestros en este estado.</div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {filtrados
-                .slice()
-                .sort((a, b) => {
-                  const pa = getSLA(a.slaTranscurrido, a.slaHoras).pct;
-                  const pb = getSLA(b.slaTranscurrido, b.slaHoras).pct;
-                  return pb - pa;
-                })
-                .map((s) => (
-                  <SiniestroCard key={s.id} s={s} onSelect={setSeleccionado} />
+      {modalProveedores && (
+        <ModalProveedores
+          siniestro={modalProveedores}
+          onClose={() => setModalProveedores(null)}
+          onToast={mostrarToast}
+        />
+      )}
+    </div>
+  );
+}
+
+function SiniestroRow({ s, onCambiarEstado, onAsignar, onProveedores, actualizando }) {
+  const tipoStyle = estiloTipo(s.poliza_tipo);
+  const Icon = tipoStyle.icon;
+  const est = ESTADOS[s.estado_resolucion] || ESTADOS.REPORTADO;
+  const [menu, setMenu] = useState(false);
+
+  return (
+    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden">
+      <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
+      <div className="p-4 flex items-start gap-4 flex-wrap sm:flex-nowrap">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
+          <Icon size={20} className={tipoStyle.accentText} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-bold text-text">SIN-{String(s.id_siniestro).padStart(6, '0')}</p>
+            <span
+              className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+              {est.label}
+            </span>
+          </div>
+          <p className="text-xs text-text-soft mt-0.5">
+            POL-{String(s.id_poliza).padStart(6, '0')} · {s.poliza_nombre}
+          </p>
+          <p className="text-sm text-text mt-1">{s.tipo_incidente}</p>
+          <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-text-soft">
+            <span className="flex items-center gap-1">
+              <MdPerson size={11} /> Cliente: {s.cliente_nombre}
+            </span>
+            <span className="flex items-center gap-1">
+              <MdAssignmentInd size={11} /> Analista: {s.analista_asignado || 'Sin asignar'}
+            </span>
+            <span className="flex items-center gap-1">
+              <MdCalendarToday size={11} /> {formatearFecha(s.fecha_reporte)}
+            </span>
+            <span className="flex items-center gap-1">
+              <MdAttachMoney size={11} /> {formatearMoneda(s.monto_reclamado)}
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-2 shrink-0 relative">
+          <button
+            onClick={onAsignar}
+            disabled={actualizando}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors disabled:opacity-50"
+          >
+            <MdAssignmentInd size={13} /> {s.id_empleado_analista ? 'Reasignar' : 'Asignar'}
+          </button>
+          <button
+            onClick={onProveedores}
+            disabled={actualizando}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
+          >
+            <MdHandyman size={13} /> Proveedores
+          </button>
+          <button
+            onClick={() => setMenu((v) => !v)}
+            disabled={actualizando}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
+          >
+            <MdEdit size={13} /> Cambiar estado
+          </button>
+          {menu && (
+            <div className="absolute right-0 top-full mt-1 w-44 bg-bg border border-border rounded-xl shadow-lg z-10 overflow-hidden">
+              {Object.entries(ESTADOS)
+                .filter(([k]) => k !== s.estado_resolucion)
+                .map(([key, cfg]) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      setMenu(false);
+                      onCambiarEstado(key);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-soft hover:bg-bg-soft transition-colors"
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                    {cfg.label}
+                  </button>
                 ))}
             </div>
           )}
-        </>
-      )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalAsignar({ siniestro, onClose, onSuccess }) {
+  const [empleados, setEmpleados] = useState([]);
+  const [seleccionado, setSeleccionado] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    apiGet('/empleados?area=TECNICO')
+      .then((data) => setEmpleados(data || []))
+      .catch(() => {});
+  }, []);
+
+  const enviar = async (e) => {
+    e.preventDefault();
+    setEnviando(true);
+    setError('');
+    try {
+      const data = await apiPatch(`/siniestros/${siniestro.id_siniestro}/asignar`, {
+        id_empleado_analista: Number(seleccionado),
+      });
+      onSuccess(data);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo asignar');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-bg w-full max-w-sm rounded-2xl border border-border shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <p className="text-sm font-bold text-text">Asignar analista</p>
+          <button onClick={onClose} className="text-text-soft hover:text-text">
+            <MdClose size={18} />
+          </button>
+        </div>
+        <form onSubmit={enviar} className="p-5 flex flex-col gap-3">
+          {error && (
+            <div className="p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">{error}</div>
+          )}
+          <p className="text-xs text-text-soft">
+            Caso: <span className="font-semibold text-text">SIN-{String(siniestro.id_siniestro).padStart(6, '0')}</span>
+          </p>
+          <div>
+            <label className="text-xs font-medium text-text-soft block mb-1.5">Analista (área TECNICO)</label>
+            <select
+              value={seleccionado}
+              onChange={(e) => setSeleccionado(e.target.value)}
+              required
+              className="w-full px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
+            >
+              <option value="">Seleccionar...</option>
+              {empleados.map((e) => (
+                <option key={e.id_empleado} value={e.id_empleado}>
+                  {e.nombres} {e.apellidos} · {e.cargo}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex gap-2 mt-2">
+            <button
+              type="submit"
+              disabled={enviando || !seleccionado}
+              className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-xs font-semibold transition-colors"
+            >
+              {enviando ? 'Asignando...' : 'Confirmar'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={enviando}
+              className="flex-1 py-2.5 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ModalProveedores({ siniestro, onClose, onToast }) {
+  const [asignados, setAsignados] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [seleccionado, setSeleccionado] = useState('');
+  const [costo, setCosto] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+
+  const cargar = async () => {
+    setCargando(true);
+    try {
+      const [a, p] = await Promise.all([
+        apiGet(`/siniestros/${siniestro.id_siniestro}/proveedores`),
+        apiGet('/proveedores?estado=ACTIVO'),
+      ]);
+      setAsignados(a || []);
+      setProveedores(p || []);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo cargar');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    cargar();
+  }, []);
+
+  const asignar = async (e) => {
+    e.preventDefault();
+    if (!seleccionado || !costo) return;
+    setEnviando(true);
+    setError('');
+    try {
+      await apiPost(`/siniestros/${siniestro.id_siniestro}/proveedores`, {
+        id_proveedor: Number(seleccionado),
+        costo_servicio: Number(costo),
+      });
+      setSeleccionado('');
+      setCosto('');
+      onToast('Proveedor asignado');
+      cargar();
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo asignar');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const quitar = async (idProveedor) => {
+    if (!confirm('Quitar este proveedor del caso?')) return;
+    try {
+      await apiDelete(`/siniestros/${siniestro.id_siniestro}/proveedores/${idProveedor}`);
+      onToast('Proveedor quitado');
+      cargar();
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo quitar');
+    }
+  };
+
+  const yaAsignados = new Set(asignados.map((a) => a.id_proveedor));
+  const disponibles = proveedores.filter((p) => !yaAsignados.has(p.id_proveedor));
+  const totalCosto = asignados.reduce((acc, a) => acc + Number(a.costo_servicio || 0), 0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-bg w-full max-w-lg rounded-2xl border border-border shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div>
+            <p className="text-sm font-bold text-text">Proveedores asignados</p>
+            <p className="text-[11px] text-text-soft">SIN-{String(siniestro.id_siniestro).padStart(6, '0')} - {siniestro.tipo_incidente}</p>
+          </div>
+          <button onClick={onClose} className="text-text-soft hover:text-text">
+            <MdClose size={18} />
+          </button>
+        </div>
+
+        <div className="p-5 flex flex-col gap-4">
+          {error && (
+            <div className="p-2.5 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">{error}</div>
+          )}
+
+          <div>
+            <p className="text-xs font-bold text-text mb-2">En el caso ({asignados.length})</p>
+            {cargando ? (
+              <p className="text-xs text-text-soft">Cargando...</p>
+            ) : asignados.length === 0 ? (
+              <p className="text-xs text-text-soft">Aun no hay proveedores asignados.</p>
+            ) : (
+              <div className="flex flex-col divide-y divide-border">
+                {asignados.map((a) => (
+                  <div key={a.id_proveedor} className="py-2 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-bg-soft flex items-center justify-center shrink-0">
+                      <MdHandyman size={14} className="text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-text truncate">{a.nombre}</p>
+                      <p className="text-[11px] text-text-soft">{a.rubro} - {a.ciudad}</p>
+                    </div>
+                    <p className="text-sm font-bold text-text">{formatearMoneda(a.costo_servicio)}</p>
+                    <button onClick={() => quitar(a.id_proveedor)} className="text-rose-600 hover:bg-rose-50 rounded-lg p-1.5">
+                      <MdDeleteOutline size={16} />
+                    </button>
+                  </div>
+                ))}
+                <div className="pt-2 flex justify-between text-xs">
+                  <span className="font-semibold text-text-soft">Costo total</span>
+                  <span className="font-bold text-text">{formatearMoneda(totalCosto)}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={asignar} className="flex flex-col gap-2 border-t border-border pt-3">
+            <p className="text-xs font-bold text-text">Asignar nuevo</p>
+            <select
+              value={seleccionado}
+              onChange={(e) => setSeleccionado(e.target.value)}
+              className="border border-border rounded-lg px-3 py-2 text-sm bg-bg-soft"
+              required
+            >
+              <option value="">Selecciona un proveedor...</option>
+              {disponibles.map((p) => (
+                <option key={p.id_proveedor} value={p.id_proveedor}>
+                  {p.nombre} - {p.rubro} - {p.ciudad}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Costo del servicio"
+              value={costo}
+              onChange={(e) => setCosto(e.target.value)}
+              className="border border-border rounded-lg px-3 py-2 text-sm bg-bg-soft"
+              required
+            />
+            <button
+              type="submit"
+              disabled={enviando || disponibles.length === 0}
+              className="bg-primary text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-primary-hover disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              <MdAdd size={14} /> {enviando ? 'Guardando...' : 'Agregar al caso'}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

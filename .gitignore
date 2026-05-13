@@ -1,0 +1,16 @@
+# Editor / IDE
+.idea/
+.vscode/
+
+# Archivos locales del entorno
+.claude/
+CLAUDE.md
+
+# Sistema
+Thumbs.db
+.DS_Store
+
+# Temporales de Office
+~$*.docx
+~$*.doc
+~$*.xlsx

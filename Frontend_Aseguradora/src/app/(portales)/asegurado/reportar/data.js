@@ -1,7 +1,11 @@
 import {
   MdDirectionsCar,
   MdHealthAndSafety,
+  MdFavorite,
   MdHome,
+  MdFlight,
+  MdBusiness,
+  MdShield,
   MdCarCrash,
   MdSecurity,
   MdLocalHospital,
@@ -10,39 +14,22 @@ import {
   MdMoreHoriz,
 } from 'react-icons/md';
 
-export const POLIZAS = [
-  {
-    id: 'POL-2024-00182',
-    label: 'Seguro de Auto',
-    icon: MdDirectionsCar,
-    accentBg: 'bg-primary/10',
-    accentText: 'text-primary',
-    plan: 'Full',
-    estado: 'activa',
-  },
-  {
-    id: 'POL-2023-00891',
-    label: 'Seguro de Salud',
-    icon: MdHealthAndSafety,
-    accentBg: 'bg-emerald-100',
-    accentText: 'text-emerald-600',
-    plan: 'Familiar',
-    estado: 'activa',
-  },
-  {
-    id: 'POL-2024-00510',
-    label: 'Seguro de Hogar',
-    icon: MdHome,
-    accentBg: 'bg-amber-100',
-    accentText: 'text-amber-600',
-    plan: 'Estándar',
-    estado: 'en proceso',
-  },
-];
+export const TIPO_STYLES = {
+  VEHICULAR: { icon: MdDirectionsCar, accentBg: 'bg-primary/10', accentText: 'text-primary' },
+  SALUD: { icon: MdHealthAndSafety, accentBg: 'bg-emerald-100', accentText: 'text-emerald-600' },
+  VIDA: { icon: MdFavorite, accentBg: 'bg-rose-100', accentText: 'text-rose-500' },
+  HOGAR: { icon: MdHome, accentBg: 'bg-amber-100', accentText: 'text-amber-600' },
+  VIAJE: { icon: MdFlight, accentBg: 'bg-sky-100', accentText: 'text-sky-600' },
+  EMPRESA: { icon: MdBusiness, accentBg: 'bg-violet-100', accentText: 'text-violet-600' },
+};
+
+export function estiloTipo(tipo) {
+  return TIPO_STYLES[tipo] || { icon: MdShield, accentBg: 'bg-bg-soft', accentText: 'text-text-soft' };
+}
 
 export const TIPOS = [
   {
-    id: 'accidente',
+    id: 'Accidente de transito',
     label: 'Accidente de tránsito',
     desc: 'Colisión, volcamiento u otro evento vial',
     icon: MdCarCrash,
@@ -50,7 +37,7 @@ export const TIPOS = [
     accentText: 'text-primary',
   },
   {
-    id: 'robo',
+    id: 'Robo o hurto',
     label: 'Robo o hurto',
     desc: 'Robo total, parcial o intento de robo',
     icon: MdSecurity,
@@ -58,7 +45,7 @@ export const TIPOS = [
     accentText: 'text-rose-500',
   },
   {
-    id: 'medico',
+    id: 'Emergencia medica',
     label: 'Emergencia médica',
     desc: 'Hospitalización, urgencia o accidente',
     icon: MdLocalHospital,
@@ -66,7 +53,7 @@ export const TIPOS = [
     accentText: 'text-emerald-600',
   },
   {
-    id: 'daños',
+    id: 'Danos a propiedad',
     label: 'Daños a propiedad',
     desc: 'Incendio, inundación, daño estructural',
     icon: MdFireTruck,
@@ -74,7 +61,7 @@ export const TIPOS = [
     accentText: 'text-amber-600',
   },
   {
-    id: 'terceros',
+    id: 'Danos a terceros',
     label: 'Daños a terceros',
     desc: 'Daños causados a bienes de otras personas',
     icon: MdPeople,
@@ -82,7 +69,7 @@ export const TIPOS = [
     accentText: 'text-sky-600',
   },
   {
-    id: 'otro',
+    id: 'Otro',
     label: 'Otro',
     desc: 'Otro tipo de incidente no listado',
     icon: MdMoreHoriz,
@@ -93,12 +80,20 @@ export const TIPOS = [
 
 export const STEPS = [
   { id: 1, label: 'Póliza' },
-  { id: 2, label: 'Siniestro' },
+  { id: 2, label: 'Tipo' },
   { id: 3, label: 'Detalle' },
   { id: 4, label: 'Evidencia' },
   { id: 5, label: 'Confirmar' },
 ];
 
-export function generateTicket() {
-  return 'SIN-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 90000) + 10000);
+export function formatearMoneda(v) {
+  if (v == null) return '—';
+  return `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+export function formatearFecha(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }

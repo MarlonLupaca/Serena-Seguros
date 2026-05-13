@@ -1,226 +1,259 @@
-"use client";
+'use client';
 
-import React, { useState } from 'react';
-import { 
-  MdRequestQuote, MdWarning, MdDescription, MdFolder, 
-  MdAccessTime, MdAddCircle, MdPeople, MdMoreVert,
-  MdDateRange, MdPieChartOutline, MdShowChart,
-  MdAttachMoney, MdPersonAdd, MdOutlineAssignment,
-  MdHistory, MdDirectionsCar, MdHealthAndSafety, MdHomeWork
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  MdRequestQuote,
+  MdPeople,
+  MdAttachMoney,
+  MdCampaign,
+  MdHandshake,
+  MdTrendingUp,
+  MdCalendarToday,
+  MdChevronRight,
 } from 'react-icons/md';
-import Link from 'next/link';
+import { apiGet } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 
-export default function EmployeeDashboard() {
-  const [taskTab, setTaskTab] = useState('Todas');
+const KANBAN = ['NUEVO', 'CONTACTADO', 'EN_PROPUESTA', 'NEGOCIACION', 'GANADO', 'PERDIDO'];
 
-  const metrics = [
-    { label: 'Solicitudes', value: '24', icon: MdRequestQuote, color: 'text-blue-600', bg: 'bg-blue-500/10', trend: '+12%' },
-    { label: 'Siniestros', value: '7', icon: MdWarning, color: 'text-orange-500', bg: 'bg-orange-500/10', trend: '-2' },
-    { label: 'Pólizas', value: '1.2k', icon: MdDescription, color: 'text-primary', bg: 'bg-primary/10', trend: '+5%' },
-    { label: 'Documentos', value: '12', icon: MdFolder, color: 'text-purple-600', bg: 'bg-purple-500/10', trend: '+3' },
-    { label: 'Nuevos Clientes', value: '15', icon: MdPersonAdd, color: 'text-green-600', bg: 'bg-green-500/10', trend: '+8%' },
-    { label: 'Pagos Pend.', value: '4', icon: MdAttachMoney, color: 'text-red-500', bg: 'bg-red-500/10', trend: '-1' },
-  ];
+const KANBAN_COLOR = {
+  NUEVO: 'bg-sky-500',
+  CONTACTADO: 'bg-violet-500',
+  EN_PROPUESTA: 'bg-amber-500',
+  NEGOCIACION: 'bg-blue-500',
+  GANADO: 'bg-emerald-500',
+  PERDIDO: 'bg-rose-400',
+};
 
-  const pendingTasks = [
-    { id: 1, type: 'Cotización', title: 'Vehicular Premium', client: 'J. Pérez', time: '10 min', status: 'Urgente' },
-    { id: 2, type: 'Siniestro', title: 'Choque Av. Javier P.', client: 'M. López', time: '1h', status: 'Pendiente' },
-    { id: 3, type: 'Documento', title: 'DNI y Propiedad', client: 'C. Sánchez', time: '2h', status: 'Revisión' },
-    { id: 4, type: 'Cotización', title: 'Salud Familiar', client: 'A. Gomez', time: '3h', status: 'Normal' },
-    { id: 5, type: 'Renovación', title: 'Empresarial Oro', client: 'Constructora Beta', time: 'Hoy 16:00', status: 'Urgente' },
-  ];
+function formatearMoneda(v) {
+  if (v == null) return 'S/ 0';
+  return `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
 
-  const filteredTasks = pendingTasks.filter(task => {
-    if (taskTab === 'Todas') return true;
-    if (taskTab === 'Urgentes') return task.status === 'Urgente';
-    if (taskTab === 'Hoy') return task.time.includes('min') || task.time.includes('h') || task.time.includes('Hoy');
-    return true;
-  });
+function formatearFecha(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
+}
 
-  const recentActivity = [
-    { id: 1, action: 'Póliza Vehicular Aprobada', user: 'Ana M.', time: 'Hace 5 min', type: 'success' },
-    { id: 2, action: 'Documento Rechazado (DNI Ilegible)', user: 'Carlos T.', time: 'Hace 15 min', type: 'error' },
-    { id: 3, action: 'Nuevo Siniestro Reportado', user: 'Sistema', time: 'Hace 30 min', type: 'warning' },
-    { id: 4, action: 'Cotización Enviada', user: 'Luis G.', time: 'Hace 1h', type: 'info' },
-  ];
+export default function ComercialDashboard() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [cotizaciones, setCotizaciones] = useState([]);
+  const [comisiones, setComisiones] = useState([]);
+  const [campanas, setCampanas] = useState([]);
+  const [clientes, setClientes] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
-  const policyDistribution = [
-    { label: 'Vehicular', value: 55, color: 'bg-blue-500', icon: MdDirectionsCar },
-    { label: 'Salud', value: 30, color: 'bg-green-500', icon: MdHealthAndSafety },
-    { label: 'Empresarial', value: 15, color: 'bg-purple-500', icon: MdHomeWork },
-  ];
+  useEffect(() => {
+    Promise.all([
+      apiGet('/cotizaciones').catch(() => []),
+      apiGet('/mis-comisiones').catch(() => []),
+      apiGet('/mis-campanas').catch(() => []),
+      apiGet('/clientes').catch(() => []),
+    ]).then(([cots, coms, camps, clis]) => {
+      setCotizaciones(cots || []);
+      setComisiones(coms || []);
+      setCampanas(camps || []);
+      setClientes(clis || []);
+      setCargando(false);
+    });
+  }, []);
+
+  const totalGanado = comisiones
+    .filter((c) => c.estado_pago === 'PAGADA')
+    .reduce((acc, c) => acc + Number(c.monto_generado || 0), 0);
+  const totalPorCobrar = comisiones
+    .filter((c) => c.estado_pago === 'PENDIENTE')
+    .reduce((acc, c) => acc + Number(c.monto_generado || 0), 0);
+
+  const cuentaPorEstado = KANBAN.reduce(
+    (acc, k) => ({ ...acc, [k]: cotizaciones.filter((c) => c.estado_kanban === k).length }),
+    {}
+  );
+
+  const ultimasCotizaciones = cotizaciones.slice(0, 5);
 
   return (
-    <div className="py-2 flex flex-col gap-4 pb-8">
-      {/* HEADER COMPACTO */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-text">Panel de Control</h1>
-          <p className="text-[11px] text-text-soft">Resumen operativo y tareas de hoy.</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button className="px-3 py-1.5 bg-bg border border-border rounded-lg text-xs font-semibold text-text hover:bg-bg-soft transition-all flex items-center gap-1 shadow-sm">
-            <MdDateRange size={16} /> Hoy
-          </button>
-          <Link href="/employee/solicitudes" className="px-3 py-1.5 bg-bg border border-border rounded-lg text-xs font-semibold text-text hover:bg-bg-soft transition-all flex items-center gap-1 shadow-sm">
-            <MdRequestQuote size={16} /> Cotizar
-          </Link>
-          <button className="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary-hover transition-all flex items-center gap-1 shadow-sm">
-            <MdAddCircle size={16} /> Nuevo Siniestro
-          </button>
-        </div>
+    <div className="flex flex-col gap-6 p-6">
+      <div>
+        <p className="text-xs text-text-soft">Hola</p>
+        <p className="text-xl font-bold text-text">{user ? `${user.nombres} ${user.apellidos}` : 'Comercial'}</p>
       </div>
 
-      {/* MÉTRICAS (6 ITEMS, MUY COMPACTO) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {metrics.map((metric, idx) => {
-          const Icon = metric.icon;
-          return (
-            <div key={idx} className="bg-bg border border-border rounded-xl p-3 flex flex-col justify-between shadow-sm hover:shadow-md transition-all group">
-              <div className="flex justify-between items-start mb-2">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${metric.bg}`}>
-                  <Icon className={`text-lg ${metric.color}`} />
-                </div>
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${metric.trend.includes('-') ? 'bg-red-500/10 text-red-600' : 'bg-green-500/10 text-green-600'}`}>
-                  {metric.trend}
-                </span>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-text leading-none">{metric.value}</h3>
-                <p className="text-[10px] text-text-soft font-medium mt-1 truncate">{metric.label}</p>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {cargando ? (
+        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
+          Cargando información...
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Kpi
+              label="Cotizaciones activas"
+              val={cotizaciones.length}
+              icon={MdRequestQuote}
+              bg="bg-primary/10"
+              color="text-primary"
+              onClick={() => router.push('/comercial/cotizaciones')}
+            />
+            <Kpi
+              label="Clientes"
+              val={clientes.length}
+              icon={MdPeople}
+              bg="bg-emerald-100"
+              color="text-emerald-600"
+              onClick={() => router.push('/comercial/clientes')}
+            />
+            <Kpi
+              label="Comisión ganada"
+              val={formatearMoneda(totalGanado)}
+              icon={MdAttachMoney}
+              bg="bg-amber-100"
+              color="text-amber-600"
+              onClick={() => router.push('/comercial/comisiones')}
+            />
+            <Kpi
+              label="Por cobrar"
+              val={formatearMoneda(totalPorCobrar)}
+              icon={MdTrendingUp}
+              bg="bg-rose-100"
+              color="text-rose-500"
+              onClick={() => router.push('/comercial/comisiones')}
+            />
+          </div>
 
-      {/* SECCIÓN PRINCIPAL: 2 COLUMNAS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        
-        {/* TAREAS (COLUMNA IZQUIERDA - 2/3) */}
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          
-          {/* PANEL DE TAREAS CON PESTAÑAS */}
-          <div className="bg-bg border border-border rounded-xl shadow-sm flex flex-col h-full">
-            <div className="p-3 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-bg-soft/50 rounded-t-xl">
-              <h2 className="text-sm font-bold text-text flex items-center gap-2"><MdOutlineAssignment className="text-primary"/> Tareas Operativas</h2>
-              <div className="flex bg-bg border border-border rounded-lg p-0.5">
-                {['Todas', 'Urgentes', 'Hoy'].map(tab => (
-                  <button 
-                    key={tab}
-                    onClick={() => setTaskTab(tab)}
-                    className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${taskTab === tab ? 'bg-primary text-white shadow-sm' : 'text-text-soft hover:text-text'}`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-col flex-1 overflow-y-auto max-h-[300px]">
-              {filteredTasks.length === 0 ? (
-                <div className="p-6 text-center text-sm text-text-soft">No hay tareas para esta vista.</div>
-              ) : (
-                filteredTasks.map((task, i) => (
-                  <div key={task.id} className={`flex items-center justify-between px-4 py-2 hover:bg-bg-soft transition-colors text-sm ${i !== filteredTasks.length -1 ? 'border-b border-border/50' : ''}`}>
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${task.status === 'Urgente' ? 'bg-red-500' : task.status === 'Pendiente' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-semibold text-text truncate text-xs">{task.title}</span>
-                        <span className="text-[10px] text-text-soft flex items-center gap-1 mt-0.5 truncate"><MdPeople size={12}/> {task.client} • {task.type}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 flex flex-col">
+              <SectionHeader
+                title="Embudo de cotizaciones"
+                onClick={() => router.push('/comercial/cotizaciones')}
+              />
+              <div className="bg-bg rounded-2xl border border-border p-5 flex flex-col gap-3">
+                {KANBAN.map((k) => {
+                  const total = cotizaciones.length || 1;
+                  const cnt = cuentaPorEstado[k] || 0;
+                  const pct = Math.round((cnt / total) * 100);
+                  return (
+                    <div key={k}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold text-text">{k.replace('_', ' ')}</span>
+                        <span className="text-xs text-text-soft">{cnt} cotizaciones</span>
+                      </div>
+                      <div className="h-2 bg-bg-soft rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${KANBAN_COLOR[k] || 'bg-primary'}`}
+                          style={{ width: `${pct}%` }}
+                        />
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-[10px] text-text-soft">{task.time}</span>
-                      <button className="text-text-soft hover:text-primary"><MdMoreVert size={16}/></button>
-                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex flex-col">
+              <SectionHeader title="Campañas" onClick={() => router.push('/comercial/campanas')} />
+              <div className="bg-bg rounded-2xl border border-border p-5 flex-1 flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <MdCampaign size={20} className="text-primary" />
                   </div>
-                ))
+                  <div>
+                    <p className="text-2xl font-bold text-text leading-none">{campanas.length}</p>
+                    <p className="text-xs text-text-soft">campañas activas</p>
+                  </div>
+                </div>
+                {campanas.slice(0, 3).map((c) => (
+                  <div key={c.id_campana} className="border-t border-border pt-2 first:border-0 first:pt-0">
+                    <p className="text-xs font-semibold text-text truncate">{c.asunto}</p>
+                    <p className="text-xs text-text-soft mt-0.5">
+                      {c.enviados} enviados · {c.abiertos} abiertos
+                    </p>
+                  </div>
+                ))}
+                {campanas.length === 0 && (
+                  <p className="text-xs text-text-soft text-center py-4">Aún no creaste campañas.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col">
+            <SectionHeader title="Últimas cotizaciones" onClick={() => router.push('/comercial/cotizaciones')} />
+            <div className="bg-bg rounded-2xl border border-border overflow-hidden">
+              {ultimasCotizaciones.length === 0 ? (
+                <div className="p-6 text-center text-sm text-text-soft">No hay cotizaciones todavía.</div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {ultimasCotizaciones.map((c) => (
+                    <div
+                      key={c.id_cotizacion}
+                      onClick={() => router.push('/comercial/cotizaciones')}
+                      className="p-4 flex items-center gap-3 hover:bg-bg-soft cursor-pointer transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <MdHandshake size={18} className="text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-text">
+                          COT-{String(c.id_cotizacion).padStart(6, '0')} · {c.producto_interes}
+                        </p>
+                        <p className="text-xs text-text-soft mt-0.5">Agente: {c.agente_asignado}</p>
+                      </div>
+                      <div className="text-right shrink-0 hidden sm:block">
+                        <p className="text-xs text-text-soft flex items-center gap-1 justify-end">
+                          <MdCalendarToday size={11} />
+                          {formatearFecha(c.fecha_ingreso)}
+                        </p>
+                        <span
+                          className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full mt-1 ${
+                            KANBAN_COLOR[c.estado_kanban] ? 'text-white' : ''
+                          } ${KANBAN_COLOR[c.estado_kanban] || 'bg-bg-soft text-text-soft'}`}
+                        >
+                          {c.estado_kanban}
+                        </span>
+                      </div>
+                      <MdChevronRight size={16} className="text-text-soft" />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
+        </>
+      )}
+    </div>
+  );
+}
 
-          {/* FLUJO FINANCIERO COMPACTO */}
-          <div className="bg-bg border border-border rounded-xl shadow-sm">
-             <div className="p-3 border-b border-border flex justify-between items-center bg-bg-soft/50 rounded-t-xl">
-                <h2 className="text-sm font-bold text-text flex items-center gap-2"><MdPieChartOutline className="text-primary"/> Flujo Diario</h2>
-                <span className="text-[10px] text-green-600 bg-green-500/10 px-2 py-0.5 rounded font-bold">+15% vs Ayer</span>
-              </div>
-              <div className="grid grid-cols-3 divide-x divide-border p-3 text-center">
-                 <div>
-                    <p className="text-[10px] text-text-soft font-bold uppercase mb-0.5">Ingresos</p>
-                    <p className="text-lg font-bold text-green-600">$12.4k</p>
-                 </div>
-                 <div>
-                    <p className="text-[10px] text-text-soft font-bold uppercase mb-0.5">Pendiente</p>
-                    <p className="text-lg font-bold text-orange-500">$3.2k</p>
-                 </div>
-                 <div>
-                    <p className="text-[10px] text-text-soft font-bold uppercase mb-0.5">Reembolsos</p>
-                    <p className="text-lg font-bold text-blue-600">$850</p>
-                 </div>
-              </div>
-          </div>
-
-        </div>
-
-        {/* REPORTES (COLUMNA DERECHA - 1/3) */}
-        <div className="flex flex-col gap-4">
-          
-          {/* DISTRIBUCIÓN DE PÓLIZAS */}
-          <div className="bg-bg border border-border rounded-xl shadow-sm p-4">
-            <h2 className="text-sm font-bold text-text flex items-center gap-2 mb-4"><MdShowChart className="text-primary"/> Portafolio Activo</h2>
-            <div className="flex flex-col gap-3">
-              {policyDistribution.map((item, i) => {
-                const Icon = item.icon;
-                return (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded bg-bg-soft flex items-center justify-center text-text-soft`}>
-                      <Icon size={16} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between text-[11px] mb-1">
-                        <span className="font-semibold text-text">{item.label}</span>
-                        <span className="font-bold text-text">{item.value}%</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
-                        <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.value}%` }}></div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* ACTIVIDAD RECIENTE (TIMELINE) */}
-          <div className="bg-bg border border-border rounded-xl shadow-sm flex flex-col flex-1">
-             <div className="p-3 border-b border-border bg-bg-soft/50 rounded-t-xl">
-               <h2 className="text-sm font-bold text-text flex items-center gap-2"><MdHistory className="text-primary"/> Actividad Reciente</h2>
-             </div>
-             <div className="p-4 flex flex-col gap-4 flex-1">
-                {recentActivity.map((act, i) => (
-                  <div key={act.id} className="flex gap-3 relative">
-                    {/* Linea conectora */}
-                    {i !== recentActivity.length - 1 && (
-                      <div className="absolute left-[11px] top-6 bottom-[-16px] w-[2px] bg-border"></div>
-                    )}
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 z-10 border-2 border-bg
-                      ${act.type === 'success' ? 'bg-green-500' : 
-                        act.type === 'error' ? 'bg-red-500' : 
-                        act.type === 'warning' ? 'bg-orange-500' : 'bg-blue-500'}`}>
-                      <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-text leading-tight">{act.action}</span>
-                      <span className="text-[10px] text-text-soft mt-0.5">{act.user} • {act.time}</span>
-                    </div>
-                  </div>
-                ))}
-             </div>
-          </div>
-          
-        </div>
+function Kpi({ label, val, icon: Icon, bg, color, onClick }) {
+  return (
+    <div
+      onClick={onClick}
+      className="bg-bg rounded-xl border border-border px-4 py-3 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow"
+    >
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${bg}`}>
+        <Icon size={17} className={color} />
       </div>
+      <div>
+        <p className={`text-xl font-bold leading-tight ${color}`}>{val}</p>
+        <p className="text-xs text-text-soft">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({ title, onClick }) {
+  return (
+    <div className="flex items-center justify-between mb-3">
+      <p className="text-sm font-bold text-text">{title}</p>
+      {onClick && (
+        <button onClick={onClick} className="flex items-center gap-0.5 text-xs text-primary hover:underline">
+          Ver todo <MdChevronRight size={14} />
+        </button>
+      )}
     </div>
   );
 }

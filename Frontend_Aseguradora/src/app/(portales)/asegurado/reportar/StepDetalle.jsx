@@ -1,4 +1,11 @@
-import { MdCalendarToday, MdAccessTime, MdLocationOn, MdNotes, MdPeople } from 'react-icons/md';
+import {
+  MdCalendarToday,
+  MdAccessTime,
+  MdLocationOn,
+  MdNotes,
+  MdPeople,
+  MdAttachMoney,
+} from 'react-icons/md';
 
 export default function StepDetalle({ form, onChange, errors }) {
   return (
@@ -7,6 +14,7 @@ export default function StepDetalle({ form, onChange, errors }) {
         <p className="text-sm font-bold text-text mb-1">Cuéntanos qué pasó</p>
         <p className="text-xs text-text-soft">Completa los datos del evento para agilizar tu caso.</p>
       </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="flex items-center gap-1.5 text-xs text-text-soft mb-1.5">
@@ -34,6 +42,7 @@ export default function StepDetalle({ form, onChange, errors }) {
           {errors.hora && <p className="text-xs text-rose-500 mt-1">{errors.hora}</p>}
         </div>
       </div>
+
       <div>
         <label className="flex items-center gap-1.5 text-xs text-text-soft mb-1.5">
           <MdLocationOn size={13} /> Lugar del incidente *
@@ -46,13 +55,24 @@ export default function StepDetalle({ form, onChange, errors }) {
           className={`w-full px-3 py-2 rounded-xl text-sm border outline-none bg-bg text-text transition-colors ${errors.lugar ? 'border-rose-400' : 'border-border focus:border-primary'}`}
         />
         {errors.lugar && <p className="text-xs text-rose-500 mt-1">{errors.lugar}</p>}
-        <div className="flex items-start gap-1.5 mt-2 p-2.5 rounded-xl bg-primary/5 border border-primary/15">
-          <MdLocationOn size={13} className="text-primary mt-0.5 shrink-0" />
-          <p className="text-xs text-primary">
-            Ingresa la dirección lo más precisa posible: calle, número, distrito y ciudad.
-          </p>
-        </div>
       </div>
+
+      <div>
+        <label className="flex items-center gap-1.5 text-xs text-text-soft mb-1.5">
+          <MdAttachMoney size={13} /> Monto reclamado *
+        </label>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={form.monto}
+          onChange={(e) => onChange('monto', e.target.value)}
+          placeholder="Ej. 3500.00"
+          className={`w-full px-3 py-2 rounded-xl text-sm border outline-none bg-bg text-text transition-colors ${errors.monto ? 'border-rose-400' : 'border-border focus:border-primary'}`}
+        />
+        {errors.monto && <p className="text-xs text-rose-500 mt-1">{errors.monto}</p>}
+      </div>
+
       <div>
         <label className="flex items-center gap-1.5 text-xs text-text-soft mb-1.5">
           <MdNotes size={13} /> Descripción de lo ocurrido *
@@ -63,7 +83,7 @@ export default function StepDetalle({ form, onChange, errors }) {
           onChange={(e) => onChange('desc', e.target.value)}
           maxLength={500}
           rows={3}
-          placeholder="Describe brevemente cómo ocurrió el siniestro, qué bienes fueron afectados y si hubo lesionados…"
+          placeholder="Describe brevemente cómo ocurrió el siniestro..."
           className={`w-full px-3 py-2 rounded-xl text-sm border outline-none bg-bg text-text transition-colors resize-none ${errors.desc ? 'border-rose-400' : 'border-border focus:border-primary'}`}
         />
         <div className="flex items-center justify-between mt-1">
@@ -73,6 +93,7 @@ export default function StepDetalle({ form, onChange, errors }) {
           </p>
         </div>
       </div>
+
       <div>
         <label className="flex items-center gap-1.5 text-xs text-text-soft mb-1.5">
           <MdPeople size={13} /> Personas involucradas
@@ -85,12 +106,6 @@ export default function StepDetalle({ form, onChange, errors }) {
           placeholder="Nombres, relación o número de personas"
           className="w-full px-3 py-2 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary transition-colors"
         />
-        <div className="flex items-start gap-1.5 mt-2 p-2.5 rounded-xl bg-primary/5 border border-primary/15">
-          <MdPeople size={13} className="text-primary mt-0.5 shrink-0" />
-          <p className="text-xs text-primary">
-            Si hay terceros involucrados, incluye sus datos básicos para facilitar el proceso.
-          </p>
-        </div>
       </div>
     </div>
   );

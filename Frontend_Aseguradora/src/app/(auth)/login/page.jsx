@@ -1,69 +1,63 @@
 'use client';
 
 import { useState } from 'react';
-import { MdEmail, MdLock, MdVisibility, MdVisibilityOff, MdClose } from 'react-icons/md';
+import { MdPerson, MdLock, MdVisibility, MdVisibilityOff, MdClose } from 'react-icons/md';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { login, PORTAL_TO_PATH } from '@/lib/auth';
+import { useAuth } from '@/lib/AuthContext';
 
-const ROLES = [
-  {
-    label: 'Asegurado',
-    email: 'cliente@test.com',
-    pass: 'cliente123',
-    path: '/asegurado',
-    url: '/icons/cliente.png',
-  },
-  {
-    label: 'Comercial',
-    email: 'empleado@test.com',
-    pass: 'empleado123',
-    path: '/comercial',
-    url: '/icons/empleado.png',
-  },
-  {
-    label: 'Core',
-    email: 'cliente@test.com',
-    pass: 'cliente123',
-    path: '/core',
-    url: '/icons/cliente.png',
-  },
-  {
-    label: 'Operativo',
-    email: 'empleado@test.com',
-    pass: 'empleado123',
-    path: '/operativo',
-    url: '/icons/empleado.png',
-  },
-  {
-    label: 'Ejecutivo',
-    email: 'admin@test.com',
-    pass: 'admin123',
-    path: '/ejecutivo',
-    url: '/icons/admin.png',
-  },
+const ACCESOS_RAPIDOS = [
+  { label: 'Asegurado', username: 'asegurado_demo', password: 'demo12345', url: '/icons/cliente.png' },
+  { label: 'Comercial', username: 'comercial_demo', password: 'demo12345', url: '/icons/empleado.png' },
+  { label: 'Tecnico', username: 'tecnico_demo', password: 'demo12345', url: '/icons/cliente.png' },
+  { label: 'Operativo', username: 'operativo_demo', password: 'demo12345', url: '/icons/empleado.png' },
+  { label: 'Ejecutivo', username: 'ejecutivo_demo', password: 'demo12345', url: '/icons/admin.png' },
 ];
 
 export default function Login() {
   const router = useRouter();
+  const { setUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
+  const ingresar = async (user, pass) => {
     setError('');
-    const user = ROLES.find((u) => u.email === email && u.pass === password);
-    if (user) {
-      router.push(user.path);
-    } else {
-      setError('Credenciales incorrectas.');
+    setLoading(true);
+    try {
+      const data = await login(user, pass);
+      const path = PORTAL_TO_PATH[data.portal_acceso];
+      if (!path) {
+        setError('Portal de acceso desconocido');
+        return;
+      }
+      setUser({
+        username: data.username,
+        nombres: data.nombres,
+        apellidos: data.apellidos,
+        portal_acceso: data.portal_acceso,
+      });
+      router.push(path);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo iniciar sesion');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const loginAs = (role) => {
-    router.push(role.path);
+  const handleLogin = (e) => {
+    e.preventDefault();
+    ingresar(username, password);
+  };
+
+  const accesoRapido = (acceso) => {
+    setError('');
+    setUsername(acceso.username);
+    setPassword(acceso.password);
   };
 
   return (
@@ -101,26 +95,26 @@ export default function Login() {
             <p className="text-sm text-text-soft">Inicia sesión para continuar</p>
           </div>
 
-          {/* Acceso rápido por rol */}
+          {/* Acceso rápido por portal */}
           <div className="mb-6">
             <p className="text-xs font-semibold text-text-soft uppercase tracking-wider mb-3">Acceso rápido — Demo</p>
             <div className="grid grid-cols-3 gap-3">
-              {ROLES.map((role) => (
+              {ACCESOS_RAPIDOS.map((acceso) => (
                 <button
-                  key={role.label}
+                  key={acceso.label}
                   type="button"
-                  onClick={() => loginAs(role)}
-                  style={{ '--role-color': role.color, '--role-bg': role.bg }}
-                  className="cursor-pointer flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl border border-primary bg-bg transition-all hover:scale-103"
+                  onClick={() => accesoRapido(acceso)}
+                  disabled={loading}
+                  className="cursor-pointer flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl border border-primary bg-bg transition-all hover:scale-103 disabled:opacity-50"
                 >
                   <Image
-                    src={role.url}
+                    src={acceso.url}
                     width={500}
                     height={500}
-                    alt={role.label}
+                    alt={acceso.label}
                     className="h-8 object-contain w-fit"
                   />
-                  <span className="text-xs font-semibold text-text-soft transition-colors">{role.label}</span>
+                  <span className="text-xs font-semibold text-text-soft transition-colors">{acceso.label}</span>
                 </button>
               ))}
             </div>
@@ -142,16 +136,16 @@ export default function Login() {
             )}
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-text">Email</label>
+              <label className="text-sm font-medium text-text">Usuario</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft">
-                  <MdEmail size={18} />
+                  <MdPerson size={18} />
                 </span>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ejemplo@test.com"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="ej: usuario_demo"
                   className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none bg-bg-soft text-text border border-border focus:border-primary transition-all"
                   required
                 />
@@ -194,9 +188,10 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-xl text-sm font-bold bg-primary hover:bg-primary-hover text-white transition-all shadow-lg shadow-primary/25"
+              disabled={loading}
+              className="w-full py-3.5 rounded-xl text-sm font-bold bg-primary hover:bg-primary-hover text-white transition-all shadow-lg shadow-primary/25 disabled:opacity-60"
             >
-              Iniciar sesión
+              {loading ? 'Ingresando...' : 'Iniciar sesión'}
             </button>
 
             <p className="text-sm text-center mt-2 text-text-soft">

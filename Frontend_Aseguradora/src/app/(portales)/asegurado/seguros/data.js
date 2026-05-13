@@ -1,155 +1,71 @@
 import {
   MdDirectionsCar,
+  MdHealthAndSafety,
   MdFavorite,
   MdHome,
-  MdHealthAndSafety,
-  MdPeople,
-  MdStar,
-  MdSecurity,
-  MdTrendingUp,
   MdFlight,
-  MdPets,
   MdBusiness,
+  MdShield,
 } from 'react-icons/md';
 
-export const seguros = [
-  {
-    id: 'auto',
+export const TIPO_STYLES = {
+  VEHICULAR: {
     icon: MdDirectionsCar,
-    tab: 'Auto',
-    nombre: 'Seguro de Auto',
-    tagline: 'Maneja sin preocupaciones',
-    descripcion:
-      'Protege tu vehículo ante accidentes, robos y daños a terceros. Cobertura completa en todo el territorio nacional.',
-    badge: 'Más popular',
     accentBg: 'bg-primary/10',
     accentText: 'text-primary',
-    beneficios: [
-      'Cobertura ante choques y volcaduras',
-      'Robo total y parcial',
-      'Responsabilidad civil a terceros',
-      'Asistencia en carretera 24/7',
-    ],
-    planes: ['Básico', 'Estándar', 'Full'],
-    desde: 'S/ 45',
+    label: 'Auto',
+    tagline: 'Maneja sin preocupaciones',
   },
-  {
-    id: 'salud',
+  SALUD: {
     icon: MdHealthAndSafety,
-    tab: 'Salud',
-    nombre: 'Seguro de Salud',
-    tagline: 'Tu bienestar, nuestra prioridad',
-    descripcion:
-      'Accede a atención médica de calidad sin preocuparte por los costos. Red de clínicas a nivel nacional.',
-    badge: 'Recomendado',
     accentBg: 'bg-emerald-100',
     accentText: 'text-emerald-600',
-    beneficios: [
-      'Consultas médicas ilimitadas',
-      'Hospitalización y cirugías',
-      'Maternidad y pediatría',
-      'Telemedicina incluida',
-    ],
-    planes: ['Individual', 'Familiar', 'Premium'],
-    desde: 'S/ 89',
+    label: 'Salud',
+    tagline: 'Tu bienestar, nuestra prioridad',
   },
-  {
-    id: 'vida',
+  VIDA: {
     icon: MdFavorite,
-    tab: 'Vida',
-    nombre: 'Seguro de Vida',
-    tagline: 'Protege a quienes más quieres',
-    descripcion:
-      'Garantiza el futuro económico de tu familia ante cualquier eventualidad. Tranquilidad para los tuyos.',
-    badge: null,
     accentBg: 'bg-rose-100',
     accentText: 'text-rose-500',
-    beneficios: [
-      'Capital asegurado para beneficiarios',
-      'Cobertura por invalidez total',
-      'Enfermedades graves',
-      'Ahorro + protección',
-    ],
-    planes: ['Esencial', 'Plus', 'Platinum'],
-    desde: 'S/ 35',
+    label: 'Vida',
+    tagline: 'Protege a quienes más quieres',
   },
-  {
-    id: 'hogar',
+  HOGAR: {
     icon: MdHome,
-    tab: 'Hogar',
-    nombre: 'Seguro de Hogar',
-    tagline: 'Tu casa, siempre protegida',
-    descripcion: 'Cubre tu vivienda ante siniestros, robos y daños accidentales. Para propietarios e inquilinos.',
-    badge: null,
     accentBg: 'bg-amber-100',
     accentText: 'text-amber-600',
-    beneficios: [
-      'Incendio y daños estructurales',
-      'Robo de contenido del hogar',
-      'Fenómenos naturales',
-      'Asistencia técnica urgente',
-    ],
-    planes: ['Básico', 'Estándar', 'Total'],
-    desde: 'S/ 28',
+    label: 'Hogar',
+    tagline: 'Tu casa, siempre protegida',
   },
-  {
-    id: 'viaje',
+  VIAJE: {
     icon: MdFlight,
-    tab: 'Viaje',
-    nombre: 'Seguro de Viaje',
-    tagline: 'Explora el mundo sin riesgos',
-    descripcion:
-      'Cobertura médica y asistencia para viajes nacionales e internacionales. Ideal para turismo y negocios.',
-    badge: 'Nuevo',
-    accentBg: 'bg-violet-100',
-    accentText: 'text-violet-600',
-    beneficios: [
-      'Gastos médicos en el extranjero',
-      'Cancelación y retraso de vuelos',
-      'Pérdida de equipaje',
-      'Evacuación médica de emergencia',
-    ],
-    planes: ['Mochilero', 'Turista', 'Business'],
-    desde: 'S/ 22',
-  },
-  {
-    id: 'mascota',
-    icon: MdPets,
-    tab: 'Mascotas',
-    nombre: 'Seguro para Mascotas',
-    tagline: 'Cuida a tu mejor amigo',
-    descripcion: 'Atención veterinaria para perros y gatos. Porque tu mascota también merece la mejor protección.',
-    badge: 'Nuevo',
-    accentBg: 'bg-pink-100',
-    accentText: 'text-pink-500',
-    beneficios: [
-      'Consultas veterinarias',
-      'Cirugías y hospitalización',
-      'Vacunas y desparasitación',
-      'Emergencias 24/7',
-    ],
-    planes: ['Básico', 'Plus', 'Full'],
-    desde: 'S/ 18',
-  },
-  {
-    id: 'empresa',
-    icon: MdBusiness,
-    tab: 'Empresa',
-    nombre: 'Seguro Empresarial',
-    tagline: 'Protege tu negocio',
-    descripcion: 'Soluciones integrales para empresas: cubre activos, responsabilidad civil y a tu equipo de trabajo.',
-    badge: null,
     accentBg: 'bg-sky-100',
     accentText: 'text-sky-600',
-    beneficios: [
-      'Daños a instalaciones y activos',
-      'Responsabilidad civil empresarial',
-      'Seguro colectivo de empleados',
-      'Continuidad de negocio',
-    ],
-    planes: ['Pyme', 'Corporativo', 'Enterprise'],
-    desde: 'S/ 150',
+    label: 'Viaje',
+    tagline: 'Explora el mundo sin riesgos',
   },
-];
+  EMPRESA: {
+    icon: MdBusiness,
+    accentBg: 'bg-violet-100',
+    accentText: 'text-violet-600',
+    label: 'Empresa',
+    tagline: 'Protege tu negocio',
+  },
+};
 
-export const ALL_TABS = [{ id: 'todos', tab: 'Todos', icon: null, accentBg: null, accentText: null }, ...seguros];
+export function estiloTipo(tipo) {
+  return (
+    TIPO_STYLES[tipo] || {
+      icon: MdShield,
+      accentBg: 'bg-bg-soft',
+      accentText: 'text-text-soft',
+      label: tipo,
+      tagline: '',
+    }
+  );
+}
+
+export function formatearMoneda(v) {
+  if (v == null) return '—';
+  return `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}

@@ -2,6 +2,7 @@
 
 import Sidebar from '../componentsMain/Sidebar';
 import AppHeader from '../componentsMain/AppHeader';
+import { useGuard } from '@/lib/useGuard';
 
 import {
   MdHome,
@@ -58,18 +59,21 @@ const operativoMenu = [
   },
 ];
 
-// 2. Datos del usuario operativo
-const operativoUser = {
-  name: 'Administrador ERP',
-  email: 'admin.erp@empresa.com',
-};
-
 export default function DashboardLayout({ children }) {
+  const { user, autorizado } = useGuard('OPERATIVO');
+
+  if (!autorizado) return null;
+
+  const sidebarUser = {
+    name: `${user.nombres} ${user.apellidos}`,
+    email: user.username,
+  };
+
   return (
     <div className="h-screen w-screen bg-transparent flex overflow-hidden">
       {/* SIDEBAR REUTILIZABLE */}
       <div className="h-screen lg:p-3">
-        <Sidebar menus={operativoMenu} user={operativoUser} />
+        <Sidebar menus={operativoMenu} user={sidebarUser} />
       </div>
 
       {/* CONTENIDO */}

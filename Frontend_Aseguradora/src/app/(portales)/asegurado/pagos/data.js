@@ -1,7 +1,11 @@
 import {
   MdDirectionsCar,
   MdHealthAndSafety,
+  MdFavorite,
   MdHome,
+  MdFlight,
+  MdBusiness,
+  MdShield,
   MdHourglassEmpty,
   MdWarningAmber,
   MdCheckCircle,
@@ -12,19 +16,19 @@ import {
 } from 'react-icons/md';
 
 export const ESTADO_CONFIG = {
-  pendiente: {
+  PENDIENTE: {
     label: 'Pendiente',
     badge: 'bg-amber-100 text-amber-700',
     dot: 'bg-amber-400',
     icon: MdHourglassEmpty,
   },
-  vencido: {
+  VENCIDO: {
     label: 'Vencido',
     badge: 'bg-rose-100 text-rose-600',
     dot: 'bg-rose-400',
     icon: MdWarningAmber,
   },
-  pagado: {
+  PAGADO: {
     label: 'Pagado',
     badge: 'bg-emerald-100 text-emerald-700',
     dot: 'bg-emerald-500',
@@ -32,139 +36,57 @@ export const ESTADO_CONFIG = {
   },
 };
 
+export const TIPO_STYLES = {
+  VEHICULAR: { icon: MdDirectionsCar, accentBg: 'bg-primary/10', accentText: 'text-primary' },
+  SALUD: { icon: MdHealthAndSafety, accentBg: 'bg-emerald-100', accentText: 'text-emerald-600' },
+  VIDA: { icon: MdFavorite, accentBg: 'bg-rose-100', accentText: 'text-rose-500' },
+  HOGAR: { icon: MdHome, accentBg: 'bg-amber-100', accentText: 'text-amber-600' },
+  VIAJE: { icon: MdFlight, accentBg: 'bg-sky-100', accentText: 'text-sky-600' },
+  EMPRESA: { icon: MdBusiness, accentBg: 'bg-violet-100', accentText: 'text-violet-600' },
+};
+
+export function estiloTipo(tipo) {
+  return (
+    TIPO_STYLES[tipo] || {
+      icon: MdShield,
+      accentBg: 'bg-bg-soft',
+      accentText: 'text-text-soft',
+    }
+  );
+}
+
 export const METODOS_PAGO = [
   { id: 'visa', label: 'Tarjeta de crédito', sub: 'Visa / Mastercard', icon: MdCreditCard },
-  { id: 'transferencia', label: 'Transferencia', sub: 'Banco BCP, Interbank…', icon: MdAccountBalance },
+  { id: 'transferencia', label: 'Transferencia', sub: 'Banco BCP, Interbank', icon: MdAccountBalance },
   { id: 'yape', label: 'Yape / Plin', sub: 'Pago instantáneo', icon: MdPhoneAndroid },
   { id: 'debito', label: 'Tarjeta de débito', sub: 'Débito inmediato', icon: MdPayment },
 ];
 
-export const CUOTAS = [
-  {
-    id: 'CUO-2024-00182-04',
-    polizaId: 'POL-2024-00182',
-    polizaLabel: 'Seguro de Auto',
-    polizaIcon: MdDirectionsCar,
-    accentBg: 'bg-primary/10',
-    accentText: 'text-primary',
-    numeroCuota: 4,
-    totalCuotas: 12,
-    monto: 'S/ 890.00',
-    montoNum: 890.0,
-    vencimiento: '20/04/2024',
-    diasRestantes: 2,
-    estado: 'pendiente',
-    periodo: 'Abril 2024',
-    descripcion: 'Cuota mensual · Plan Cobertura Total',
-  },
-  {
-    id: 'CUO-2024-00182-03',
-    polizaId: 'POL-2024-00182',
-    polizaLabel: 'Seguro de Auto',
-    polizaIcon: MdDirectionsCar,
-    accentBg: 'bg-primary/10',
-    accentText: 'text-primary',
-    numeroCuota: 3,
-    totalCuotas: 12,
-    monto: 'S/ 890.00',
-    montoNum: 890.0,
-    vencimiento: '20/03/2024',
-    diasRestantes: null,
-    estado: 'pagado',
-    periodo: 'Marzo 2024',
-    descripcion: 'Cuota mensual · Plan Cobertura Total',
-    comprobante: 'COMP-2024-03182.pdf',
-    fechaPago: '18/03/2024',
-    metodoPago: 'Visa •••• 4821',
-  },
-  {
-    id: 'CUO-2024-09871-02',
-    polizaId: 'POL-2023-00891',
-    polizaLabel: 'Seguro de Salud',
-    polizaIcon: MdHealthAndSafety,
-    accentBg: 'bg-emerald-100',
-    accentText: 'text-emerald-600',
-    numeroCuota: 2,
-    totalCuotas: 6,
-    monto: 'S/ 340.00',
-    montoNum: 340.0,
-    vencimiento: '15/04/2024',
-    diasRestantes: -3,
-    estado: 'vencido',
-    periodo: 'Abril 2024',
-    descripcion: 'Cuota bimestral · Plan Familiar Plus',
-  },
-  {
-    id: 'CUO-2024-09871-01',
-    polizaId: 'POL-2023-00891',
-    polizaLabel: 'Seguro de Salud',
-    polizaIcon: MdHealthAndSafety,
-    accentBg: 'bg-emerald-100',
-    accentText: 'text-emerald-600',
-    numeroCuota: 1,
-    totalCuotas: 6,
-    monto: 'S/ 340.00',
-    montoNum: 340.0,
-    vencimiento: '15/02/2024',
-    diasRestantes: null,
-    estado: 'pagado',
-    periodo: 'Febrero 2024',
-    descripcion: 'Cuota bimestral · Plan Familiar Plus',
-    comprobante: 'COMP-2024-02891.pdf',
-    fechaPago: '14/02/2024',
-    metodoPago: 'Transferencia BCP',
-  },
-  {
-    id: 'CUO-2022-00345-08',
-    polizaId: 'POL-2022-00345',
-    polizaLabel: 'Seguro de Hogar',
-    polizaIcon: MdHome,
-    accentBg: 'bg-amber-100',
-    accentText: 'text-amber-600',
-    numeroCuota: 8,
-    totalCuotas: 12,
-    monto: 'S/ 210.00',
-    montoNum: 210.0,
-    vencimiento: '30/04/2024',
-    diasRestantes: 12,
-    estado: 'pendiente',
-    periodo: 'Abril 2024',
-    descripcion: 'Cuota mensual · Plan Estándar',
-  },
-];
+export function formatearMoneda(v) {
+  if (v == null) return '—';
+  return `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
-export const HISTORIAL = [
-  {
-    id: 'PAG-2024-0312',
-    polizaLabel: 'Seguro de Auto',
-    polizaIcon: MdDirectionsCar,
-    accentBg: 'bg-primary/10',
-    accentText: 'text-primary',
-    monto: 'S/ 890.00',
-    fecha: '18/03/2024',
-    metodo: 'Visa •••• 4821',
-    comprobante: 'COMP-2024-03182.pdf',
-  },
-  {
-    id: 'PAG-2024-0215',
-    polizaLabel: 'Seguro de Salud',
-    polizaIcon: MdHealthAndSafety,
-    accentBg: 'bg-emerald-100',
-    accentText: 'text-emerald-600',
-    monto: 'S/ 340.00',
-    fecha: '14/02/2024',
-    metodo: 'Transferencia BCP',
-    comprobante: 'COMP-2024-02891.pdf',
-  },
-  {
-    id: 'PAG-2024-0118',
-    polizaLabel: 'Seguro de Hogar',
-    polizaIcon: MdHome,
-    accentBg: 'bg-amber-100',
-    accentText: 'text-amber-600',
-    monto: 'S/ 210.00',
-    fecha: '28/01/2024',
-    metodo: 'Yape',
-    comprobante: 'COMP-2024-01345.pdf',
-  },
-];
+export function formatearFecha(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+export function diasHasta(iso) {
+  if (!iso) return null;
+  const objetivo = new Date(iso);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  objetivo.setHours(0, 0, 0, 0);
+  return Math.round((objetivo - hoy) / (1000 * 60 * 60 * 24));
+}
+
+export function clasificarEstado(cuota) {
+  if (cuota.estado_pago === 'PAGADO') return 'PAGADO';
+  if (cuota.estado_pago === 'VENCIDO') return 'VENCIDO';
+  const d = diasHasta(cuota.fecha_vencimiento);
+  if (d != null && d < 0) return 'VENCIDO';
+  return 'PENDIENTE';
+}

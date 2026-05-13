@@ -241,3 +241,34 @@ CREATE TABLE objetivo_corporativo (
     estado ENUM('CUMPLIDO', 'EN_RIESGO', 'RETRASADO', 'EN_PROGRESO') DEFAULT 'EN_PROGRESO' NOT NULL,
     FOREIGN KEY (id_empleado_responsable) REFERENCES empleado(id_empleado)
 ) ENGINE=InnoDB;
+
+-- ========================================================
+-- 7. AUDITORIA Y NOTIFICACIONES (FASE 7)
+-- ========================================================
+
+CREATE TABLE auditoria_accion (
+    id_auditoria INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NULL,
+    username VARCHAR(50) NULL,
+    accion VARCHAR(80) NOT NULL,
+    modulo VARCHAR(50) NOT NULL,
+    detalle TEXT NULL,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE SET NULL,
+    INDEX idx_auditoria_fecha (fecha),
+    INDEX idx_auditoria_usuario (id_usuario)
+) ENGINE=InnoDB;
+
+CREATE TABLE notificacion (
+    id_notificacion INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    titulo VARCHAR(150) NOT NULL,
+    mensaje TEXT NULL,
+    enlace VARCHAR(255) NULL,
+    tipo ENUM('APROBACION', 'SINIESTRO', 'COBRANZA', 'COMISION', 'GENERAL') DEFAULT 'GENERAL' NOT NULL,
+    leida BOOLEAN DEFAULT FALSE NOT NULL,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+    INDEX idx_notif_usuario (id_usuario, leida),
+    INDEX idx_notif_fecha (fecha)
+) ENGINE=InnoDB;

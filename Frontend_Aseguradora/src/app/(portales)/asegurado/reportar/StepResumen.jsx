@@ -1,18 +1,25 @@
 import { MdWarning } from 'react-icons/md';
-import { POLIZAS, TIPOS } from './data';
+import { TIPOS, estiloTipo, formatearMoneda } from './data';
 
-export default function StepResumen({ data }) {
-  const pol = POLIZAS.find((p) => p.id === data.poliza);
+export default function StepResumen({ data, polizas }) {
+  const pol = (polizas || []).find((p) => p.id_poliza === data.poliza);
   const tip = TIPOS.find((t) => t.id === data.tipo);
-  const PolIcon = pol?.icon;
+  const tipoStyle = pol ? estiloTipo(pol.producto?.tipo_seguro) : null;
+  const PolIcon = tipoStyle?.icon;
   const TipIcon = tip?.icon;
+
   const rows = [
-    { label: 'Póliza', value: pol?.label },
-    { label: 'Número', value: pol?.id, small: true },
+    { label: 'Póliza', value: pol?.producto?.nombre },
+    { label: 'Número', value: pol ? `POL-${String(pol.id_poliza).padStart(6, '0')}` : '—', small: true },
     { label: 'Fecha y hora', value: `${data.fecha} · ${data.hora}` },
     { label: 'Lugar', value: data.lugar },
-    { label: 'Descripción', value: data.desc.length > 80 ? data.desc.slice(0, 80) + '…' : data.desc, muted: true },
+    {
+      label: 'Descripción',
+      value: data.desc.length > 100 ? data.desc.slice(0, 100) + '…' : data.desc,
+      muted: true,
+    },
     ...(data.personas ? [{ label: 'Involucrados', value: data.personas }] : []),
+    { label: 'Monto reclamado', value: formatearMoneda(data.monto) },
     {
       label: 'Archivos adjuntos',
       value: data.files.length ? `${data.files.length} archivo${data.files.length > 1 ? 's' : ''}` : 'Ninguno',
@@ -24,13 +31,13 @@ export default function StepResumen({ data }) {
       <div className="bg-bg rounded-2xl border border-border overflow-hidden">
         <div className="flex items-center gap-3 p-4 border-b border-border">
           {pol && PolIcon && (
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${pol.accentBg}`}>
-              <PolIcon size={20} className={pol.accentText} />
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
+              <PolIcon size={20} className={tipoStyle.accentText} />
             </div>
           )}
           <div className="flex-1">
-            <p className="text-sm font-bold text-text">{pol?.label}</p>
-            <p className="text-xs text-text-soft">{pol?.id}</p>
+            <p className="text-sm font-bold text-text">{pol?.producto?.nombre}</p>
+            <p className="text-xs text-text-soft">POL-{String(pol?.id_poliza || 0).padStart(6, '0')}</p>
           </div>
           {tip && TipIcon && (
             <span
@@ -58,8 +65,7 @@ export default function StepResumen({ data }) {
         <div>
           <p className="text-xs font-semibold text-primary mb-0.5">¿Todo correcto?</p>
           <p className="text-xs text-primary/80">
-            Una vez enviado, se generará tu número de caso. Podrás adjuntar más documentos luego desde la sección Mis
-            pólizas.
+            Una vez enviado, se generará tu número de caso. La hora y el lugar van incluidos en la descripción.
           </p>
         </div>
       </div>

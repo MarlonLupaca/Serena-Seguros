@@ -1,5 +1,8 @@
 'use client';
 
-export default function facturacionPage() {
-  return <div className="py-4 flex flex-col gap-4 pb-8">facturacion</div>;
+import { MdRequestQuote } from 'react-icons/md';
+import PlaceholderPendiente from '@/lib/PlaceholderPendiente';
+
+export default function FacturacionPage() {
+  return <PlaceholderPendiente titulo="Facturacion electronica" icon={MdRequestQuote} />;
 }

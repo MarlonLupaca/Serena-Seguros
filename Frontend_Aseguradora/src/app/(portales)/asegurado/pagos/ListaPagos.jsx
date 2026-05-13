@@ -1,39 +1,42 @@
+'use client';
+
 import { useState } from 'react';
 import { MdSearch, MdFilterList, MdDescription, MdWarningAmber } from 'react-icons/md';
-import { CUOTAS, HISTORIAL } from './data';
 import PagosKPIs from './PagosKPIs';
 import CuotaCard from './CuotaCard';
 import HistorialCard from './HistorialCard';
+import { clasificarEstado } from './data';
 
-export default function ListaPagos({ onSelect, onPagar }) {
+export default function ListaPagos({ cuotas, onSelect, onPagar }) {
   const [busqueda, setBusqueda] = useState('');
   const [filtro, setFiltro] = useState('todos');
   const [tab, setTab] = useState('cuotas');
 
-  const filtradas = CUOTAS.filter((c) => {
-    const matchFiltro = filtro === 'todos' || c.estado === filtro;
+  const cuotasPorPagar = cuotas.filter((c) => clasificarEstado(c) !== 'PAGADO');
+  const cuotasPagadas = cuotas.filter((c) => clasificarEstado(c) === 'PAGADO');
+
+  const filtradas = cuotasPorPagar.filter((c) => {
+    const cls = clasificarEstado(c);
+    const matchFiltro = filtro === 'todos' || cls === filtro;
+    const texto = busqueda.toLowerCase();
     const matchBusq =
-      busqueda === '' ||
-      c.id.toLowerCase().includes(busqueda.toLowerCase()) ||
-      c.polizaLabel.toLowerCase().includes(busqueda.toLowerCase()) ||
-      c.periodo.toLowerCase().includes(busqueda.toLowerCase());
+      texto === '' ||
+      String(c.id_cuota).includes(texto) ||
+      (c.poliza_nombre || '').toLowerCase().includes(texto);
     return matchFiltro && matchBusq;
   });
 
-  const totalPendiente = CUOTAS.filter((c) => c.estado === 'pendiente' || c.estado === 'vencido').reduce(
-    (acc, c) => acc + c.montoNum,
-    0
-  );
+  const totalPendiente = cuotasPorPagar.reduce((acc, c) => acc + Number(c.monto || 0), 0);
 
   const counts = {
-    pendiente: CUOTAS.filter((c) => c.estado === 'pendiente').length,
-    vencido: CUOTAS.filter((c) => c.estado === 'vencido').length,
-    pagado: CUOTAS.filter((c) => c.estado === 'pagado').length,
+    pendiente: cuotasPorPagar.filter((c) => clasificarEstado(c) === 'PENDIENTE').length,
+    vencido: cuotasPorPagar.filter((c) => clasificarEstado(c) === 'VENCIDO').length,
+    pagado: cuotasPagadas.length,
   };
 
   const TABS = [
-    { id: 'cuotas', label: 'Cuotas' },
-    { id: 'historial', label: 'Historial de pagos' },
+    { id: 'cuotas', label: `Por pagar (${cuotasPorPagar.length})` },
+    { id: 'historial', label: `Historial (${cuotasPagadas.length})` },
   ];
 
   return (
@@ -72,7 +75,7 @@ export default function ListaPagos({ onSelect, onPagar }) {
             <div className="relative flex-1">
               <MdSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
               <input
-                placeholder="Buscar por póliza, periodo…"
+                placeholder="Buscar por póliza o número..."
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary transition-colors"
@@ -86,9 +89,8 @@ export default function ListaPagos({ onSelect, onPagar }) {
                 className="pl-8 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary transition-colors appearance-none"
               >
                 <option value="todos">Todos los estados</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="vencido">Vencido</option>
-                <option value="pagado">Pagado</option>
+                <option value="PENDIENTE">Pendiente</option>
+                <option value="VENCIDO">Vencido</option>
               </select>
             </div>
           </div>
@@ -96,13 +98,13 @@ export default function ListaPagos({ onSelect, onPagar }) {
           {filtradas.length === 0 ? (
             <div className="bg-bg rounded-2xl border border-border p-12 text-center">
               <MdDescription size={36} className="text-text-soft mx-auto mb-3 opacity-40" />
-              <p className="text-sm font-medium text-text">No se encontraron cuotas</p>
-              <p className="text-xs text-text-soft mt-1">Prueba cambiando los filtros</p>
+              <p className="text-sm font-medium text-text">No tienes cuotas por pagar</p>
+              <p className="text-xs text-text-soft mt-1">Estás al día con tus pólizas.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
               {filtradas.map((c) => (
-                <CuotaCard key={c.id} c={c} onSelect={onSelect} onPagar={onPagar} />
+                <CuotaCard key={c.id_cuota} c={c} onSelect={onSelect} onPagar={onPagar} />
               ))}
             </div>
           )}
@@ -111,9 +113,13 @@ export default function ListaPagos({ onSelect, onPagar }) {
 
       {tab === 'historial' && (
         <div className="flex flex-col gap-3">
-          {HISTORIAL.map((h) => (
-            <HistorialCard key={h.id} h={h} />
-          ))}
+          {cuotasPagadas.length === 0 ? (
+            <div className="bg-bg rounded-2xl border border-border p-12 text-center">
+              <p className="text-sm text-text-soft">Sin cuotas pagadas todavía.</p>
+            </div>
+          ) : (
+            cuotasPagadas.map((c) => <HistorialCard key={c.id_cuota} c={c} />)
+          )}
         </div>
       )}
     </div>
