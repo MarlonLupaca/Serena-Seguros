@@ -1,6 +1,6 @@
 package com.serena.modules.ejecutivo.entity;
 
-import com.serena.modules.empleados.entity.Empleado;
+import com.serena.modules.seguridad.empleados.entity.Empleado;
 import jakarta.persistence.*;
 import lombok.*;
 

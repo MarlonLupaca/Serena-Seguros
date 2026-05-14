@@ -1,0 +1,13 @@
+package com.serena.modules.seguridad.auth.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+
+public record LoginRequest(
+
+        @NotBlank(message = "El username es obligatorio")
+        String username,
+
+        @NotBlank(message = "La contrasena es obligatoria")
+        String password
+
+) {}

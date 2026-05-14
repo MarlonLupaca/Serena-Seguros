@@ -1,5 +1,6 @@
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+import Cookies from 'js-cookie';
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
 const KEY_TOKEN = 'serena_access_token';
 const KEY_REFRESH = 'serena_refresh_token';
@@ -9,14 +10,14 @@ const RUTAS_PUBLICAS = ['/auth/login', '/auth/registro'];
 
 function obtenerToken() {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem(KEY_TOKEN);
+  return Cookies.get(KEY_TOKEN);
 }
 
 function manejarSesionInvalida() {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(KEY_TOKEN);
-  localStorage.removeItem(KEY_REFRESH);
-  localStorage.removeItem(KEY_USER);
+  Cookies.remove(KEY_TOKEN);
+  Cookies.remove(KEY_REFRESH);
+  Cookies.remove(KEY_USER);
   if (window.location.pathname !== '/login') {
     window.location.replace('/login');
   }
