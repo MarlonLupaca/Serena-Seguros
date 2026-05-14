@@ -2,7 +2,7 @@ package com.serena.modules.ejecutivo.controller;
 
 import com.serena.modules.ejecutivo.entity.ObjetivoCorporativo;
 import com.serena.modules.ejecutivo.repository.ObjetivoCorporativoRepository;
-import com.serena.modules.empleados.repository.EmpleadoRepository;
+import com.serena.modules.seguridad.empleados.repository.EmpleadoRepository;
 import com.serena.shared.exception.RecursoNoEncontradoException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;

@@ -1,9 +1,11 @@
 -- ========================================================
 -- SCRIPT DDL: SISTEMA DE SEGUROS (PACÍFICO - 5 PORTALES)
 -- MOTOR: MySQL
+-- MODO: DESARROLLO (Recrea la base de datos desde cero)
 -- ========================================================
 
-CREATE DATABASE IF NOT EXISTS bd_seguros_pacifico;
+DROP DATABASE IF EXISTS bd_seguros_pacifico;
+CREATE DATABASE bd_seguros_pacifico;
 USE bd_seguros_pacifico;
 
 -- ========================================================
@@ -243,7 +245,7 @@ CREATE TABLE objetivo_corporativo (
 ) ENGINE=InnoDB;
 
 -- ========================================================
--- 7. AUDITORIA Y NOTIFICACIONES (FASE 7)
+-- 7. AUDITORIA Y NOTIFICACIONES
 -- ========================================================
 
 CREATE TABLE auditoria_accion (

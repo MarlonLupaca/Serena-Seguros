@@ -1,11 +1,11 @@
 package com.serena.modules.ejecutivo.controller;
 
-import com.serena.modules.auditoria.service.AuditoriaService;
-import com.serena.modules.auth.entity.Usuario;
+import com.serena.modules.soporte.auditoria.service.AuditoriaService;
+import com.serena.modules.seguridad.auth.entity.Usuario;
 import com.serena.modules.ejecutivo.entity.AprobacionCritica;
 import com.serena.modules.ejecutivo.repository.AprobacionCriticaRepository;
-import com.serena.modules.notificaciones.entity.Notificacion;
-import com.serena.modules.notificaciones.service.NotificacionService;
+import com.serena.modules.soporte.notificaciones.entity.Notificacion;
+import com.serena.modules.soporte.notificaciones.service.NotificacionService;
 import com.serena.shared.exception.RecursoNoEncontradoException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;

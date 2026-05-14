@@ -1,7 +1,7 @@
 package com.serena.shared.config;
 
-import com.serena.modules.auth.entity.Usuario;
-import com.serena.modules.auth.repository.UsuarioRepository;
+import com.serena.modules.seguridad.auth.entity.Usuario;
+import com.serena.modules.seguridad.auth.repository.UsuarioRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
