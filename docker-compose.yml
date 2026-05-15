@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # ----------------------------------------
-  # 1. BD MAESTRO (Independiente por ahora)
+  # 1. BD MAESTRO
   # ----------------------------------------
   serena-mysql-master:
     image: mysql:8.0
@@ -14,30 +14,53 @@ services:
       - '3308:3306'
     networks:
       - serena_network
+    # Activamos el Server ID 1 y el modo GTID
+    command: --server-id=1 --log-bin=mysql-bin --enforce-gtid-consistency=ON --gtid-mode=ON
     volumes:
-      # Data persistente
       - master_data:/var/lib/mysql
-      # Inyección de tu carpeta con los scripts SQL
+      # Scripts iniciales
       - ./Script_DB:/docker-entrypoint-initdb.d
 
   # ----------------------------------------
-  # 2. BD RÉPLICA (Independiente por ahora)
+  # 2. BD RÉPLICA
   # ----------------------------------------
   serena-mysql-replica:
     image: mysql:8.0
     container_name: mysql-replica
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: bd_seguros_pacifico
     ports:
       - '3309:3306'
     networks:
       - serena_network
+    # Activamos el Server ID 2, GTID y la ponemos en Modo Lectura
+    command: --server-id=2 --enforce-gtid-consistency=ON --gtid-mode=ON --read-only=1
     volumes:
-      # Data persistente
       - replica_data:/var/lib/mysql
-      # OJO: También inyectamos los scripts a la réplica para que tenga la estructura
-      - ./Script_DB:/docker-entrypoint-initdb.d
+
+  # ----------------------------------------
+  # 3. BACKUP AUTOMATIZADO (Sidecar)
+  # ----------------------------------------
+  serena-mysql-backup:
+    image: mysql:8.0
+    container_name: mysql-backup
+    networks:
+      - serena_network
+    volumes:
+      - ./backups:/backups
+    command: >
+      bash -c "
+      echo 'Esperando a que la base de datos réplica inicie...';
+      sleep 30;
+      while true; do
+        FECHA=\$$(date +'%Y-%m-%d_%H-%M-%S');
+        ARCHIVO=/backups/backup_\$$FECHA.sql.gz;
+        echo 'Iniciando backup en: '\$$ARCHIVO;
+        mysqldump -h serena-mysql-replica -u root -proot bd_seguros_pacifico | gzip > \$$ARCHIVO;
+        echo 'Backup completado exitosamente.';
+        sleep 86400;
+      done
+      "
 
 networks:
   serena_network:

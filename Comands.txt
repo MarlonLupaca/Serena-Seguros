@@ -1,0 +1,7 @@
+-backup manual
+
+docker exec -it mysql-backup bash -c "FECHA=`$(date +'%Y-%m-%d_%H-%M-%S_MANUAL') && mysqldump -h serena-mysql-replica -u root -proot bd_seguros_pacifico | gzip > /backups/backup_`$FECHA.sql.gz && echo 'Backup manual generado con éxito.'"
+
+-Levantar replica 
+
+docker exec -it mysql-replica mysql -uroot -proot -e "STOP REPLICA; CHANGE REPLICATION SOURCE TO SOURCE_HOST='serena-mysql-master', SOURCE_USER='usuario_replica', SOURCE_PASSWORD='password_seguro', SOURCE_AUTO_POSITION=1, GET_SOURCE_PUBLIC_KEY=1; START REPLICA;"
