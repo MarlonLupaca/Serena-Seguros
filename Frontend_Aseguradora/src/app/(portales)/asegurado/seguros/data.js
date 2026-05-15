@@ -1,4 +1,16 @@
-import { MdDirectionsCar, MdHealthAndSafety, MdFavorite, MdHome, MdFlight, MdBusiness, MdShield } from 'react-icons/md';
+// Catalogos visuales por tipo de seguro + helpers de formato.
+// La simulacion, el guardado y la contratacion van directo al backend:
+//   POST /cotizar/simular, POST /mis-cotizaciones/guardar, POST /mis-cotizaciones/{id}/contratar.
+
+import {
+  MdDirectionsCar,
+  MdHealthAndSafety,
+  MdFavorite,
+  MdHome,
+  MdFlight,
+  MdBusiness,
+  MdShield,
+} from 'react-icons/md';
 
 export const TIPO_STYLES = {
   VEHICULAR: {
@@ -20,7 +32,7 @@ export const TIPO_STYLES = {
     accentBg: 'bg-rose-100',
     accentText: 'text-rose-500',
     label: 'Vida',
-    tagline: 'Protege a quienes más quieres',
+    tagline: 'Protege a quienes mas quieres',
   },
   HOGAR: {
     icon: MdHome,
@@ -61,49 +73,3 @@ export function formatearMoneda(v) {
   if (v == null) return '—';
   return `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
-
-// FALTA ESTE ENDPOINT: POST /api/cotizaciones/simular
-// ¿Qué hace?: Recibe los datos del formulario del cliente (edad, vehículo, etc.)
-// y devuelve 3 opciones de planes calculados para que el cliente compare.
-export const mockSimulacionPlanes = [
-  {
-    id_plan: 'basico',
-    nombre: 'Plan Básico',
-    prima_mensual: 80.0,
-    cobertura: 'Cobertura esencial',
-    deducible: '20%',
-    beneficios: ['Asistencia telefónica', 'Cobertura nacional'],
-  },
-  {
-    id_plan: 'intermedio',
-    nombre: 'Plan Intermedio',
-    prima_mensual: 120.0,
-    cobertura: 'Cobertura estándar',
-    deducible: '15%',
-    beneficios: ['Asistencia presencial', 'Grúa 2 veces/año', 'Cobertura nacional'],
-  },
-  {
-    id_plan: 'premium',
-    nombre: 'Plan Premium',
-    prima_mensual: 200.0,
-    cobertura: 'Todo Riesgo',
-    deducible: '10%',
-    beneficios: ['Asistencia VIP', 'Grúa ilimitada', 'Auto de reemplazo', 'Cobertura internacional'],
-  },
-];
-
-// FALTA ESTE ENDPOINT: POST /api/cotizaciones/contratar
-// ¿Qué hace?: Recibe el plan seleccionado, la confirmación de los términos
-// y los documentos adjuntos, y genera la póliza final automáticamente.
-export const mockContratacionExitosa = {
-  id_poliza: 99421,
-  estado: 'ACTIVA',
-  mensaje: 'Póliza generada y activa correctamente.',
-};
-
-// FALTA ESTE ENDPOINT: POST /api/cotizaciones/guardar
-// ¿Qué hace?: Permite al usuario guardar la simulación sin llegar a contratarla.
-export const mockGuardarCotizacion = {
-  id_cotizacion: 'COT-9921',
-  mensaje: 'Cotización guardada exitosamente en tu perfil.',
-};

@@ -66,10 +66,10 @@ export default function OperativoDashboard() {
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Kpi label="Empleados" val={empleados.length} icon={MdBadge} bg="bg-primary/10" color="text-primary" onClick={() => router.push('/operativo/empleados')} />
-            <Kpi label="Activos internos" val={activos.length} icon={MdDomain} bg="bg-emerald-100" color="text-emerald-600" onClick={() => router.push('/operativo/activos')} />
-            <Kpi label="Balance caja" val={formatearMoneda(tesoreria?.balance)} icon={MdAccountBalanceWallet} bg={Number(tesoreria?.balance ?? 0) >= 0 ? 'bg-emerald-100' : 'bg-rose-100'} color={Number(tesoreria?.balance ?? 0) >= 0 ? 'text-emerald-600' : 'text-rose-500'} onClick={() => router.push('/operativo/tesoreria')} />
-            <Kpi label="Por cobrar" val={formatearMoneda(cobranza?.por_cobrar)} icon={MdPriceCheck} bg="bg-amber-100" color="text-amber-600" onClick={() => router.push('/operativo/cobranza')} />
+            <Kpi label="Empleados" val={empleados.length} icon={MdBadge} bg="bg-primary/10" color="text-primary" onClick={() => router.push('/finanzas/empleados')} />
+            <Kpi label="Activos internos" val={activos.length} icon={MdDomain} bg="bg-emerald-100" color="text-emerald-600" onClick={() => router.push('/finanzas/activos')} />
+            <Kpi label="Balance caja" val={formatearMoneda(tesoreria?.balance)} icon={MdAccountBalanceWallet} bg={Number(tesoreria?.balance ?? 0) >= 0 ? 'bg-emerald-100' : 'bg-rose-100'} color={Number(tesoreria?.balance ?? 0) >= 0 ? 'text-emerald-600' : 'text-rose-500'} onClick={() => router.push('/finanzas/tesoreria')} />
+            <Kpi label="Por cobrar" val={formatearMoneda(cobranza?.por_cobrar)} icon={MdPriceCheck} bg="bg-amber-100" color="text-amber-600" onClick={() => router.push('/finanzas/cobranza')} />
           </div>
 
           {sobreconsumo.length > 0 && (
@@ -79,12 +79,12 @@ export default function OperativoDashboard() {
                 <p className="text-xs font-bold text-amber-700">{sobreconsumo.length} área(s) por encima del 90% de su presupuesto</p>
                 <p className="text-xs text-amber-700">{sobreconsumo.map((p) => `${p.area} (${p.porcentaje_uso}%)`).join(', ')}</p>
               </div>
-              <button onClick={() => router.push('/operativo/presupuesto')} className="text-xs font-semibold text-amber-700 hover:underline shrink-0">Ver detalle</button>
+              <button onClick={() => router.push('/finanzas/presupuesto')} className="text-xs font-semibold text-amber-700 hover:underline shrink-0">Ver detalle</button>
             </div>
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card title="Presupuesto por área" subtitle={`${presupuestos.length} áreas configuradas`} icon={MdCalculate} onClick={() => router.push('/operativo/presupuesto')}>
+            <Card title="Presupuesto por área" subtitle={`${presupuestos.length} áreas configuradas`} icon={MdCalculate} onClick={() => router.push('/finanzas/presupuesto')}>
               {presupuestos.slice(0, 4).map((p) => (
                 <div key={p.id_presupuesto} className="border-t border-border pt-2 first:border-0 first:pt-0">
                   <div className="flex justify-between text-xs">
@@ -98,7 +98,7 @@ export default function OperativoDashboard() {
               ))}
             </Card>
 
-            <Card title="Comisiones pendientes" subtitle={`${comisionesPendientes.length} por pagar`} icon={MdAttachMoney} onClick={() => router.push('/operativo/comisiones')}>
+            <Card title="Comisiones pendientes" subtitle={`${comisionesPendientes.length} por pagar`} icon={MdAttachMoney} onClick={() => router.push('/finanzas/comisiones')}>
               <div className="text-center py-4">
                 <p className="text-3xl font-bold text-amber-600">{formatearMoneda(totalComisionesPendientes)}</p>
                 <p className="text-xs text-text-soft mt-1">Total a pagar a agentes</p>

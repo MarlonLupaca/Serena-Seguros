@@ -2,6 +2,7 @@ package com.serena.modules.tecnico.siniestros.controller;
 
 import com.serena.modules.seguridad.auth.entity.Usuario;
 import com.serena.modules.tecnico.siniestros.dto.CrearSiniestroRequest;
+import com.serena.modules.tecnico.siniestros.dto.SiniestroDetalleResponse;
 import com.serena.modules.tecnico.siniestros.dto.SiniestroResponse;
 import com.serena.modules.tecnico.siniestros.service.SiniestroService;
 import jakarta.validation.Valid;
@@ -30,7 +31,7 @@ public class MisSiniestrosController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SiniestroResponse> obtener(
+    public ResponseEntity<SiniestroDetalleResponse> obtener(
             @AuthenticationPrincipal Usuario usuario,
             @PathVariable Integer id
     ) {

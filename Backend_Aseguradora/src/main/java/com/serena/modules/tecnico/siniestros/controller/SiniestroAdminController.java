@@ -1,7 +1,9 @@
 package com.serena.modules.tecnico.siniestros.controller;
 
+import com.serena.modules.seguridad.auth.entity.Usuario;
 import com.serena.modules.tecnico.siniestros.dto.AsignarAnalistaRequest;
 import com.serena.modules.tecnico.siniestros.dto.CambioEstadoSiniestroRequest;
+import com.serena.modules.tecnico.siniestros.dto.PeritoObservacionRequest;
 import com.serena.modules.tecnico.siniestros.dto.SiniestroAdminResponse;
 import com.serena.modules.tecnico.siniestros.entity.Siniestro;
 import com.serena.modules.tecnico.siniestros.service.SiniestroService;
@@ -9,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -47,5 +50,14 @@ public class SiniestroAdminController {
             @Valid @RequestBody AsignarAnalistaRequest request
     ) {
         return ResponseEntity.ok(siniestroService.asignarAnalista(id, request));
+    }
+
+    @PostMapping("/{id}/perito/observacion")
+    public ResponseEntity<SiniestroAdminResponse> registrarObservacionPerito(
+            @PathVariable Integer id,
+            @Valid @RequestBody PeritoObservacionRequest request,
+            @AuthenticationPrincipal Usuario usuario
+    ) {
+        return ResponseEntity.ok(siniestroService.registrarObservacionPerito(id, request, usuario));
     }
 }

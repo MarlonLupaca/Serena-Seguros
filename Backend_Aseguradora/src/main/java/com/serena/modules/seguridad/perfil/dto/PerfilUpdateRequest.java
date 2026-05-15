@@ -20,6 +20,19 @@ public record PerfilUpdateRequest(
         @NotBlank(message = "El email es obligatorio")
         @Email(message = "Email invalido")
         @Size(max = 100)
-        String email
+        String email,
+
+        @Size(max = 150)
+        String contactoEmergenciaNombre,
+
+        @Size(max = 50)
+        String contactoEmergenciaRelacion,
+
+        @Size(max = 20)
+        String contactoEmergenciaTelefono,
+
+        @Email(message = "Correo invalido")
+        @Size(max = 100)
+        String contactoEmergenciaCorreo
 
 ) {}

@@ -1,9 +1,11 @@
 package com.serena.modules.comercial.cotizaciones.controller;
 
-import com.serena.modules.seguridad.auth.entity.Usuario;
+import com.serena.modules.comercial.cotizaciones.dto.ContratarCotizacionRequest;
 import com.serena.modules.comercial.cotizaciones.dto.CotizacionResponse;
 import com.serena.modules.comercial.cotizaciones.dto.CrearCotizacionRequest;
+import com.serena.modules.comercial.cotizaciones.dto.GuardarCotizacionRequest;
 import com.serena.modules.comercial.cotizaciones.service.CotizacionService;
+import com.serena.modules.seguridad.auth.entity.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,5 +30,24 @@ public class MisCotizacionesController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(cotizacionService.crear(usuario, request));
+    }
+
+    @PostMapping("/guardar")
+    public ResponseEntity<CotizacionResponse> guardar(
+            @AuthenticationPrincipal Usuario usuario,
+            @Valid @RequestBody GuardarCotizacionRequest request
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(cotizacionService.guardar(usuario, request));
+    }
+
+    @PostMapping("/{id}/contratar")
+    public ResponseEntity<CotizacionResponse> contratar(
+            @AuthenticationPrincipal Usuario usuario,
+            @PathVariable Integer id,
+            @Valid @RequestBody ContratarCotizacionRequest request
+    ) {
+        return ResponseEntity.ok(cotizacionService.contratar(usuario, id, request));
     }
 }

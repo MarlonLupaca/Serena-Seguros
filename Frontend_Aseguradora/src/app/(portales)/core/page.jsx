@@ -80,21 +80,21 @@ export default function CoreDashboard() {
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Kpi label="Pólizas activas" val={polizasActivas} icon={MdShield} bg="bg-primary/10" color="text-primary" onClick={() => router.push('/core/emisiones')} />
-            <Kpi label="Endosos pendientes" val={endosos.length} icon={MdEditDocument} bg="bg-amber-100" color="text-amber-600" onClick={() => router.push('/core/endosos')} />
-            <Kpi label="Renuevan en 30d" val={renovaciones.length} icon={MdAutorenew} bg="bg-sky-100" color="text-sky-600" onClick={() => router.push('/core/renovaciones')} />
+            <Kpi label="Endosos pendientes" val={endosos.length} icon={MdEditDocument} bg="bg-amber-100" color="text-amber-600" onClick={() => router.push('/core/bandeja')} />
+            <Kpi label="Renuevan en 30d" val={renovaciones.length} icon={MdAutorenew} bg="bg-sky-100" color="text-sky-600" onClick={() => router.push('/core/bandeja')} />
             <Kpi label="Siniestros en curso" val={siniestrosEnCurso.length} icon={MdWarning} bg="bg-rose-100" color="text-rose-500" onClick={() => router.push('/core/siniestros')} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="flex flex-col">
-              <Header title="Endosos por aprobar" onClick={() => router.push('/core/endosos')} />
+              <Header title="Endosos por aprobar" onClick={() => router.push('/core/bandeja')} />
               <div className="bg-bg rounded-2xl border border-border overflow-hidden">
                 {endosos.length === 0 ? (
                   <div className="p-6 text-center text-sm text-text-soft">No hay endosos pendientes.</div>
                 ) : (
                   <div className="divide-y divide-border">
                     {endosos.slice(0, 5).map((e) => (
-                      <div key={e.id_endoso} onClick={() => router.push('/core/endosos')} className="p-4 flex items-center gap-3 hover:bg-bg-soft cursor-pointer transition-colors">
+                      <div key={e.id_endoso} onClick={() => router.push('/core/bandeja')} className="p-4 flex items-center gap-3 hover:bg-bg-soft cursor-pointer transition-colors">
                         <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
                           <MdEditDocument size={18} className="text-amber-600" />
                         </div>

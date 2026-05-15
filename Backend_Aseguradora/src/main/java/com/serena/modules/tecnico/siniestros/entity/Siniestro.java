@@ -53,6 +53,15 @@ public class Siniestro {
     @Column(name = "monto_reclamado", nullable = false, precision = 10, scale = 2)
     private BigDecimal montoReclamado;
 
+    @Column(name = "observaciones_perito", columnDefinition = "TEXT")
+    private String observacionesPerito;
+
+    @Column(name = "monto_estimado_perito", precision = 12, scale = 2)
+    private BigDecimal montoEstimadoPerito;
+
+    @Column(name = "informe_tecnico", length = 500)
+    private String informeTecnico;
+
     public enum EstadoResolucion {
         REPORTADO, EN_REVISION, INSPECCION, APROBADO, RECHAZADO, LIQUIDADO
     }

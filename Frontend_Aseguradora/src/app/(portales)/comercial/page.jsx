@@ -96,7 +96,7 @@ export default function ComercialDashboard() {
               icon={MdRequestQuote}
               bg="bg-primary/10"
               color="text-primary"
-              onClick={() => router.push('/comercial/cotizaciones')}
+              onClick={() => router.push('/comercial/leads')}
             />
             <Kpi
               label="Clientes"
@@ -128,7 +128,7 @@ export default function ComercialDashboard() {
             <div className="lg:col-span-2 flex flex-col">
               <SectionHeader
                 title="Embudo de cotizaciones"
-                onClick={() => router.push('/comercial/cotizaciones')}
+                onClick={() => router.push('/comercial/leads')}
               />
               <div className="bg-bg rounded-2xl border border-border p-5 flex flex-col gap-3">
                 {KANBAN.map((k) => {
@@ -181,7 +181,7 @@ export default function ComercialDashboard() {
           </div>
 
           <div className="flex flex-col">
-            <SectionHeader title="Últimas cotizaciones" onClick={() => router.push('/comercial/cotizaciones')} />
+            <SectionHeader title="Últimas cotizaciones" onClick={() => router.push('/comercial/leads')} />
             <div className="bg-bg rounded-2xl border border-border overflow-hidden">
               {ultimasCotizaciones.length === 0 ? (
                 <div className="p-6 text-center text-sm text-text-soft">No hay cotizaciones todavía.</div>
@@ -190,7 +190,7 @@ export default function ComercialDashboard() {
                   {ultimasCotizaciones.map((c) => (
                     <div
                       key={c.id_cotizacion}
-                      onClick={() => router.push('/comercial/cotizaciones')}
+                      onClick={() => router.push('/comercial/leads')}
                       className="p-4 flex items-center gap-3 hover:bg-bg-soft cursor-pointer transition-colors"
                     >
                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">

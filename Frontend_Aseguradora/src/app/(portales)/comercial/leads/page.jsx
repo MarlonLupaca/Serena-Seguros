@@ -52,7 +52,7 @@ function formatearMoneda(v) {
   return `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-const ESTADOS_LEAD = ['NUEVO', 'CONTACTADO', 'EN_PROPUESTA'];
+const ESTADOS_LEAD = ['NUEVO', 'CONTACTADO', 'EN_PROPUESTA', 'NEGOCIACION', 'GANADO', 'PERDIDO'];
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState([]);
@@ -131,16 +131,16 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
         {ESTADOS_LEAD.map((k) => {
           const cfg = ESTADOS[k];
           return (
             <div key={k} className="bg-bg rounded-xl border border-border p-3">
               <div className="flex items-center gap-1.5 mb-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                <p className="text-xs text-text-soft">{cfg.label}</p>
+                <p className="text-xs text-text-soft truncate">{cfg.label}</p>
               </div>
-              <p className="text-lg font-bold text-text">{counts[k]}</p>
+              <p className="text-lg font-bold text-text">{counts[k] || 0}</p>
             </div>
           );
         })}

@@ -1,9 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MdTimeline, MdChatBubbleOutline, MdClose, MdSend } from 'react-icons/md';
-import { apiGet, apiPost } from '@/lib/api';
-import { formatearFecha, mockDetalleSiniestro } from './data';
+import { MdTimeline, MdClose, MdHistory } from 'react-icons/md';
+import { apiGet } from '@/lib/api';
+import { formatearFecha } from './data';
+
+const ESTADO_BADGE = {
+  REPORTADO: 'bg-sky-100 text-sky-700',
+  EN_REVISION: 'bg-amber-100 text-amber-700',
+  INSPECCION: 'bg-violet-100 text-violet-700',
+  APROBADO: 'bg-emerald-100 text-emerald-700',
+  RECHAZADO: 'bg-rose-100 text-rose-700',
+  LIQUIDADO: 'bg-emerald-100 text-emerald-700',
+};
 
 export default function SeguimientoSiniestros() {
   const [siniestros, setSiniestros] = useState([]);
@@ -18,7 +27,7 @@ export default function SeguimientoSiniestros() {
   }, []);
 
   if (cargando) return <div className="p-4 text-sm text-text-soft text-center">Cargando tus casos...</div>;
-  if (siniestros.length === 0) return null; // Si no hay, no mostramos la sección
+  if (siniestros.length === 0) return null;
 
   return (
     <div className="mt-8 pt-8 border-t border-border">
@@ -36,11 +45,7 @@ export default function SeguimientoSiniestros() {
                 </span>
                 <span
                   className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
-                    sin.estado_resolucion === 'OBSERVADO'
-                      ? 'bg-amber-100 text-amber-700'
-                      : sin.estado_resolucion === 'LIQUIDADO'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-sky-100 text-sky-700'
+                    ESTADO_BADGE[sin.estado_resolucion] || 'bg-bg-soft text-text-soft'
                   }`}
                 >
                   {sin.estado_resolucion}
@@ -55,13 +60,12 @@ export default function SeguimientoSiniestros() {
               onClick={() => setSiniestroSeleccionado(sin.id_siniestro)}
               className="mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold"
             >
-              <MdTimeline size={16} /> Ver Línea de Tiempo
+              <MdTimeline size={16} /> Ver línea de tiempo
             </button>
           </div>
         ))}
       </div>
 
-      {/* Modal de Línea de Tiempo y Observaciones */}
       {siniestroSeleccionado && (
         <ModalLineaTiempo id={siniestroSeleccionado} onClose={() => setSiniestroSeleccionado(null)} />
       )}
@@ -71,85 +75,68 @@ export default function SeguimientoSiniestros() {
 
 function ModalLineaTiempo({ id, onClose }) {
   const [detalle, setDetalle] = useState(null);
-  const [respuesta, setRespuesta] = useState('');
-  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Simulación del endpoint de línea de tiempo
-    setTimeout(() => {
-      setDetalle(mockDetalleSiniestro);
-    }, 500);
+    let activo = true;
+    apiGet(`/mis-siniestros/${id}`)
+      .then((data) => activo && setDetalle(data))
+      .catch((e) => activo && setError(e.mensaje || 'No se pudo cargar el detalle'));
+    return () => {
+      activo = false;
+    };
   }, [id]);
 
-  const enviarRespuesta = async () => {
-    if (!respuesta.trim()) return;
-    setEnviando(true);
-    // Simulación de envío de respuesta a observación
-    setTimeout(() => {
-      alert('Respuesta enviada al analista.');
-      setEnviando(false);
-      onClose();
-    }, 800);
-  };
+  const eventos = detalle?.timeline || [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-bg rounded-2xl border border-border shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center p-4 border-b border-border">
-          <p className="font-bold text-text text-sm">Línea de Tiempo - Caso #{String(id).padStart(6, '0')}</p>
+          <p className="font-bold text-text text-sm">
+            Línea de tiempo · Caso #{String(id).padStart(6, '0')}
+          </p>
           <button onClick={onClose} className="text-text-soft hover:text-text">
             <MdClose size={20} />
           </button>
         </div>
 
         <div className="p-5 flex-1 overflow-y-auto">
-          {!detalle ? (
+          {error ? (
+            <p className="text-center text-xs text-rose-500">{error}</p>
+          ) : !detalle ? (
             <p className="text-center text-xs text-text-soft">Cargando historial...</p>
+          ) : eventos.length === 0 ? (
+            <div className="text-center py-6">
+              <MdHistory size={28} className="mx-auto text-text-soft opacity-40 mb-2" />
+              <p className="text-xs text-text-soft">
+                Aun no hay movimientos registrados para este caso.
+              </p>
+              <p className="text-[11px] text-text-soft mt-1">
+                Estado actual:{' '}
+                <span className="font-semibold">{detalle.estado_resolucion}</span>
+              </p>
+            </div>
           ) : (
             <div className="relative border-l-2 border-border ml-3 flex flex-col gap-6">
-              {detalle.linea_tiempo.map((hito, idx) => (
+              {eventos.map((evento, idx) => (
                 <div key={idx} className="relative pl-6">
                   <span
                     className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 border-bg ${
-                      idx === detalle.linea_tiempo.length - 1 ? 'bg-primary' : 'bg-text-soft'
+                      idx === eventos.length - 1 ? 'bg-primary' : 'bg-text-soft'
                     }`}
                   />
-                  <p className="text-xs font-bold text-text">{hito.estado}</p>
-                  <p className="text-[10px] text-text-soft mb-1">{formatearFecha(hito.fecha)}</p>
-                  <p className="text-xs text-text-soft leading-relaxed">{hito.detalle}</p>
+                  <p className="text-xs font-bold text-text">{evento.accion}</p>
+                  <p className="text-[10px] text-text-soft mb-1">
+                    {formatearFecha(evento.fecha)}
+                    {evento.autor ? ` · ${evento.autor}` : ''}
+                  </p>
+                  <p className="text-xs text-text-soft leading-relaxed">{evento.detalle}</p>
                 </div>
               ))}
             </div>
           )}
         </div>
-
-        {detalle?.requiere_respuesta && (
-          <div className="p-4 border-t border-border bg-amber-50">
-            <label className="flex items-center gap-1.5 text-xs font-bold text-amber-700 mb-2">
-              <MdChatBubbleOutline size={14} /> Responder a la observación
-            </label>
-            <textarea
-              value={respuesta}
-              onChange={(e) => setRespuesta(e.target.value)}
-              rows={2}
-              placeholder="Escribe tu respuesta o aclaración aquí..."
-              className="w-full px-3 py-2 rounded-xl text-xs border border-amber-200 outline-none focus:border-amber-400 resize-none mb-2"
-            />
-            <button
-              onClick={enviarRespuesta}
-              disabled={enviando || !respuesta.trim()}
-              className="w-full flex justify-center items-center gap-2 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl disabled:opacity-50 transition-colors"
-            >
-              {enviando ? (
-                'Enviando...'
-              ) : (
-                <>
-                  <MdSend size={14} /> Enviar respuesta
-                </>
-              )}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

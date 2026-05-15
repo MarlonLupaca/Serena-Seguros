@@ -1,4 +1,16 @@
-import { MdDirectionsCar, MdHealthAndSafety, MdFavorite, MdHome, MdFlight, MdBusiness, MdShield } from 'react-icons/md';
+// Catalogos visuales (badges, iconos por tipo) y helpers de formato.
+// El detalle de poliza (beneficiarios + pagos + endosos) viene de /mis-polizas/{id}.
+// La descarga del contrato pasa por /mis-polizas/{id}/contrato (apiDownloadFile).
+
+import {
+  MdDirectionsCar,
+  MdHealthAndSafety,
+  MdFavorite,
+  MdHome,
+  MdFlight,
+  MdBusiness,
+  MdShield,
+} from 'react-icons/md';
 
 export const ESTADO_STYLES = {
   ACTIVA: {
@@ -24,36 +36,12 @@ export const ESTADO_STYLES = {
 };
 
 export const TIPO_STYLES = {
-  VEHICULAR: {
-    icon: MdDirectionsCar,
-    accentBg: 'bg-primary/10',
-    accentText: 'text-primary',
-  },
-  SALUD: {
-    icon: MdHealthAndSafety,
-    accentBg: 'bg-emerald-100',
-    accentText: 'text-emerald-600',
-  },
-  VIDA: {
-    icon: MdFavorite,
-    accentBg: 'bg-rose-100',
-    accentText: 'text-rose-500',
-  },
-  HOGAR: {
-    icon: MdHome,
-    accentBg: 'bg-amber-100',
-    accentText: 'text-amber-600',
-  },
-  VIAJE: {
-    icon: MdFlight,
-    accentBg: 'bg-sky-100',
-    accentText: 'text-sky-600',
-  },
-  EMPRESA: {
-    icon: MdBusiness,
-    accentBg: 'bg-violet-100',
-    accentText: 'text-violet-600',
-  },
+  VEHICULAR: { icon: MdDirectionsCar, accentBg: 'bg-primary/10', accentText: 'text-primary' },
+  SALUD: { icon: MdHealthAndSafety, accentBg: 'bg-emerald-100', accentText: 'text-emerald-600' },
+  VIDA: { icon: MdFavorite, accentBg: 'bg-rose-100', accentText: 'text-rose-500' },
+  HOGAR: { icon: MdHome, accentBg: 'bg-amber-100', accentText: 'text-amber-600' },
+  VIAJE: { icon: MdFlight, accentBg: 'bg-sky-100', accentText: 'text-sky-600' },
+  EMPRESA: { icon: MdBusiness, accentBg: 'bg-violet-100', accentText: 'text-violet-600' },
 };
 
 export function estiloTipo(tipo) {
@@ -77,31 +65,3 @@ export function formatearFecha(iso) {
   if (isNaN(d)) return iso;
   return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
-
-// data.js (Añadir al final de tu archivo existente)
-
-// SIMULACIÓN DE ENDPOINTS PARA EL MÓDULO 3
-
-// Endpoint para descargar contrato
-export const simularDescargaPDF = (idPoliza) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        url: `https://fake-url.com/contrato-${idPoliza}.pdf`,
-        mensaje: 'Descarga iniciada',
-      });
-    }, 800);
-  });
-};
-
-// Data simulada que el endpoint /mis-polizas/{id} debería devolver
-export const mockDetallePolizaExtra = {
-  beneficiarios: [
-    { id: 1, nombre: 'María Pérez', parentesco: 'Cónyuge', porcentaje: '50%' },
-    { id: 2, nombre: 'Carlos Pérez', parentesco: 'Hijo', porcentaje: '50%' },
-  ],
-  pagos: [
-    { id_pago: 101, fecha: '2026-04-15', monto: 150.0, estado: 'PAGADO' },
-    { id_pago: 102, fecha: '2026-05-15', monto: 150.0, estado: 'PENDIENTE' },
-  ],
-};

@@ -1,48 +1,75 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
-  MdAttachFile,
-  MdCalendarToday,
-  MdDelete,
-  MdDownload,
+  MdInbox,
   MdSearch,
-  MdUpload,
-  MdClose,
-  MdFolder,
   MdShield,
+  MdEditNote,
   MdWarning,
-  MdReceiptLong,
-  MdPictureAsPdf,
-  MdImage,
-  MdDescription,
-  MdInsertDriveFile,
+  MdFactCheck,
+  MdAutorenew,
+  MdOpenInNew,
+  MdAccessTime,
+  MdCalendarToday,
+  MdPerson,
 } from 'react-icons/md';
-import { apiDelete, apiDownloadFile, apiGet, apiUploadFile } from '@/lib/api';
+import { apiGet } from '@/lib/api';
 
-const TABLAS = [
-  { value: 'general', label: 'General', icon: MdFolder, accentBg: 'bg-bg-soft', accentText: 'text-text-soft' },
-  { value: 'poliza', label: 'Póliza', icon: MdShield, accentBg: 'bg-primary/10', accentText: 'text-primary' },
-  { value: 'siniestro', label: 'Siniestro', icon: MdWarning, accentBg: 'bg-amber-100', accentText: 'text-amber-600' },
-  { value: 'pago', label: 'Pago', icon: MdReceiptLong, accentBg: 'bg-emerald-100', accentText: 'text-emerald-600' },
+const BANDEJAS = [
+  {
+    id: 'emisiones',
+    label: 'Emisiones pendientes',
+    icon: MdShield,
+    accent: 'primary',
+    descripcion: 'Pólizas en estado PENDIENTE esperando emisión.',
+  },
+  {
+    id: 'endosos',
+    label: 'Endosos pendientes',
+    icon: MdEditNote,
+    accent: 'amber',
+    descripcion: 'Solicitudes de cambio sobre pólizas activas.',
+  },
+  {
+    id: 'siniestros',
+    label: 'Siniestros pendientes',
+    icon: MdWarning,
+    accent: 'rose',
+    descripcion: 'Casos reportados o en revisión sin liquidar.',
+  },
+  {
+    id: 'validaciones',
+    label: 'Validaciones documentales',
+    icon: MdFactCheck,
+    accent: 'violet',
+    descripcion: 'Identidades y documentos por validar antes de activar al cliente.',
+  },
+  {
+    id: 'renovaciones',
+    label: 'Renovaciones por aprobar',
+    icon: MdAutorenew,
+    accent: 'sky',
+    descripcion: 'Pólizas activas próximas a vencer en los próximos 30 días.',
+  },
 ];
 
-function estiloTabla(t) {
-  return TABLAS.find((x) => x.value === t) || TABLAS[0];
-}
+const ACCENT_STYLES = {
+  primary: { bg: 'bg-primary/10', text: 'text-primary', bar: 'bg-primary/40' },
+  amber: { bg: 'bg-amber-100', text: 'text-amber-600', bar: 'bg-amber-400' },
+  rose: { bg: 'bg-rose-100', text: 'text-rose-600', bar: 'bg-rose-400' },
+  violet: { bg: 'bg-violet-100', text: 'text-violet-600', bar: 'bg-violet-400' },
+  sky: { bg: 'bg-sky-100', text: 'text-sky-600', bar: 'bg-sky-400' },
+};
 
-function extension(nombre) {
-  if (!nombre) return '';
-  const i = nombre.lastIndexOf('.');
-  return i >= 0 ? nombre.substring(i + 1).toLowerCase() : '';
-}
+const PRIORIDADES = {
+  ALTA: { label: 'Alta', badge: 'bg-rose-100 text-rose-600' },
+  MEDIA: { label: 'Media', badge: 'bg-amber-100 text-amber-700' },
+  BAJA: { label: 'Baja', badge: 'bg-bg-soft text-text-soft' },
+};
 
-function iconoArchivo(ext) {
-  if (ext === 'pdf') return MdPictureAsPdf;
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return MdImage;
-  if (['doc', 'docx', 'txt', 'rtf'].includes(ext)) return MdDescription;
-  return MdInsertDriveFile;
-}
+const SLA_DIAS = { verde: 2, amarillo: 5 };
 
 function formatearFecha(iso) {
   if (!iso) return '—';
@@ -51,14 +78,33 @@ function formatearFecha(iso) {
   return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-export default function DocumentosCorePage() {
-  const [documentos, setDocumentos] = useState([]);
+function diasDesde(iso) {
+  if (!iso) return 0;
+  const d = new Date(iso);
+  if (isNaN(d)) return 0;
+  const hoy = new Date();
+  return Math.floor((hoy - d) / (1000 * 60 * 60 * 24));
+}
+
+function colorSla(dias) {
+  if (dias <= SLA_DIAS.verde) return { dot: 'bg-emerald-500', text: 'text-emerald-700', label: 'En tiempo' };
+  if (dias <= SLA_DIAS.amarillo) return { dot: 'bg-amber-500', text: 'text-amber-700', label: 'Próximo a vencer' };
+  return { dot: 'bg-rose-500', text: 'text-rose-700', label: 'Vencido' };
+}
+
+export default function BandejaPage() {
+  const router = useRouter();
+  const [tab, setTab] = useState('emisiones');
+  const [datos, setDatos] = useState({
+    emisiones: [],
+    endosos: [],
+    siniestros: [],
+    validaciones: [],
+    renovaciones: [],
+  });
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [busq, setBusq] = useState('');
-  const [filtro, setFiltro] = useState('todos');
-  const [modal, setModal] = useState(false);
-  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -68,250 +114,263 @@ export default function DocumentosCorePage() {
     setCargando(true);
     setError('');
     try {
-      const data = await apiGet('/mis-documentos');
-      setDocumentos(data || []);
+      const [pol, end, sin, val, ren] = await Promise.all([
+        apiGet('/polizas?estado=PENDIENTE').catch(() => []),
+        apiGet('/endosos?estado=PENDIENTE').catch(() => []),
+        apiGet('/siniestros').catch(() => []),
+        apiGet('/validaciones?estado=PENDIENTE').catch(() => []),
+        apiGet('/polizas/renovaciones?dias=30').catch(() => []),
+      ]);
+      setDatos({
+        emisiones: pol || [],
+        endosos: end || [],
+        siniestros: (sin || []).filter((s) =>
+          ['REPORTADO', 'EN_REVISION', 'INSPECCION', 'APROBADO'].includes(s.estado_resolucion)
+        ),
+        validaciones: val || [],
+        renovaciones: ren || [],
+      });
     } catch (e) {
-      setError(e.mensaje || 'No se pudo cargar');
+      setError(e.mensaje || 'No se pudo cargar la bandeja');
     } finally {
       setCargando(false);
     }
   };
 
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const descargar = async (doc) => {
-    try {
-      await apiDownloadFile(`/mis-documentos/${doc.id_documento}/archivo`, doc.nombre_archivo);
-    } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo descargar');
-    }
-  };
-
-  const eliminar = async (id) => {
-    try {
-      await apiDelete(`/mis-documentos/${id}`);
-      mostrarToast('Documento eliminado');
-      cargar();
-    } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo eliminar');
-    }
-  };
-
-  const filtrados = documentos.filter((d) => {
+  const items = construirItems(datos[tab] || [], tab);
+  const filtrados = items.filter((it) => {
     const t = busq.toLowerCase();
-    const matchBusq = t === '' || (d.nombre_archivo || '').toLowerCase().includes(t);
-    const matchFiltro = filtro === 'todos' || d.tabla_referencia === filtro;
-    return matchBusq && matchFiltro;
+    return (
+      t === '' ||
+      (it.numero || '').toLowerCase().includes(t) ||
+      (it.cliente || '').toLowerCase().includes(t) ||
+      (it.tipoSolicitud || '').toLowerCase().includes(t)
+    );
   });
+
+  const totales = BANDEJAS.reduce(
+    (acc, b) => ({ ...acc, [b.id]: (datos[b.id] || []).length }),
+    {}
+  );
+
+  const bandejaActual = BANDEJAS.find((b) => b.id === tab);
+  const accent = ACCENT_STYLES[bandejaActual?.accent] || ACCENT_STYLES.primary;
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
-
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-base font-bold text-text">Documentos del área técnica</h1>
-          <p className="text-xs text-text-soft mt-0.5">{documentos.length} documentos cargados</p>
-        </div>
-        <button
-          onClick={() => setModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
-        >
-          <MdUpload size={15} /> Subir documento
-        </button>
+      <div>
+        <h1 className="text-base font-bold text-text">Mesa de trabajo</h1>
+        <p className="text-xs text-text-soft mt-0.5">
+          Tareas pendientes del equipo técnico. Indicadores SLA por antigüedad del caso.
+        </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <MdSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
-          <input
-            placeholder="Buscar archivos..."
-            value={busq}
-            onChange={(e) => setBusq(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary"
-          />
-        </div>
-        <select
-          value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
-          className="px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary appearance-none"
-        >
-          <option value="todos">Todas las categorías</option>
-          {TABLAS.map((t) => (
-            <option key={t.value} value={t.value}>{t.label}</option>
-          ))}
-        </select>
-      </div>
-
-      {cargando ? (
-        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">Cargando...</div>
-      ) : error ? (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-600 text-center">{error}</div>
-      ) : filtrados.length === 0 ? (
-        <div className="bg-bg rounded-2xl border border-border p-12 text-center">
-          <MdFolder size={32} className="text-text-soft mx-auto mb-3 opacity-40" />
-          <p className="text-sm font-medium text-text">Sin documentos</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {filtrados.map((d) => {
-            const tabla = estiloTabla(d.tabla_referencia);
-            const ext = extension(d.nombre_archivo);
-            const ExtIcon = iconoArchivo(ext);
-            return (
-              <div key={d.id_documento} className="bg-bg rounded-2xl border border-border overflow-hidden">
-                <div className={`h-1 w-full ${tabla.accentBg}`} />
-                <div className="p-4 flex items-center gap-4 flex-wrap sm:flex-nowrap">
-                  <div className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center shrink-0 ${tabla.accentBg} gap-0.5`}>
-                    <ExtIcon size={18} className={tabla.accentText} />
-                    <span className="font-bold uppercase tracking-wide" style={{ fontSize: 8 }}>
-                      {ext || 'doc'}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-text truncate">{d.nombre_archivo}</p>
-                    <p className="text-xs text-text-soft mt-0.5">
-                      DOC-{String(d.id_documento).padStart(6, '0')} · {tabla.label}
-                      {d.id_referencia ? ` · #${d.id_referencia}` : ''}
-                    </p>
-                    <p className="text-xs text-text-soft mt-0.5 flex items-center gap-1">
-                      <MdCalendarToday size={11} /> {formatearFecha(d.fecha_carga)}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button
-                      onClick={() => descargar(d)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors"
-                    >
-                      <MdDownload size={13} /> Descargar
-                    </button>
-                    <button
-                      onClick={() => eliminar(d.id_documento)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-medium transition-colors"
-                    >
-                      <MdDelete size={13} />
-                    </button>
-                  </div>
-                </div>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {BANDEJAS.map((b) => {
+          const s = ACCENT_STYLES[b.accent];
+          const Icon = b.icon;
+          const activa = tab === b.id;
+          return (
+            <button
+              key={b.id}
+              onClick={() => setTab(b.id)}
+              className={`text-left rounded-xl border p-3 transition-colors ${
+                activa ? 'border-primary bg-primary/5' : 'border-border bg-bg hover:bg-bg-soft'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${s.bg}`}>
+                <Icon size={16} className={s.text} />
               </div>
-            );
-          })}
-        </div>
-      )}
+              <p className="text-[11px] text-text-soft leading-tight">{b.label}</p>
+              <p className="text-xl font-bold text-text mt-1">{totales[b.id] || 0}</p>
+            </button>
+          );
+        })}
+      </div>
 
-      {modal && (
-        <ModalSubir
-          onClose={() => setModal(false)}
-          onSuccess={() => {
-            setModal(false);
-            mostrarToast('Documento subido');
-            cargar();
-          }}
-        />
-      )}
+      <div className="bg-bg rounded-2xl border border-border overflow-hidden">
+        <div className={`h-1 w-full ${accent.bar}`} />
+        <div className="px-5 py-4 border-b border-border flex items-start justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${accent.bg}`}>
+              {bandejaActual && <bandejaActual.icon size={20} className={accent.text} />}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-text">{bandejaActual?.label}</p>
+              <p className="text-xs text-text-soft">{bandejaActual?.descripcion}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] text-text-soft">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" /> Verde ≤{SLA_DIAS.verde}d
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-amber-500" /> Amarillo ≤{SLA_DIAS.amarillo}d
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-rose-500" /> Rojo &gt;{SLA_DIAS.amarillo}d
+            </span>
+          </div>
+        </div>
+
+        <div className="p-5 flex flex-col gap-3">
+          <div className="relative">
+            <MdSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
+            <input
+              placeholder="Buscar por N° caso, cliente o tipo de solicitud..."
+              value={busq}
+              onChange={(e) => setBusq(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary"
+            />
+          </div>
+
+          {cargando ? (
+            <div className="bg-bg-soft rounded-xl p-12 text-center text-sm text-text-soft">
+              Cargando bandeja...
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-sm text-red-600 text-center">
+              {error}
+            </div>
+          ) : filtrados.length === 0 ? (
+            <div className="bg-bg-soft rounded-xl p-12 text-center">
+              <MdInbox size={32} className="text-text-soft mx-auto mb-3 opacity-40" />
+              <p className="text-sm font-medium text-text">Bandeja al día</p>
+              <p className="text-xs text-text-soft mt-1">
+                No hay casos pendientes en esta sección.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-bg-soft">
+                  <tr className="text-xs text-text-soft">
+                    <th className="px-3 py-2 text-left font-medium">N° caso</th>
+                    <th className="px-3 py-2 text-left font-medium">Cliente</th>
+                    <th className="px-3 py-2 text-left font-medium">Tipo solicitud</th>
+                    <th className="px-3 py-2 text-left font-medium">Fecha ingreso</th>
+                    <th className="px-3 py-2 text-left font-medium">Responsable</th>
+                    <th className="px-3 py-2 text-left font-medium">SLA</th>
+                    <th className="px-3 py-2 text-left font-medium">Prioridad</th>
+                    <th className="px-3 py-2 text-right font-medium">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtrados.map((it) => {
+                    const sla = colorSla(it.diasTranscurridos);
+                    const prio = PRIORIDADES[it.prioridad] || PRIORIDADES.MEDIA;
+                    return (
+                      <tr key={`${tab}-${it.id}`} className="border-t border-border">
+                        <td className="px-3 py-2.5 font-semibold text-text">{it.numero}</td>
+                        <td className="px-3 py-2.5 text-text">
+                          <p className="flex items-center gap-1 text-text-soft">
+                            <MdPerson size={11} /> {it.cliente || '—'}
+                          </p>
+                        </td>
+                        <td className="px-3 py-2.5 text-text-soft">{it.tipoSolicitud || '—'}</td>
+                        <td className="px-3 py-2.5 text-text-soft">
+                          <p className="flex items-center gap-1">
+                            <MdCalendarToday size={11} /> {formatearFecha(it.fechaIngreso)}
+                          </p>
+                        </td>
+                        <td className="px-3 py-2.5 text-text-soft">{it.responsable || 'Sin asignar'}</td>
+                        <td className="px-3 py-2.5">
+                          <span className={`flex items-center gap-1 text-xs font-semibold ${sla.text}`}>
+                            <span className={`w-2 h-2 rounded-full ${sla.dot}`} />
+                            {it.diasTranscurridos}d · {sla.label}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${prio.badge}`}>
+                            {prio.label}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-right">
+                          <button
+                            onClick={() => router.push(it.linkExpediente)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold ml-auto"
+                          >
+                            <MdOpenInNew size={12} /> Abrir
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-function ModalSubir({ onClose, onSuccess }) {
-  const [archivo, setArchivo] = useState(null);
-  const [tabla, setTabla] = useState('general');
-  const [idReferencia, setIdReferencia] = useState('');
-  const [enviando, setEnviando] = useState(false);
-  const [error, setError] = useState('');
-
-  const subir = async () => {
-    if (!archivo) return;
-    setEnviando(true);
-    setError('');
-    try {
-      const fd = new FormData();
-      fd.append('archivo', archivo);
-      fd.append('tabla_referencia', tabla);
-      if (idReferencia) fd.append('id_referencia', String(idReferencia));
-      await apiUploadFile('/mis-documentos', fd);
-      onSuccess();
-    } catch (e) {
-      setError(e.mensaje || 'No se pudo subir');
-    } finally {
-      setEnviando(false);
+function construirItems(raw, tipo) {
+  return (raw || []).map((r) => {
+    switch (tipo) {
+      case 'emisiones':
+        return {
+          id: r.id_poliza,
+          numero: `POL-${String(r.id_poliza).padStart(6, '0')}`,
+          cliente: r.cliente_nombre || r.producto?.nombre || '—',
+          tipoSolicitud: `Emisión ${r.producto?.tipo_seguro || ''}`,
+          fechaIngreso: r.fecha_emision,
+          diasTranscurridos: diasDesde(r.fecha_emision),
+          responsable: null,
+          prioridad: 'MEDIA',
+          linkExpediente: '/core/emisiones',
+        };
+      case 'endosos':
+        return {
+          id: r.id_endoso,
+          numero: `END-${String(r.id_endoso).padStart(6, '0')}`,
+          cliente: r.poliza_nombre || '—',
+          tipoSolicitud: r.tipo_cambio || 'Endoso',
+          fechaIngreso: r.fecha_solicitud,
+          diasTranscurridos: diasDesde(r.fecha_solicitud),
+          responsable: null,
+          prioridad: 'MEDIA',
+          linkExpediente: '/core/siniestros',
+        };
+      case 'siniestros':
+        return {
+          id: r.id_siniestro,
+          numero: `SIN-${String(r.id_siniestro).padStart(6, '0')}`,
+          cliente: r.cliente_nombre || '—',
+          tipoSolicitud: r.tipo_incidente || '—',
+          fechaIngreso: r.fecha_reporte,
+          diasTranscurridos: diasDesde(r.fecha_reporte),
+          responsable: r.analista_asignado,
+          prioridad: r.monto_reclamado > 10000 ? 'ALTA' : 'MEDIA',
+          linkExpediente: '/core/siniestros',
+        };
+      case 'validaciones':
+        return {
+          id: r.id_validacion,
+          numero: `VAL-${String(r.id_validacion).padStart(6, '0')}`,
+          cliente: r.cliente_nombre,
+          tipoSolicitud: 'Validar identidad',
+          fechaIngreso: r.fecha_ingreso,
+          diasTranscurridos: diasDesde(r.fecha_ingreso),
+          responsable: r.validador_nombre,
+          prioridad: 'MEDIA',
+          linkExpediente: '/core/validaciones',
+        };
+      case 'renovaciones':
+        return {
+          id: r.id_poliza,
+          numero: `POL-${String(r.id_poliza).padStart(6, '0')}`,
+          cliente: r.cliente_nombre || r.producto?.nombre || '—',
+          tipoSolicitud: `Renovación ${r.producto?.tipo_seguro || ''}`,
+          fechaIngreso: r.fecha_emision,
+          diasTranscurridos: diasDesde(r.fecha_emision),
+          responsable: null,
+          prioridad: 'ALTA',
+          linkExpediente: '/core/emisiones',
+        };
+      default:
+        return { id: 0, numero: '—', diasTranscurridos: 0 };
     }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-bg w-full max-w-sm rounded-2xl border border-border shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <p className="text-sm font-bold text-text">Subir documento</p>
-          <button onClick={onClose} className="text-text-soft hover:text-text">
-            <MdClose size={18} />
-          </button>
-        </div>
-        <div className="p-5 flex flex-col gap-3">
-          {error && (
-            <div className="p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">{error}</div>
-          )}
-          <label className="flex flex-col items-center gap-2 border-2 border-dashed border-primary/25 rounded-xl p-6 cursor-pointer hover:bg-primary/5 transition-colors">
-            <MdUpload size={22} className="text-primary" />
-            <p className="text-xs font-medium text-text">{archivo ? 'Cambiar archivo' : 'Seleccionar archivo'}</p>
-            <p className="text-xs text-text-soft">PDF, JPG, PNG · Máx. 10 MB</p>
-            <input type="file" className="hidden" onChange={(e) => setArchivo(e.target.files?.[0] || null)} />
-          </label>
-          {archivo && (
-            <div className="flex items-center gap-2 text-xs text-text-soft bg-bg-soft rounded-lg px-3 py-2">
-              <MdAttachFile size={13} className="text-primary shrink-0" />
-              <span className="flex-1 truncate">{archivo.name}</span>
-            </div>
-          )}
-          <div>
-            <label className="text-xs font-medium text-text-soft block mb-1.5">Categoría</label>
-            <select
-              value={tabla}
-              onChange={(e) => setTabla(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
-            >
-              {TABLAS.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
-          </div>
-          {tabla !== 'general' && (
-            <div>
-              <label className="text-xs font-medium text-text-soft block mb-1.5">ID de {tabla} (opcional)</label>
-              <input
-                type="number"
-                min="0"
-                value={idReferencia}
-                onChange={(e) => setIdReferencia(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
-              />
-            </div>
-          )}
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={subir}
-              disabled={!archivo || enviando}
-              className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-xs font-semibold transition-colors"
-            >
-              {enviando ? 'Subiendo...' : 'Subir'}
-            </button>
-            <button
-              onClick={onClose}
-              disabled={enviando}
-              className="flex-1 py-2.5 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors disabled:opacity-50"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  });
 }

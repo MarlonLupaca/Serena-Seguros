@@ -29,6 +29,10 @@ CREATE TABLE persona (
     documento_identidad VARCHAR(20) UNIQUE NOT NULL,
     telefono VARCHAR(20) NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
+    contacto_emergencia_nombre VARCHAR(150) NULL,
+    contacto_emergencia_relacion VARCHAR(50) NULL,
+    contacto_emergencia_telefono VARCHAR(20) NULL,
+    contacto_emergencia_correo VARCHAR(100) NULL,
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
@@ -46,7 +50,12 @@ CREATE TABLE empleado (
     cargo VARCHAR(100) NOT NULL,
     area VARCHAR(100) NOT NULL,
     sueldo_base DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (id_persona) REFERENCES persona(id_persona) ON DELETE CASCADE
+    fecha_ingreso DATE NULL,
+    id_jefe INT NULL,
+    dias_vacaciones INT DEFAULT 0 NOT NULL,
+    estado_empleado ENUM('ACTIVO', 'VACACIONES', 'LICENCIA', 'RETIRADO') DEFAULT 'ACTIVO' NOT NULL,
+    FOREIGN KEY (id_persona) REFERENCES persona(id_persona) ON DELETE CASCADE,
+    FOREIGN KEY (id_jefe) REFERENCES empleado(id_empleado) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- ========================================================
@@ -146,6 +155,9 @@ CREATE TABLE siniestro (
     fecha_reporte DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     estado_resolucion ENUM('REPORTADO', 'EN_REVISION', 'INSPECCION', 'APROBADO', 'RECHAZADO', 'LIQUIDADO') DEFAULT 'REPORTADO' NOT NULL,
     monto_reclamado DECIMAL(10,2) NOT NULL,
+    observaciones_perito TEXT NULL,
+    monto_estimado_perito DECIMAL(12,2) NULL,
+    informe_tecnico VARCHAR(500) NULL,
     FOREIGN KEY (id_poliza) REFERENCES poliza(id_poliza),
     FOREIGN KEY (id_empleado_analista) REFERENCES empleado(id_empleado)
 ) ENGINE=InnoDB;
@@ -273,4 +285,199 @@ CREATE TABLE notificacion (
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
     INDEX idx_notif_usuario (id_usuario, leida),
     INDEX idx_notif_fecha (fecha)
+) ENGINE=InnoDB;
+
+-- ========================================================
+-- 8. FASE 8 - PORTAL ASEGURADO (beneficiarios, preferencias, promociones)
+-- ========================================================
+
+CREATE TABLE beneficiario (
+    id_beneficiario INT AUTO_INCREMENT PRIMARY KEY,
+    id_persona INT NOT NULL,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    parentesco VARCHAR(50) NOT NULL,
+    documento_identidad VARCHAR(20) NULL,
+    porcentaje DECIMAL(5,2) NOT NULL DEFAULT 100.00,
+    FOREIGN KEY (id_persona) REFERENCES persona(id_persona) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE preferencia_notificacion (
+    id_preferencia INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT UNIQUE NOT NULL,
+    notif_email BOOLEAN NOT NULL DEFAULT TRUE,
+    notif_sms BOOLEAN NOT NULL DEFAULT FALSE,
+    notif_push BOOLEAN NOT NULL DEFAULT TRUE,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE promocion (
+    id_promocion INT AUTO_INCREMENT PRIMARY KEY,
+    id_producto INT NOT NULL,
+    titulo VARCHAR(150) NOT NULL,
+    descripcion TEXT NULL,
+    descuento_pct DECIMAL(5,2) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    activa BOOLEAN NOT NULL DEFAULT TRUE,
+    FOREIGN KEY (id_producto) REFERENCES producto_seguro(id_producto)
+) ENGINE=InnoDB;
+
+-- ========================================================
+-- 9. FASE A - PORTAL COMERCIAL (notas internas del CRM)
+-- ========================================================
+
+CREATE TABLE nota_cliente (
+    id_nota INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    id_empleado_autor INT NULL,
+    texto TEXT NOT NULL,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_empleado_autor) REFERENCES empleado(id_empleado) ON DELETE SET NULL,
+    INDEX idx_nota_cliente (id_cliente, fecha)
+) ENGINE=InnoDB;
+
+-- ========================================================
+-- 10. FASE B - PORTAL CORE (validacion documental de identidad)
+-- ========================================================
+
+CREATE TABLE validacion_documental (
+    id_validacion INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    id_documento INT NULL,
+    estado ENUM('PENDIENTE', 'APROBADO', 'RECHAZADO', 'CORRECCION') DEFAULT 'PENDIENTE' NOT NULL,
+    motivo_rechazo TEXT NULL,
+    id_empleado_validador INT NULL,
+    fecha_ingreso DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    fecha_resolucion DATETIME NULL,
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_documento) REFERENCES documento_auditoria(id_documento) ON DELETE SET NULL,
+    FOREIGN KEY (id_empleado_validador) REFERENCES empleado(id_empleado) ON DELETE SET NULL,
+    INDEX idx_validacion_estado (estado, fecha_ingreso)
+) ENGINE=InnoDB;
+
+-- ========================================================
+-- 11. FASE C - PORTAL OPERATIVO (nomina, compras, contabilidad)
+-- ========================================================
+
+-- Nomina y planillas
+CREATE TABLE planilla_mensual (
+    id_planilla INT AUTO_INCREMENT PRIMARY KEY,
+    periodo VARCHAR(7) UNIQUE NOT NULL,
+    total_planilla DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    total_descuentos DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    total_neto DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    estado ENUM('PROCESADA', 'CERRADA') DEFAULT 'PROCESADA' NOT NULL,
+    fecha_proceso DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    INDEX idx_planilla_periodo (periodo)
+) ENGINE=InnoDB;
+
+CREATE TABLE detalle_planilla (
+    id_detalle INT AUTO_INCREMENT PRIMARY KEY,
+    id_planilla INT NOT NULL,
+    id_empleado INT NOT NULL,
+    sueldo_base DECIMAL(10,2) NOT NULL,
+    bonos DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    horas_extra DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    afp_onp DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    impuesto_renta DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    neto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    FOREIGN KEY (id_planilla) REFERENCES planilla_mensual(id_planilla) ON DELETE CASCADE,
+    FOREIGN KEY (id_empleado) REFERENCES empleado(id_empleado) ON DELETE CASCADE,
+    UNIQUE KEY uk_planilla_empleado (id_planilla, id_empleado)
+) ENGINE=InnoDB;
+
+-- Compras y proveedores internos
+CREATE TABLE proveedor_interno (
+    id_proveedor_interno INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    ruc VARCHAR(20) UNIQUE NOT NULL,
+    rubro VARCHAR(100) NOT NULL,
+    contacto VARCHAR(150) NULL,
+    telefono VARCHAR(20) NULL,
+    email VARCHAR(100) NULL,
+    estado ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO' NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE solicitud_compra (
+    id_solicitud INT AUTO_INCREMENT PRIMARY KEY,
+    area VARCHAR(100) NOT NULL,
+    producto VARCHAR(200) NOT NULL,
+    descripcion TEXT NULL,
+    monto_estimado DECIMAL(12,2) NOT NULL,
+    prioridad ENUM('BAJA', 'MEDIA', 'ALTA') DEFAULT 'MEDIA' NOT NULL,
+    estado ENUM('PENDIENTE', 'APROBADO', 'RECHAZADO', 'COMPRADO') DEFAULT 'PENDIENTE' NOT NULL,
+    id_empleado_solicitante INT NULL,
+    fecha_solicitud DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (id_empleado_solicitante) REFERENCES empleado(id_empleado) ON DELETE SET NULL,
+    INDEX idx_solicitud_estado (estado, fecha_solicitud)
+) ENGINE=InnoDB;
+
+CREATE TABLE orden_compra (
+    id_orden INT AUTO_INCREMENT PRIMARY KEY,
+    id_solicitud INT NOT NULL,
+    id_proveedor_interno INT NOT NULL,
+    monto_total DECIMAL(12,2) NOT NULL,
+    estado ENUM('EMITIDA', 'RECIBIDA', 'CERRADA') DEFAULT 'EMITIDA' NOT NULL,
+    fecha_emision DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (id_solicitud) REFERENCES solicitud_compra(id_solicitud) ON DELETE CASCADE,
+    FOREIGN KEY (id_proveedor_interno) REFERENCES proveedor_interno(id_proveedor_interno)
+) ENGINE=InnoDB;
+
+-- Contabilidad
+CREATE TABLE cuenta_contable (
+    id_cuenta INT AUTO_INCREMENT PRIMARY KEY,
+    codigo VARCHAR(20) UNIQUE NOT NULL,
+    nombre VARCHAR(150) NOT NULL,
+    tipo ENUM('ACTIVO', 'PASIVO', 'PATRIMONIO', 'INGRESO', 'GASTO') NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE asiento_contable (
+    id_asiento INT AUTO_INCREMENT PRIMARY KEY,
+    fecha DATE NOT NULL,
+    descripcion VARCHAR(255) NOT NULL,
+    total_debe DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    total_haber DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    estado ENUM('ABIERTO', 'CERRADO') DEFAULT 'ABIERTO' NOT NULL,
+    INDEX idx_asiento_fecha (fecha)
+) ENGINE=InnoDB;
+
+CREATE TABLE movimiento_contable (
+    id_movimiento INT AUTO_INCREMENT PRIMARY KEY,
+    id_asiento INT NOT NULL,
+    id_cuenta INT NOT NULL,
+    debe DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    haber DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    FOREIGN KEY (id_asiento) REFERENCES asiento_contable(id_asiento) ON DELETE CASCADE,
+    FOREIGN KEY (id_cuenta) REFERENCES cuenta_contable(id_cuenta)
+) ENGINE=InnoDB;
+
+CREATE TABLE factura (
+    id_factura INT AUTO_INCREMENT PRIMARY KEY,
+    tipo ENUM('FACTURA', 'BOLETA', 'NOTA_CREDITO') NOT NULL,
+    serie VARCHAR(10) NOT NULL,
+    numero VARCHAR(20) NOT NULL,
+    id_cliente INT NULL,
+    total DECIMAL(12,2) NOT NULL,
+    fecha_emision DATE NOT NULL,
+    estado ENUM('EMITIDA', 'PAGADA', 'ANULADA') DEFAULT 'EMITIDA' NOT NULL,
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE SET NULL,
+    UNIQUE KEY uk_factura_serie_numero (serie, numero)
+) ENGINE=InnoDB;
+
+-- ========================================================
+-- 12. FASE D - PORTAL EJECUTIVO (riesgos corporativos)
+-- ========================================================
+
+CREATE TABLE riesgo_corporativo (
+    id_riesgo INT AUTO_INCREMENT PRIMARY KEY,
+    tipo ENUM('CONCENTRACION', 'SINIESTRALIDAD', 'MORA', 'PROVEEDOR', 'REGULATORIO', 'OTRO') NOT NULL,
+    descripcion TEXT NOT NULL,
+    severidad ENUM('BAJA', 'MEDIA', 'ALTA', 'CRITICA') DEFAULT 'MEDIA' NOT NULL,
+    area_afectada VARCHAR(100) NULL,
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    registrado_por INT NULL,
+    FOREIGN KEY (registrado_por) REFERENCES usuario(id_usuario) ON DELETE SET NULL,
+    INDEX idx_riesgo_severidad (severidad, fecha_registro)
 ) ENGINE=InnoDB;
