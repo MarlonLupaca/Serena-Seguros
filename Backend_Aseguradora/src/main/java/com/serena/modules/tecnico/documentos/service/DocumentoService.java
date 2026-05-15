@@ -80,7 +80,18 @@ public class DocumentoService {
         if (!d.getUsuarioCreador().getIdUsuario().equals(usuario.getIdUsuario())) {
             throw new AccessDeniedException("El documento no pertenece al usuario");
         }
+        String ruta = d.getRutaArchivo();
         repository.delete(d);
+        storage.borrar(ruta);
+    }
+
+    @Transactional
+    public void eliminarAdmin(Integer id) {
+        DocumentoAuditoria d = repository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Documento", id));
+        String ruta = d.getRutaArchivo();
+        repository.delete(d);
+        storage.borrar(ruta);
     }
 
     private DescargaArchivo abrirArchivo(DocumentoAuditoria d) throws IOException {

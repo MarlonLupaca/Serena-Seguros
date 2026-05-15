@@ -51,4 +51,17 @@ public class DocumentoStorage {
         }
         return new UrlResource(archivo.toUri());
     }
+
+    public void borrar(String nombreArchivo) {
+        if (nombreArchivo == null || nombreArchivo.isBlank()) {
+            return;
+        }
+        try {
+            Path archivo = raiz.resolve(nombreArchivo).normalize();
+            if (archivo.startsWith(raiz)) {
+                Files.deleteIfExists(archivo);
+            }
+        } catch (IOException ignored) {
+        }
+    }
 }

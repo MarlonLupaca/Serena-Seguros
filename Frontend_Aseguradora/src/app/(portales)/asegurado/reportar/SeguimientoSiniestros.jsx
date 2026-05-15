@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MdTimeline, MdClose, MdHistory, MdInsertDriveFile, MdDownload } from 'react-icons/md';
-import { apiGet, apiDownloadFile } from '@/lib/api';
+import { MdTimeline, MdClose, MdHistory, MdInsertDriveFile, MdDownload, MdDelete } from 'react-icons/md';
+import { apiGet, apiDelete, apiDownloadFile } from '@/lib/api';
 import { formatearFecha } from './data';
 
 const ESTADO_BADGE = {
@@ -77,6 +77,11 @@ function ModalLineaTiempo({ id, onClose }) {
   const [detalle, setDetalle] = useState(null);
   const [error, setError] = useState('');
 
+  const cargar = () =>
+    apiGet(`/mis-siniestros/${id}`)
+      .then((data) => setDetalle(data))
+      .catch((e) => setError(e.mensaje || 'No se pudo cargar el detalle'));
+
   useEffect(() => {
     let activo = true;
     apiGet(`/mis-siniestros/${id}`)
@@ -86,6 +91,16 @@ function ModalLineaTiempo({ id, onClose }) {
       activo = false;
     };
   }, [id]);
+
+  const eliminarDocumento = async (idDocumento) => {
+    if (!confirm('Eliminar esta evidencia? Esta accion no se puede deshacer.')) return;
+    try {
+      await apiDelete(`/mis-documentos/${idDocumento}`);
+      await cargar();
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo eliminar el documento');
+    }
+  };
 
   const eventos = detalle?.timeline || [];
   const documentos = detalle?.documentos || [];
@@ -164,6 +179,13 @@ function ModalLineaTiempo({ id, onClose }) {
                           title="Descargar"
                         >
                           <MdDownload size={14} />
+                        </button>
+                        <button
+                          onClick={() => eliminarDocumento(doc.id_documento)}
+                          className="p-1 rounded hover:bg-red-50 text-rose-500"
+                          title="Eliminar"
+                        >
+                          <MdDelete size={14} />
                         </button>
                       </div>
                     ))}
