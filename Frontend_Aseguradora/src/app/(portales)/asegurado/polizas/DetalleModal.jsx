@@ -13,8 +13,9 @@ import {
   MdDownload,
   MdDescription,
   MdInsertDriveFile,
+  MdDelete,
 } from 'react-icons/md';
-import { apiGet, apiPost, apiDownloadFile } from '@/lib/api';
+import { apiGet, apiPost, apiDelete, apiDownloadFile } from '@/lib/api';
 import { ESTADO_STYLES, estiloTipo, formatearFecha, formatearMoneda } from './data';
 
 const ESTADO_ENDOSO = {
@@ -77,6 +78,16 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
       setErrorEndoso(e.mensaje || 'No se pudo solicitar el endoso');
     } finally {
       setEnviandoEndoso(false);
+    }
+  };
+
+  const eliminarDocumento = async (idDocumento) => {
+    if (!confirm('Eliminar este documento? Esta accion no se puede deshacer.')) return;
+    try {
+      await apiDelete(`/mis-documentos/${idDocumento}`);
+      await cargar();
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo eliminar el documento');
     }
   };
 
@@ -309,6 +320,13 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:bg-bg text-text-soft text-xs font-medium transition-colors"
                         >
                           <MdDownload size={12} /> Descargar
+                        </button>
+                        <button
+                          onClick={() => eliminarDocumento(doc.id_documento)}
+                          title="Eliminar"
+                          className="p-1.5 rounded-lg border border-border hover:bg-red-50 text-rose-500 transition-colors"
+                        >
+                          <MdDelete size={14} />
                         </button>
                       </div>
                     ))
