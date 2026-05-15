@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "empleado")
@@ -32,4 +33,24 @@ public class Empleado {
 
     @Column(name = "sueldo_base", nullable = false, precision = 10, scale = 2)
     private BigDecimal sueldoBase;
+
+    @Column(name = "fecha_ingreso")
+    private LocalDate fechaIngreso;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_jefe")
+    private Empleado jefe;
+
+    @Column(name = "dias_vacaciones", nullable = false)
+    @Builder.Default
+    private Integer diasVacaciones = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_empleado", nullable = false)
+    @Builder.Default
+    private EstadoEmpleado estadoEmpleado = EstadoEmpleado.ACTIVO;
+
+    public enum EstadoEmpleado {
+        ACTIVO, VACACIONES, LICENCIA, RETIRADO
+    }
 }

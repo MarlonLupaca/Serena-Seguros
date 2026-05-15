@@ -1,5 +1,7 @@
 package com.serena.modules.core.polizas.dto;
 
+import com.serena.modules.seguridad.perfil.dto.BeneficiarioResponse;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,5 +15,15 @@ public record PolizaDetalleResponse(
         LocalDate vigenciaFin,
         LocalDateTime fechaEmision,
         ProductoMini producto,
-        List<EndosoResponse> endosos
-) {}
+        List<EndosoResponse> endosos,
+        List<BeneficiarioResponse> beneficiarios,
+        List<CuotaMini> pagos
+) {
+    public record CuotaMini(
+            Integer idCuota,
+            Integer numeroCuota,
+            BigDecimal monto,
+            LocalDate fechaVencimiento,
+            String estadoPago
+    ) {}
+}

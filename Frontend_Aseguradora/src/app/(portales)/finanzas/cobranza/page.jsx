@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MdAttachMoney, MdCalendarToday, MdCheckCircle, MdHourglassEmpty, MdPriceCheck, MdSearch, MdWarning } from 'react-icons/md';
-import { apiGet, apiPatch } from '@/lib/api';
+import { MdAttachMoney, MdCalendarToday, MdCheckCircle, MdHourglassEmpty, MdPriceCheck, MdSearch, MdWarning, MdUploadFile, MdClose } from 'react-icons/md';
+import { apiGet, apiPatch, apiUploadFile } from '@/lib/api';
 
 const ESTADOS = {
   PENDIENTE: { label: 'Pendiente', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
@@ -31,6 +31,7 @@ export default function CobranzaPage() {
   const [busq, setBusq] = useState('');
   const [actualizandoId, setActualizandoId] = useState(null);
   const [toast, setToast] = useState(null);
+  const [modalImportar, setModalImportar] = useState(false);
 
   useEffect(() => { cargar(); }, []);
 
@@ -74,9 +75,17 @@ export default function CobranzaPage() {
     <div className="py-4 flex flex-col gap-4 pb-8">
       {toast && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">{toast}</div>}
 
-      <div>
-        <h1 className="text-base font-bold text-text">Cobranza</h1>
-        <p className="text-xs text-text-soft mt-0.5">{cuotas.length} cuotas en el sistema</p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-base font-bold text-text">Cobranza</h1>
+          <p className="text-xs text-text-soft mt-0.5">{cuotas.length} cuotas en el sistema</p>
+        </div>
+        <button
+          onClick={() => setModalImportar(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
+        >
+          <MdUploadFile size={14} /> Importar carga bancaria
+        </button>
       </div>
 
       {resumen && (
@@ -142,6 +151,122 @@ export default function CobranzaPage() {
           )}
         </div>
       )}
+
+      {modalImportar && (
+        <ModalImportarCobranza
+          onClose={() => setModalImportar(false)}
+          onSuccess={(r) => {
+            setModalImportar(false);
+            mostrarToast(`Conciliadas ${r.conciliadas} · No encontradas ${r.no_encontradas}`);
+            cargar();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ModalImportarCobranza({ onClose, onSuccess }) {
+  const [archivo, setArchivo] = useState(null);
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+  const [resultado, setResultado] = useState(null);
+
+  const enviar = async (e) => {
+    e.preventDefault();
+    if (!archivo) return;
+    setEnviando(true);
+    setError('');
+    try {
+      const formData = new FormData();
+      formData.append('archivo', archivo);
+      const r = await apiUploadFile('/cobranza/importar', formData);
+      setResultado(r);
+    } catch (err) {
+      setError(err.mensaje || 'No se pudo importar');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <p className="text-sm font-bold text-text">Importar carga bancaria</p>
+          <button onClick={onClose} className="text-text-soft hover:text-text">
+            <MdClose size={18} />
+          </button>
+        </div>
+        <form onSubmit={enviar} className="p-5 flex flex-col gap-3">
+          {error && (
+            <div className="p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">
+              {error}
+            </div>
+          )}
+          {!resultado && (
+            <>
+              <p className="text-xs text-text-soft leading-relaxed">
+                Sube un CSV con los IDs de las cuotas a marcar como pagadas. Formato esperado: la primera columna
+                debe ser <code className="bg-bg-soft px-1 rounded">id_cuota</code>; las cuotas listadas pasan a
+                estado PAGADO.
+              </p>
+              <input
+                type="file"
+                accept=".csv,text/csv,text/plain"
+                onChange={(e) => setArchivo(e.target.files?.[0] || null)}
+                required
+                className="text-xs"
+              />
+              <div className="flex gap-2 mt-2">
+                <button
+                  type="submit"
+                  disabled={enviando || !archivo}
+                  className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-xs font-semibold transition-colors"
+                >
+                  {enviando ? 'Procesando...' : 'Importar'}
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={enviando}
+                  className="flex-1 py-2.5 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </>
+          )}
+          {resultado && (
+            <div className="flex flex-col gap-3">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-800">
+                Importación completada
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <Stat label="Conciliadas" val={resultado.conciliadas} color="text-emerald-600" />
+                <Stat label="Ya pagadas" val={resultado.ya_pagadas} color="text-sky-600" />
+                <Stat label="No encontradas" val={resultado.no_encontradas} color="text-rose-600" />
+                <Stat label="Filas inválidas" val={resultado.filas_invalidas} color="text-amber-600" />
+              </div>
+              <button
+                onClick={() => onSuccess(resultado)}
+                className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, val, color }) {
+  return (
+    <div className="bg-bg-soft border border-border rounded-xl p-2 flex items-center justify-between">
+      <span className="text-text-soft">{label}</span>
+      <span className={`font-bold ${color}`}>{val}</span>
     </div>
   );
 }

@@ -73,9 +73,9 @@ export default function EjecutivoDashboard() {
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Kpi label="Polizas activas" valor={resumen?.polizas_activas ?? 0} icon={MdDescription} bg="bg-primary/10" color="text-primary" onClick={() => router.push('/ejecutivo/produccion')} />
-            <Kpi label="Siniestros pendientes" valor={resumen?.siniestros_pendientes ?? 0} icon={MdReportProblem} bg="bg-rose-100" color="text-rose-600" onClick={() => router.push('/ejecutivo/siniestralidad')} />
-            <Kpi label="Recaudacion mes" valor={formatearMoneda(resumen?.recaudacion_mes)} icon={MdPayments} bg="bg-emerald-100" color="text-emerald-600" onClick={() => router.push('/ejecutivo/financiero')} />
+            <Kpi label="Polizas activas" valor={resumen?.polizas_activas ?? 0} icon={MdDescription} bg="bg-primary/10" color="text-primary" onClick={() => router.push('/ejecutivo/reportes')} />
+            <Kpi label="Siniestros pendientes" valor={resumen?.siniestros_pendientes ?? 0} icon={MdReportProblem} bg="bg-rose-100" color="text-rose-600" onClick={() => router.push('/ejecutivo/reportes')} />
+            <Kpi label="Recaudacion mes" valor={formatearMoneda(resumen?.recaudacion_mes)} icon={MdPayments} bg="bg-emerald-100" color="text-emerald-600" onClick={() => router.push('/ejecutivo/reportes')} />
             <Kpi label="Aprobaciones" valor={resumen?.aprobaciones_pendientes ?? 0} icon={MdAssignmentTurnedIn} bg="bg-amber-100" color="text-amber-700" onClick={() => router.push('/ejecutivo/aprobaciones')} />
           </div>
 
@@ -128,10 +128,10 @@ export default function EjecutivoDashboard() {
               <p className="text-sm font-bold text-text">Mas reportes</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Acceso titulo="Produccion" descripcion="Polizas y prima" onClick={() => router.push('/ejecutivo/produccion')} />
+              <Acceso titulo="Produccion" descripcion="Polizas y prima" onClick={() => router.push('/ejecutivo/reportes')} />
               <Acceso titulo="Comercial" descripcion="Embudo y comisiones" onClick={() => router.push('/ejecutivo/comercial')} />
-              <Acceso titulo="Financiero" descripcion="Flujo de caja" onClick={() => router.push('/ejecutivo/financiero')} />
-              <Acceso titulo="Simulador" descripcion="Escenarios" onClick={() => router.push('/ejecutivo/simulaciones')} />
+              <Acceso titulo="Financiero" descripcion="Flujo de caja" onClick={() => router.push('/ejecutivo/reportes')} />
+              <Acceso titulo="Simulador" descripcion="Escenarios" onClick={() => router.push('/ejecutivo/escenarios')} />
             </div>
           </div>
         </>

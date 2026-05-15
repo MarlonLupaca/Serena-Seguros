@@ -16,16 +16,21 @@ import com.serena.modules.core.polizas.repository.PolizaRepository;
 import com.serena.modules.tecnico.siniestros.entity.Siniestro;
 import com.serena.modules.tecnico.siniestros.repository.SiniestroRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -196,5 +201,46 @@ public class EjecutivoController {
         data.put("indice_siniestralidad", indice);
         data.put("por_estado", porEstado);
         return ResponseEntity.ok(data);
+    }
+
+    @GetMapping("/reportes/{tipo}/exportar")
+    @Transactional(readOnly = true)
+    public ResponseEntity<byte[]> exportarReporte(@PathVariable String tipo) {
+        String contenido = generarReporte(tipo);
+        byte[] bytes = ("﻿" + contenido).getBytes(StandardCharsets.UTF_8);
+        String fecha = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+        String filename = "reporte-" + tipo.toLowerCase() + "-" + fecha + ".csv";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(bytes);
+    }
+
+    private String generarReporte(String tipo) {
+        StringBuilder sb = new StringBuilder();
+        switch (tipo.toLowerCase()) {
+            case "produccion" -> {
+                sb.append("indicador,valor\n");
+                var p = produccion().getBody();
+                if (p != null) p.forEach((k, v) -> sb.append(k).append(",").append(v).append("\n"));
+            }
+            case "comercial" -> {
+                sb.append("indicador,valor\n");
+                var c = comercial().getBody();
+                if (c != null) c.forEach((k, v) -> sb.append(k).append(",").append(v).append("\n"));
+            }
+            case "siniestralidad", "siniestros" -> {
+                sb.append("indicador,valor\n");
+                var s = siniestralidad().getBody();
+                if (s != null) s.forEach((k, v) -> sb.append(k).append(",").append(v).append("\n"));
+            }
+            default -> {
+                // Mensual / general
+                sb.append("indicador,valor\n");
+                var r = resumen().getBody();
+                if (r != null) r.forEach((k, v) -> sb.append(k).append(",").append(v).append("\n"));
+            }
+        }
+        return sb.toString();
     }
 }

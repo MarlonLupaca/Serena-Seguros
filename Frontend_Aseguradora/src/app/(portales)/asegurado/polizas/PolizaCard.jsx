@@ -1,6 +1,7 @@
-import { MdChevronRight, MdPictureAsPdf, MdAutorenew } from 'react-icons/md';
-import { ESTADO_STYLES, estiloTipo, formatearFecha, formatearMoneda, simularDescargaPDF } from './data';
 import { useState } from 'react';
+import { MdChevronRight, MdPictureAsPdf, MdAutorenew } from 'react-icons/md';
+import { apiDownloadFile } from '@/lib/api';
+import { ESTADO_STYLES, estiloTipo, formatearFecha, formatearMoneda } from './data';
 
 export default function PolizaCard({ p, onVerDetalle }) {
   const [descargando, setDescargando] = useState(false);
@@ -10,9 +11,13 @@ export default function PolizaCard({ p, onVerDetalle }) {
 
   const handleDescargar = async () => {
     setDescargando(true);
-    await simularDescargaPDF(p.id_poliza);
-    alert('Descargando contrato en PDF...');
-    setDescargando(false);
+    try {
+      await apiDownloadFile(`/mis-polizas/${p.id_poliza}/contrato`, `contrato-poliza-${p.id_poliza}.txt`);
+    } catch (e) {
+      alert(e.mensaje || 'No se pudo descargar el contrato');
+    } finally {
+      setDescargando(false);
+    }
   };
 
   return (
@@ -39,14 +44,13 @@ export default function PolizaCard({ p, onVerDetalle }) {
           </div>
         </div>
 
-        {/* Vigencia Inicio/Fin y Prima */}
         <div className="flex gap-4 text-xs text-text-soft shrink-0 flex-wrap sm:flex-nowrap justify-between">
           <div className="text-center hidden md:block">
-            <p className="text-text-soft">Vigencia Inicio</p>
+            <p className="text-text-soft">Vigencia inicio</p>
             <p className="font-semibold text-text mt-0.5">{formatearFecha(p.vigencia_inicio)}</p>
           </div>
           <div className="text-center">
-            <p className="text-text-soft">Vigencia Fin</p>
+            <p className="text-text-soft">Vigencia fin</p>
             <p className="font-semibold text-text mt-0.5">{formatearFecha(p.vigencia_fin)}</p>
           </div>
           <div className="text-center">
@@ -55,26 +59,25 @@ export default function PolizaCard({ p, onVerDetalle }) {
           </div>
         </div>
 
-        {/* Acciones por fila */}
         <div className="flex gap-2 shrink-0 justify-between sm:justify-end mt-2 sm:mt-0">
           <button
             onClick={handleDescargar}
             disabled={descargando}
-            className="p-2 rounded-xl border border-border text-text-soft hover:text-primary hover:bg-primary/5 transition-colors"
-            title="Descargar Contrato PDF"
+            className="p-2 rounded-xl border border-border text-text-soft hover:text-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
+            title="Descargar contrato"
           >
             <MdPictureAsPdf size={18} />
           </button>
 
-          {p.estado_poliza === 'VENCIDA' || p.estado_poliza === 'ACTIVA' ? (
+          {(p.estado_poliza === 'VENCIDA' || p.estado_poliza === 'ACTIVA') && (
             <button
               className="p-2 rounded-xl border border-border text-text-soft hover:text-amber-600 hover:bg-amber-50 transition-colors"
-              title="Renovar Póliza"
-              onClick={() => alert('Redirigiendo a formulario de renovación...')}
+              title="Renovar poliza"
+              onClick={onVerDetalle}
             >
               <MdAutorenew size={18} />
             </button>
-          ) : null}
+          )}
 
           <button
             onClick={onVerDetalle}

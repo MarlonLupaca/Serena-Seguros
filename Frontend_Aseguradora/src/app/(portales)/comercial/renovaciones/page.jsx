@@ -1,168 +1,321 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  MdAdd,
-  MdClose,
-  MdPeople,
-  MdSave,
-  MdArrowBack,
-  MdAutoAwesome,
-  MdTrendingUp,
-  MdShield,
-  MdHome,
-  MdDirectionsCar,
-  MdFavorite,
-  MdFilterList,
-  MdChevronRight,
-  MdBookmark,
-  MdBookmarkBorder,
   MdSearch,
-  MdLocationOn,
-  MdAccessTime,
-  MdCheckCircle,
+  MdAutorenew,
+  MdSend,
   MdCancel,
-  MdInfo,
-  MdChevronLeft,
+  MdCalendarToday,
+  MdAttachMoney,
+  MdPerson,
+  MdShield,
+  MdEditNote,
+  MdCheck,
+  MdClose,
 } from 'react-icons/md';
+import { apiGet, apiPatch } from '@/lib/api';
 
-// ─── Data ────────────────────────────────────────────────────────────────────
-
-const RAMOS = [
-  { value: 'vehicular', label: 'Vehicular', icon: MdDirectionsCar, accentBg: 'bg-sky-100', accentText: 'text-sky-700' },
-  { value: 'hogar', label: 'Hogar', icon: MdHome, accentBg: 'bg-amber-100', accentText: 'text-amber-700' },
-  { value: 'vida', label: 'Vida', icon: MdFavorite, accentBg: 'bg-rose-100', accentText: 'text-rose-600' },
-  { value: 'salud', label: 'Salud', icon: MdShield, accentBg: 'bg-emerald-100', accentText: 'text-emerald-700' },
+const RANGOS = [
+  { dias: 7, label: '7 días' },
+  { dias: 15, label: '15 días' },
+  { dias: 30, label: '30 días' },
+  { dias: 60, label: '60 días' },
+  { dias: 90, label: '90 días' },
 ];
 
-const ZONAS = ['Lima Norte', 'Lima Sur', 'Lima Este', 'Lima Centro', 'Callao', 'Provincias'];
-const PRODUCTOS = ['Básico', 'Estándar', 'Premium', 'Todo Riesgo'];
-const ESTADOS_POLIZA = [
-  { value: 'vigente', label: 'Vigente', dot: 'bg-emerald-500' },
-  { value: 'por_vencer', label: 'Por vencer', dot: 'bg-amber-500' },
-  { value: 'vencida', label: 'Vencida', dot: 'bg-rose-400' },
-  { value: 'suspendida', label: 'Suspendida', dot: 'bg-gray-400' },
-];
-const ANTIGUEDAD_OPCIONES = [
-  { value: 'menos_1', label: 'Menos de 1 año' },
-  { value: '1_3', label: '1 a 3 años' },
-  { value: '3_5', label: '3 a 5 años' },
-  { value: 'mas_5', label: 'Más de 5 años' },
-];
+const ESTADO_POLIZA_BADGE = {
+  ACTIVA: 'bg-emerald-100 text-emerald-700',
+  PENDIENTE: 'bg-amber-100 text-amber-700',
+  VENCIDA: 'bg-rose-100 text-rose-600',
+  CANCELADA: 'bg-slate-100 text-slate-600',
+};
 
-const SEGMENTOS_GUARDADOS = [
-  {
-    id: 'S-001',
-    nombre: 'Clientes vehicular Lima Norte',
-    filtros: { ramos: ['vehicular'], zonas: ['Lima Norte'], productos: [], estados: ['vigente'], antiguedad: [] },
-    clientes: 342,
-    creadoEn: '12 mar 2025',
-    oportunidades: 87,
-  },
-  {
-    id: 'S-002',
-    nombre: 'Pólizas por vencer próximo mes',
-    filtros: { ramos: [], zonas: [], productos: [], estados: ['por_vencer'], antiguedad: [] },
-    clientes: 218,
-    creadoEn: '20 abr 2025',
-    oportunidades: 218,
-  },
-  {
-    id: 'S-003',
-    nombre: 'Clientes premium antiguos',
-    filtros: {
-      ramos: [],
-      zonas: [],
-      productos: ['Premium', 'Todo Riesgo'],
-      estados: ['vigente'],
-      antiguedad: ['mas_5'],
-    },
-    clientes: 95,
-    creadoEn: '5 abr 2025',
-    oportunidades: 41,
-  },
-];
+const ESTADO_ENDOSO_BADGE = {
+  PENDIENTE: 'bg-amber-100 text-amber-700',
+  APROBADO: 'bg-emerald-100 text-emerald-700',
+  RECHAZADO: 'bg-rose-100 text-rose-600',
+};
 
-const OPORTUNIDADES_AUTO = [
-  {
-    id: 'OP-001',
-    tipo: 'cross-sell',
-    titulo: 'Vehicular → Hogar',
-    descripcion: 'Clientes con seguro vehicular vigente sin cobertura de hogar',
-    clientes: 523,
-    potencial: 'Alto',
-    ramo: 'hogar',
-  },
-  {
-    id: 'OP-002',
-    tipo: 'up-sell',
-    titulo: 'Básico → Premium',
-    descripcion: 'Clientes con plan básico con más de 2 años de antigüedad sin siniestros',
-    clientes: 189,
-    potencial: 'Alto',
-    ramo: 'vehicular',
-  },
-  {
-    id: 'OP-003',
-    tipo: 'cross-sell',
-    titulo: 'Hogar → Vida',
-    descripcion: 'Titulares de póliza hogar mayores de 35 años sin seguro de vida',
-    clientes: 274,
-    potencial: 'Medio',
-    ramo: 'vida',
-  },
-  {
-    id: 'OP-004',
-    tipo: 'up-sell',
-    titulo: 'Estándar → Todo Riesgo',
-    descripcion: 'Clientes con plan estándar en zonas de alta siniestralidad',
-    clientes: 112,
-    potencial: 'Medio',
-    ramo: 'vehicular',
-  },
-];
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const FILTROS_VACIO = { ramos: [], zonas: [], productos: [], estados: [], antiguedad: [] };
-
-function toggleItem(arr, val) {
-  return arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val];
+function formatearMoneda(v) {
+  if (v == null) return '—';
+  return `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function contarClientes(filtros) {
-  let base = 1200;
-  if (filtros.ramos.length) base = Math.round(base * (0.2 + filtros.ramos.length * 0.15));
-  if (filtros.zonas.length) base = Math.round(base * (0.3 + filtros.zonas.length * 0.08));
-  if (filtros.productos.length) base = Math.round(base * (0.4 + filtros.productos.length * 0.1));
-  if (filtros.estados.length) base = Math.round(base * (0.5 + filtros.estados.length * 0.1));
-  if (filtros.antiguedad.length) base = Math.round(base * (0.5 + filtros.antiguedad.length * 0.12));
-  return Math.max(base, 0);
+function formatearFecha(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function hayFiltros(f) {
-  return Object.values(f).some((v) => v.length > 0);
+function diasHasta(iso) {
+  if (!iso) return null;
+  const objetivo = new Date(iso);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  objetivo.setHours(0, 0, 0, 0);
+  return Math.round((objetivo - hoy) / (1000 * 60 * 60 * 24));
 }
 
-function resumirFiltros(f) {
-  const partes = [];
-  if (f.ramos.length) partes.push(f.ramos.map((r) => RAMOS.find((x) => x.value === r)?.label).join(', '));
-  if (f.zonas.length) partes.push(f.zonas.join(', '));
-  if (f.productos.length) partes.push(f.productos.join(', '));
-  if (f.estados.length) partes.push(f.estados.map((e) => ESTADOS_POLIZA.find((x) => x.value === e)?.label).join(', '));
-  if (f.antiguedad.length)
-    partes.push(f.antiguedad.map((a) => ANTIGUEDAD_OPCIONES.find((x) => x.value === a)?.label).join(', '));
-  return partes.join(' · ') || 'Sin filtros';
+export default function RenovacionesPage() {
+  const [tab, setTab] = useState('renovaciones');
+  const [renovaciones, setRenovaciones] = useState([]);
+  const [endosos, setEndosos] = useState([]);
+  const [rango, setRango] = useState(30);
+  const [busqRen, setBusqRen] = useState('');
+  const [busqEnd, setBusqEnd] = useState('');
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
+  const [actualizando, setActualizando] = useState(null);
+
+  useEffect(() => {
+    cargar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rango]);
+
+  const cargar = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const [ren, end] = await Promise.all([
+        apiGet(`/polizas/renovaciones?dias=${rango}`).catch(() => []),
+        apiGet('/endosos').catch(() => []),
+      ]);
+      setRenovaciones(ren || []);
+      setEndosos(end || []);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudieron cargar los datos');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const mostrarToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  const marcarNoRenovada = async (idPoliza) => {
+    if (!confirm('¿Marcar la poliza como cancelada/no renovada?')) return;
+    setActualizando('poliza-' + idPoliza);
+    try {
+      await apiPatch(`/polizas/${idPoliza}/estado`, { estado_poliza: 'CANCELADA' });
+      mostrarToast('Poliza marcada como cancelada');
+      cargar();
+    } catch (e) {
+      mostrarToast(e.mensaje || 'No se pudo actualizar');
+    } finally {
+      setActualizando(null);
+    }
+  };
+
+  const cambiarEstadoEndoso = async (idEndoso, nuevo) => {
+    setActualizando('endoso-' + idEndoso);
+    try {
+      await apiPatch(`/endosos/${idEndoso}/estado`, { estado_aprobacion: nuevo });
+      mostrarToast(`Endoso ${nuevo.toLowerCase()}`);
+      cargar();
+    } catch (e) {
+      mostrarToast(e.mensaje || 'No se pudo actualizar');
+    } finally {
+      setActualizando(null);
+    }
+  };
+
+  const renFiltradas = renovaciones.filter((p) => {
+    const texto = busqRen.toLowerCase();
+    return (
+      texto === '' ||
+      String(p.id_poliza).includes(texto) ||
+      (p.producto?.nombre || '').toLowerCase().includes(texto) ||
+      (p.cliente_nombre || '').toLowerCase().includes(texto)
+    );
+  });
+
+  const endFiltrados = endosos.filter((e) => {
+    const texto = busqEnd.toLowerCase();
+    return (
+      texto === '' ||
+      String(e.id_endoso).includes(texto) ||
+      (e.tipo_cambio || '').toLowerCase().includes(texto) ||
+      (e.descripcion_cambio || '').toLowerCase().includes(texto)
+    );
+  });
+
+  const endosoPendientes = endosos.filter((e) => e.estado_aprobacion === 'PENDIENTE').length;
+
+  return (
+    <div className="py-4 flex flex-col gap-4 pb-8">
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
+          {toast}
+        </div>
+      )}
+
+      <div>
+        <h1 className="text-base font-bold text-text">Renovaciones y endosos</h1>
+        <p className="text-xs text-text-soft mt-0.5">
+          Mantén la cartera vigente: renueva próximas a vencer y gestiona los cambios solicitados.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Kpi
+          label="Próximas a renovar"
+          val={renovaciones.length}
+          icon={MdAutorenew}
+          bg="bg-amber-100"
+          color="text-amber-600"
+        />
+        <Kpi
+          label="Endosos pendientes"
+          val={endosoPendientes}
+          icon={MdEditNote}
+          bg="bg-primary/10"
+          color="text-primary"
+        />
+        <Kpi
+          label="Endosos totales"
+          val={endosos.length}
+          icon={MdShield}
+          bg="bg-sky-100"
+          color="text-sky-600"
+        />
+        <Kpi
+          label="Rango actual"
+          val={`${rango} días`}
+          icon={MdCalendarToday}
+          bg="bg-bg-soft"
+          color="text-text"
+        />
+      </div>
+
+      <div className="flex border-b border-border gap-2">
+        <TabButton activo={tab === 'renovaciones'} onClick={() => setTab('renovaciones')}>
+          <MdAutorenew size={14} /> Renovaciones
+        </TabButton>
+        <TabButton activo={tab === 'endosos'} onClick={() => setTab('endosos')}>
+          <MdEditNote size={14} /> Endosos
+        </TabButton>
+      </div>
+
+      {tab === 'renovaciones' && (
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
+              <MdSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
+              <input
+                placeholder="Buscar por cliente o producto..."
+                value={busqRen}
+                onChange={(e) => setBusqRen(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary"
+              />
+            </div>
+            <select
+              value={rango}
+              onChange={(e) => setRango(Number(e.target.value))}
+              className="px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary appearance-none"
+            >
+              {RANGOS.map((r) => (
+                <option key={r.dias} value={r.dias}>
+                  Próximas {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {cargando ? (
+            <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
+              Cargando renovaciones...
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-600 text-center">
+              {error}
+            </div>
+          ) : renFiltradas.length === 0 ? (
+            <div className="bg-bg rounded-2xl border border-border p-12 text-center">
+              <MdAutorenew size={32} className="text-text-soft mx-auto mb-3 opacity-40" />
+              <p className="text-sm font-medium text-text">Sin renovaciones en el rango seleccionado</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {renFiltradas.map((p) => (
+                <RenovacionCard
+                  key={p.id_poliza}
+                  poliza={p}
+                  actualizando={actualizando === 'poliza-' + p.id_poliza}
+                  onEnviarPropuesta={() => mostrarToast('Propuesta enviada al cliente')}
+                  onMarcarNoRenovada={() => marcarNoRenovada(p.id_poliza)}
+                  onRenovar={() => mostrarToast('Renovacion iniciada. Confirma con el cliente.')}
+                  onRecalcular={() => mostrarToast('Nueva prima estimada solicitada al area tecnica.')}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'endosos' && (
+        <div className="flex flex-col gap-3">
+          <div className="relative">
+            <MdSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
+            <input
+              placeholder="Buscar por tipo o descripción..."
+              value={busqEnd}
+              onChange={(e) => setBusqEnd(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary"
+            />
+          </div>
+
+          {cargando ? (
+            <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
+              Cargando endosos...
+            </div>
+          ) : endFiltrados.length === 0 ? (
+            <div className="bg-bg rounded-2xl border border-border p-12 text-center">
+              <MdEditNote size={32} className="text-text-soft mx-auto mb-3 opacity-40" />
+              <p className="text-sm font-medium text-text">No hay endosos para mostrar</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {endFiltrados.map((e) => (
+                <EndosoCard
+                  key={e.id_endoso}
+                  endoso={e}
+                  actualizando={actualizando === 'endoso-' + e.id_endoso}
+                  onCambiarEstado={(estado) => cambiarEstadoEndoso(e.id_endoso, estado)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
-// ─── Sub-componentes ──────────────────────────────────────────────────────────
+function Kpi({ label, val, icon: Icon, bg, color }) {
+  return (
+    <div className="bg-bg rounded-xl border border-border px-4 py-3 flex items-center gap-3">
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${bg}`}>
+        <Icon size={17} className={color} />
+      </div>
+      <div>
+        <p className={`text-xl font-bold leading-tight ${color}`}>{val}</p>
+        <p className="text-xs text-text-soft">{label}</p>
+      </div>
+    </div>
+  );
+}
 
-function ChipToggle({ active, onClick, children }) {
+function TabButton({ activo, onClick, children }) {
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${
-        active ? 'bg-primary border-primary text-text-inverse' : 'border-border bg-bg hover:bg-bg-soft text-text-soft'
+      className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+        activo ? 'border-primary text-primary' : 'border-transparent text-text-soft hover:text-text'
       }`}
     >
       {children}
@@ -170,416 +323,144 @@ function ChipToggle({ active, onClick, children }) {
   );
 }
 
-function SeccionFiltro({ titulo, children, abierto, onToggle }) {
-  return (
-    <div className="border border-border rounded-xl overflow-hidden">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-3 bg-bg hover:bg-bg-soft transition-colors"
-      >
-        <p className="text-xs font-semibold text-text">{titulo}</p>
-        <MdChevronLeft size={16} className={`text-text-soft transition-transform ${abierto ? 'rotate-180' : ''}`} />
-      </button>
-      {abierto && <div className="px-4 py-3 border-t border-border bg-bg flex flex-wrap gap-2">{children}</div>}
-    </div>
-  );
-}
+function RenovacionCard({ poliza, actualizando, onEnviarPropuesta, onMarcarNoRenovada, onRenovar, onRecalcular }) {
+  const dias = diasHasta(poliza.vigencia_fin);
+  const urgencia =
+    dias != null && dias <= 7 ? 'rose' : dias != null && dias <= 30 ? 'amber' : 'sky';
 
-function ModalGuardar({ clientes, filtros, onClose, onGuardar }) {
-  const [nombre, setNombre] = useState('');
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-bg w-full max-w-sm rounded-2xl border border-border shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <p className="text-sm font-bold text-text">Guardar segmento</p>
-          <button onClick={onClose} className="text-text-soft hover:text-text transition-colors">
-            <MdClose size={18} />
-          </button>
-        </div>
-        <div className="p-5 flex flex-col gap-3">
-          <div className="bg-bg-soft rounded-xl p-3 flex items-center gap-3">
-            <MdPeople size={20} className="text-primary shrink-0" />
-            <div>
-              <p className="text-xs text-text-soft">Clientes en este segmento</p>
-              <p className="text-base font-bold text-text">{clientes.toLocaleString()}</p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-text-soft">Nombre del segmento</label>
-            <input
-              className="w-full text-xs rounded-xl border border-border bg-bg-soft px-3 py-2 text-text placeholder:text-text-soft outline-none focus:border-primary transition-colors"
-              placeholder="Ej. Clientes vehicular Lima Norte"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              autoFocus
-            />
-          </div>
-          <p className="text-xs text-text-soft">{resumirFiltros(filtros)}</p>
-        </div>
-        <div className="px-5 py-4 border-t border-border flex gap-2">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-border text-xs font-medium text-text-soft hover:bg-bg-soft transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            disabled={!nombre.trim()}
-            onClick={() => {
-              onGuardar(nombre.trim());
-              onClose();
-            }}
-            className="flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors disabled:opacity-40"
-          >
-            Guardar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function OportunidadCard({ op }) {
-  const ramo = RAMOS.find((r) => r.value === op.ramo);
-  const RamoIcon = ramo?.icon ?? MdShield;
-  const esCross = op.tipo === 'cross-sell';
-  return (
-    <div className="bg-bg rounded-2xl border border-border overflow-hidden">
-      <div className={`h-1 w-full ${esCross ? 'bg-violet-400' : 'bg-emerald-400'}`} />
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${ramo?.accentBg ?? 'bg-bg-soft'}`}
-          >
-            <RamoIcon size={18} className={ramo?.accentText ?? 'text-text-soft'} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-0.5">
-              <p className="text-xs font-bold text-text">{op.titulo}</p>
-              <span
-                className={`text-xs font-medium px-2 py-0.5 rounded-full ${esCross ? 'bg-violet-100 text-violet-700' : 'bg-emerald-100 text-emerald-700'}`}
-              >
-                {esCross ? 'Cross-sell' : 'Up-sell'}
-              </span>
-              <span
-                className={`text-xs font-medium px-2 py-0.5 rounded-full ${op.potencial === 'Alto' ? 'bg-amber-100 text-amber-700' : 'bg-bg-soft text-text-soft'}`}
-              >
-                {op.potencial}
-              </span>
-            </div>
-            <p className="text-xs text-text-soft leading-relaxed">{op.descripcion}</p>
-            <div className="flex items-center gap-1 mt-2">
-              <MdPeople size={12} className="text-text-soft" />
-              <p className="text-xs font-semibold text-text">{op.clientes.toLocaleString()} clientes identificados</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SegmentoGuardadoCard({ seg, onCargar }) {
   return (
     <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden">
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-bg-soft border border-border flex items-center justify-center shrink-0">
-              <MdBookmark size={16} className="text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-text truncate">{seg.nombre}</p>
-              <p className="text-xs text-text-soft mt-0.5 truncate">{resumirFiltros(seg.filtros)}</p>
-            </div>
-          </div>
-          <button
-            onClick={() => onCargar(seg)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors shrink-0"
-          >
-            Cargar <MdChevronRight size={13} />
-          </button>
+      <div className={`h-1 w-full ${urgencia === 'rose' ? 'bg-rose-400' : urgencia === 'amber' ? 'bg-amber-400' : 'bg-sky-400'}`} />
+      <div className="p-5 flex items-start gap-4 flex-wrap sm:flex-nowrap">
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${urgencia === 'rose' ? 'bg-rose-100 text-rose-600' : urgencia === 'amber' ? 'bg-amber-100 text-amber-600' : 'bg-sky-100 text-sky-600'}`}>
+          <MdAutorenew size={20} />
         </div>
-        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border">
-          <div className="flex items-center gap-1">
-            <MdPeople size={12} className="text-text-soft" />
-            <p className="text-xs font-semibold text-text">{seg.clientes.toLocaleString()}</p>
-            <p className="text-xs text-text-soft">clientes</p>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-bold text-text">{poliza.producto?.nombre || 'Producto'}</p>
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                ESTADO_POLIZA_BADGE[poliza.estado_poliza] || 'bg-bg-soft text-text-soft'
+              }`}
+            >
+              {poliza.estado_poliza}
+            </span>
+            {dias != null && (
+              <span
+                className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                  urgencia === 'rose'
+                    ? 'bg-rose-100 text-rose-600'
+                    : urgencia === 'amber'
+                      ? 'bg-amber-100 text-amber-600'
+                      : 'bg-sky-100 text-sky-600'
+                }`}
+              >
+                Vence en {dias} d
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-1">
-            <MdAutoAwesome size={12} className="text-violet-500" />
-            <p className="text-xs font-semibold text-text">{seg.oportunidades}</p>
-            <p className="text-xs text-text-soft">oportunidades</p>
+          <p className="text-xs text-text-soft mt-0.5">
+            POL-{String(poliza.id_poliza).padStart(6, '0')} · {poliza.producto?.tipo_seguro}
+          </p>
+          <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-text-soft">
+            {poliza.cliente_nombre && (
+              <span className="flex items-center gap-1">
+                <MdPerson size={11} /> {poliza.cliente_nombre}
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <MdCalendarToday size={11} /> Vence: {formatearFecha(poliza.vigencia_fin)}
+            </span>
+            <span className="flex items-center gap-1">
+              <MdAttachMoney size={11} /> Prima: {formatearMoneda(poliza.prima_total)}
+            </span>
           </div>
-          <p className="text-xs text-text-soft ml-auto">{seg.creadoEn}</p>
+        </div>
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <div className="flex flex-wrap gap-2 justify-end">
+            <button
+              onClick={onRenovar}
+              disabled={actualizando}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors disabled:opacity-50"
+            >
+              <MdAutorenew size={13} /> Renovar
+            </button>
+            <button
+              onClick={onRecalcular}
+              disabled={actualizando}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
+            >
+              <MdAttachMoney size={13} /> Recalcular
+            </button>
+            <button
+              onClick={onEnviarPropuesta}
+              disabled={actualizando}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
+            >
+              <MdSend size={13} /> Enviar propuesta
+            </button>
+            <button
+              onClick={onMarcarNoRenovada}
+              disabled={actualizando}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-medium transition-colors disabled:opacity-50"
+            >
+              <MdCancel size={13} /> No renovar
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Page Principal ───────────────────────────────────────────────────────────
-
-const TABS = ['Constructor', 'Guardados', 'Oportunidades'];
-
-export default function SegmentacionPage() {
-  const [tab, setTab] = useState('Constructor');
-  const [filtros, setFiltros] = useState(FILTROS_VACIO);
-  const [seccionesAbiertas, setSeccionesAbiertas] = useState({
-    ramos: true,
-    zonas: false,
-    productos: false,
-    estados: false,
-    antiguedad: false,
-  });
-  const [modalGuardar, setModalGuardar] = useState(false);
-  const [segmentos, setSegmentos] = useState(SEGMENTOS_GUARDADOS);
-
-  const toggleSeccion = (k) => setSeccionesAbiertas((p) => ({ ...p, [k]: !p[k] }));
-  const toggleFiltro = (key, val) => setFiltros((p) => ({ ...p, [key]: toggleItem(p[key], val) }));
-  const limpiar = () => setFiltros(FILTROS_VACIO);
-  const clientesCount = useMemo(() => contarClientes(filtros), [filtros]);
-  const activo = hayFiltros(filtros);
-
-  const handleGuardarSegmento = (nombre) => {
-    const nuevo = {
-      id: `S-${String(segmentos.length + 1).padStart(3, '0')}`,
-      nombre,
-      filtros: { ...filtros },
-      clientes: clientesCount,
-      creadoEn: new Date().toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }),
-      oportunidades: Math.round(clientesCount * 0.35),
-    };
-    setSegmentos((p) => [nuevo, ...p]);
-    setTab('Guardados');
-  };
-
-  const handleCargarSegmento = (seg) => {
-    setFiltros({ ...seg.filtros });
-    setTab('Constructor');
-  };
-
+function EndosoCard({ endoso, actualizando, onCambiarEstado }) {
   return (
-    <div className="py-4 flex flex-col gap-4 pb-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-base font-bold text-text">Segmentación</h1>
-        <p className="text-xs text-text-soft mt-0.5">Crea y gestiona segmentos de clientes para tus campañas</p>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 bg-bg-soft border border-border rounded-xl p-1">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${
-              tab === t ? 'bg-bg text-text shadow-sm border border-border' : 'text-text-soft hover:text-text'
-            }`}
-          >
-            {t}
-            {t === 'Oportunidades' && (
-              <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold">
-                {OPORTUNIDADES_AUTO.length}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab: Constructor */}
-      {tab === 'Constructor' && (
-        <>
-          {/* Resultado vivo */}
-          <div
-            className={`rounded-2xl border overflow-hidden transition-colors ${activo ? 'border-primary bg-primary/5' : 'border-border bg-bg'}`}
-          >
-            <div className="p-4 flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${activo ? 'bg-primary' : 'bg-bg-soft border border-border'}`}
-                >
-                  <MdPeople size={20} className={activo ? 'text-text-inverse' : 'text-text-soft'} />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-text tabular-nums">
-                    {activo ? clientesCount.toLocaleString() : '—'}
-                  </p>
-                  <p className="text-xs text-text-soft">
-                    {activo ? 'clientes en este segmento' : 'Aplica filtros para ver clientes'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                {activo && (
-                  <button
-                    onClick={limpiar}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors"
-                  >
-                    <MdClose size={13} /> Limpiar
-                  </button>
-                )}
-                <button
-                  disabled={!activo}
-                  onClick={() => setModalGuardar(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors disabled:opacity-40"
-                >
-                  <MdSave size={13} /> Guardar segmento
-                </button>
-              </div>
-            </div>
-            {activo && (
-              <div className="px-4 pb-3">
-                <p className="text-xs text-text-soft">{resumirFiltros(filtros)}</p>
-              </div>
-            )}
+    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden">
+      <div className="h-1 w-full bg-primary/30" />
+      <div className="p-5 flex items-start gap-4 flex-wrap sm:flex-nowrap">
+        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+          <MdEditNote size={20} className="text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-bold text-text">{endoso.tipo_cambio}</p>
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                ESTADO_ENDOSO_BADGE[endoso.estado_aprobacion] || 'bg-bg-soft text-text-soft'
+              }`}
+            >
+              {endoso.estado_aprobacion}
+            </span>
           </div>
-
-          {/* Filtros */}
-          <div className="flex flex-col gap-2">
-            <SeccionFiltro
-              titulo="Ramo de seguro"
-              abierto={seccionesAbiertas.ramos}
-              onToggle={() => toggleSeccion('ramos')}
-            >
-              {RAMOS.map((r) => {
-                const Icon = r.icon;
-                return (
-                  <ChipToggle
-                    key={r.value}
-                    active={filtros.ramos.includes(r.value)}
-                    onClick={() => toggleFiltro('ramos', r.value)}
-                  >
-                    <Icon size={12} /> {r.label}
-                  </ChipToggle>
-                );
-              })}
-            </SeccionFiltro>
-
-            <SeccionFiltro
-              titulo="Zona geográfica"
-              abierto={seccionesAbiertas.zonas}
-              onToggle={() => toggleSeccion('zonas')}
-            >
-              {ZONAS.map((z) => (
-                <ChipToggle key={z} active={filtros.zonas.includes(z)} onClick={() => toggleFiltro('zonas', z)}>
-                  <MdLocationOn size={11} /> {z}
-                </ChipToggle>
-              ))}
-            </SeccionFiltro>
-
-            <SeccionFiltro
-              titulo="Producto contratado"
-              abierto={seccionesAbiertas.productos}
-              onToggle={() => toggleSeccion('productos')}
-            >
-              {PRODUCTOS.map((p) => (
-                <ChipToggle key={p} active={filtros.productos.includes(p)} onClick={() => toggleFiltro('productos', p)}>
-                  {p}
-                </ChipToggle>
-              ))}
-            </SeccionFiltro>
-
-            <SeccionFiltro
-              titulo="Estado de póliza"
-              abierto={seccionesAbiertas.estados}
-              onToggle={() => toggleSeccion('estados')}
-            >
-              {ESTADOS_POLIZA.map((e) => (
-                <ChipToggle
-                  key={e.value}
-                  active={filtros.estados.includes(e.value)}
-                  onClick={() => toggleFiltro('estados', e.value)}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${e.dot}`} /> {e.label}
-                </ChipToggle>
-              ))}
-            </SeccionFiltro>
-
-            <SeccionFiltro
-              titulo="Antigüedad del cliente"
-              abierto={seccionesAbiertas.antiguedad}
-              onToggle={() => toggleSeccion('antiguedad')}
-            >
-              {ANTIGUEDAD_OPCIONES.map((a) => (
-                <ChipToggle
-                  key={a.value}
-                  active={filtros.antiguedad.includes(a.value)}
-                  onClick={() => toggleFiltro('antiguedad', a.value)}
-                >
-                  <MdAccessTime size={11} /> {a.label}
-                </ChipToggle>
-              ))}
-            </SeccionFiltro>
-          </div>
-
-          {/* Aviso solo lectura */}
-          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-bg-soft border border-border">
-            <MdInfo size={14} className="text-text-soft mt-0.5 shrink-0" />
-            <p className="text-xs text-text-soft">
-              La segmentación es de solo lectura. Los datos de clientes no pueden editarse desde aquí.
-            </p>
-          </div>
-        </>
-      )}
-
-      {/* Tab: Guardados */}
-      {tab === 'Guardados' && (
-        <>
-          {segmentos.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-bg-soft border border-border flex items-center justify-center">
-                <MdBookmarkBorder size={22} className="text-text-soft" />
-              </div>
-              <p className="text-sm font-semibold text-text">Sin segmentos guardados</p>
-              <p className="text-xs text-text-soft max-w-xs">
-                Crea un segmento en el constructor y guárdalo para reutilizarlo en campañas.
-              </p>
+          <p className="text-xs text-text-soft mt-0.5">
+            END-{String(endoso.id_endoso).padStart(6, '0')} · POL-{String(endoso.id_poliza).padStart(6, '0')}
+          </p>
+          <p className="text-xs text-text-soft mt-1 line-clamp-2">{endoso.descripcion_cambio}</p>
+          <p className="text-[11px] text-text-soft mt-2 flex items-center gap-1">
+            <MdCalendarToday size={11} /> Solicitado: {formatearFecha(endoso.fecha_solicitud)}
+          </p>
+        </div>
+        {endoso.estado_aprobacion === 'PENDIENTE' && (
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <div className="flex gap-2">
               <button
-                onClick={() => setTab('Constructor')}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
+                onClick={() => onCambiarEstado('APROBADO')}
+                disabled={actualizando}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
               >
-                <MdAdd size={15} /> Crear segmento
+                <MdCheck size={13} /> Aprobar
+              </button>
+              <button
+                onClick={() => onCambiarEstado('RECHAZADO')}
+                disabled={actualizando}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-medium transition-colors disabled:opacity-50"
+              >
+                <MdClose size={13} /> Rechazar
               </button>
             </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {segmentos.map((seg) => (
-                <SegmentoGuardadoCard key={seg.id} seg={seg} onCargar={handleCargarSegmento} />
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Tab: Oportunidades */}
-      {tab === 'Oportunidades' && (
-        <>
-          <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-violet-50 border border-violet-200">
-            <MdAutoAwesome size={15} className="text-violet-500 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-xs font-bold text-violet-700 mb-0.5">Oportunidades identificadas automáticamente</p>
-              <p className="text-xs text-violet-600">
-                El sistema analiza tu cartera y detecta oportunidades de cross-sell y up-sell en tiempo real.
-              </p>
-            </div>
           </div>
-          <div className="flex flex-col gap-3">
-            {OPORTUNIDADES_AUTO.map((op) => (
-              <OportunidadCard key={op.id} op={op} />
-            ))}
-          </div>
-        </>
-      )}
-
-      {modalGuardar && (
-        <ModalGuardar
-          clientes={clientesCount}
-          filtros={filtros}
-          onClose={() => setModalGuardar(false)}
-          onGuardar={handleGuardarSegmento}
-        />
-      )}
+        )}
+      </div>
     </div>
   );
 }

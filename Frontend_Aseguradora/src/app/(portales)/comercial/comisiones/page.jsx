@@ -14,6 +14,7 @@ import {
   MdShield,
   MdCheckCircle,
   MdHourglassEmpty,
+  MdFileDownload,
 } from 'react-icons/md';
 import { apiGet } from '@/lib/api';
 
@@ -48,6 +49,28 @@ function estiloTipo(tipo) {
 function formatearMoneda(v) {
   if (v == null) return '—';
   return `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function descargarReporte(comisiones) {
+  if (!comisiones || comisiones.length === 0) return;
+  const headers = ['id_comision', 'id_poliza', 'poliza', 'tipo', 'porcentaje', 'monto_generado', 'estado'];
+  const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const filas = comisiones.map((c) =>
+    [c.id_comision, c.id_poliza, c.poliza_nombre, c.poliza_tipo, c.porcentaje, c.monto_generado, c.estado_pago]
+      .map(escape)
+      .join(',')
+  );
+  const csv = [headers.map(escape).join(','), ...filas].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fecha = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `mis-comisiones-${fecha}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export default function ComisionesPage() {
@@ -90,9 +113,18 @@ export default function ComisionesPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      <div>
-        <h1 className="text-base font-bold text-text">Mis comisiones</h1>
-        <p className="text-xs text-text-soft mt-0.5">{counts.total} comisiones registradas</p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-base font-bold text-text">Mis comisiones</h1>
+          <p className="text-xs text-text-soft mt-0.5">{counts.total} comisiones registradas</p>
+        </div>
+        <button
+          onClick={() => descargarReporte(filtradas)}
+          disabled={filtradas.length === 0}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-xs font-semibold text-text-soft transition-colors disabled:opacity-50"
+        >
+          <MdFileDownload size={14} /> Descargar reporte
+        </button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

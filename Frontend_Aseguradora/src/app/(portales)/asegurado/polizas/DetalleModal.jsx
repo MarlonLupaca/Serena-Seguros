@@ -1,14 +1,30 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MdClose, MdShield, MdHistory, MdCheck, MdAdd, MdSend, MdPeople, MdPayment } from 'react-icons/md';
-import { apiGet, apiPost } from '@/lib/api';
-import { ESTADO_STYLES, estiloTipo, formatearFecha, formatearMoneda, mockDetallePolizaExtra } from './data';
+import {
+  MdClose,
+  MdShield,
+  MdHistory,
+  MdCheck,
+  MdAdd,
+  MdSend,
+  MdPeople,
+  MdPayment,
+  MdDownload,
+} from 'react-icons/md';
+import { apiGet, apiPost, apiDownloadFile } from '@/lib/api';
+import { ESTADO_STYLES, estiloTipo, formatearFecha, formatearMoneda } from './data';
 
 const ESTADO_ENDOSO = {
   PENDIENTE: 'bg-amber-100 text-amber-700',
   APROBADO: 'bg-emerald-100 text-emerald-700',
   RECHAZADO: 'bg-rose-100 text-rose-600',
+};
+
+const ESTADO_PAGO = {
+  PAGADO: 'bg-emerald-100 text-emerald-700',
+  PENDIENTE: 'bg-amber-100 text-amber-700',
+  VENCIDO: 'bg-rose-100 text-rose-600',
 };
 
 export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
@@ -21,6 +37,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
   const [descripcionCambio, setDescripcionCambio] = useState('');
   const [enviandoEndoso, setEnviandoEndoso] = useState(false);
   const [errorEndoso, setErrorEndoso] = useState('');
+  const [descargando, setDescargando] = useState(false);
 
   useEffect(() => {
     cargar();
@@ -31,14 +48,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
     setCargando(true);
     setError('');
     try {
-      // Petición a tu API real
       const data = await apiGet(`/mis-polizas/${idPoliza}`);
-
-      // Simulación de los datos que faltan en tu BD actualmente (Beneficiarios y Pagos)
-      // Cuando tu backend devuelva esto, simplemente bórralo.
-      data.beneficiarios = data.beneficiarios || mockDetallePolizaExtra.beneficiarios;
-      data.pagos = data.pagos || mockDetallePolizaExtra.pagos;
-
       setPoliza(data);
     } catch (e) {
       setError(e.mensaje || 'No se pudo cargar el detalle');
@@ -68,6 +78,20 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
     }
   };
 
+  const descargarContrato = async () => {
+    setDescargando(true);
+    try {
+      await apiDownloadFile(
+        `/mis-polizas/${idPoliza}/contrato`,
+        `contrato-poliza-${idPoliza}.txt`
+      );
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo descargar');
+    } finally {
+      setDescargando(false);
+    }
+  };
+
   const tipoStyle = poliza
     ? estiloTipo(poliza.producto?.tipo_seguro)
     : { icon: MdShield, accentBg: 'bg-bg-soft', accentText: 'text-text-soft' };
@@ -77,7 +101,6 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="bg-bg rounded-2xl border border-border shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
-        {/* Header */}
         <div className={`${tipoStyle.accentBg} px-5 py-4 flex items-start justify-between`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-bg/70 flex items-center justify-center">
@@ -88,9 +111,22 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
               <p className="text-xs text-text-soft">POL-{String(idPoliza).padStart(6, '0')}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-bg/50 text-text-soft transition-colors">
-            <MdClose size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={descargarContrato}
+              disabled={descargando || cargando}
+              title="Descargar contrato"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bg/70 hover:bg-bg text-text text-xs font-semibold transition-colors disabled:opacity-50"
+            >
+              <MdDownload size={14} /> {descargando ? 'Descargando...' : 'Descargar'}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-bg/50 text-text-soft transition-colors"
+            >
+              <MdClose size={18} />
+            </button>
+          </div>
         </div>
 
         {cargando ? (
@@ -99,7 +135,6 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
           <div className="p-6 text-sm text-red-500 bg-red-50 m-4 rounded-xl">{error}</div>
         ) : (
           <>
-            {/* Info rápida */}
             <div className="grid grid-cols-3 divide-x divide-border border-b border-border text-center">
               <div className="py-3 px-2">
                 <p className="text-xs text-text-soft">Tipo</p>
@@ -117,13 +152,12 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
               </div>
             </div>
 
-            {/* Tabs */}
             <div className="flex border-b border-border px-4 gap-1 overflow-x-auto">
               {[
                 { id: 'cobertura', label: 'Cobertura', icon: MdShield },
                 { id: 'beneficiarios', label: 'Beneficiarios', icon: MdPeople },
                 { id: 'pagos', label: 'Pagos', icon: MdPayment },
-                { id: 'historial', label: `Endosos`, icon: MdHistory },
+                { id: 'historial', label: 'Endosos', icon: MdHistory },
               ].map((t) => {
                 const TIcon = t.icon;
                 return (
@@ -131,7 +165,9 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                     key={t.id}
                     onClick={() => setTab(t.id)}
                     className={`flex items-center gap-1.5 px-3 py-3 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${
-                      tab === t.id ? 'border-primary text-primary' : 'border-transparent text-text-soft hover:text-text'
+                      tab === t.id
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-text-soft hover:text-text'
                     }`}
                   >
                     <TIcon size={14} />
@@ -141,13 +177,13 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
               })}
             </div>
 
-            {/* Tab content */}
             <div className="flex-1 overflow-y-auto p-5">
-              {/* TAB COBERTURA */}
               {tab === 'cobertura' && (
                 <div className="flex flex-col gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-text-soft mb-2">Cobertura</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-text-soft mb-2">
+                      Cobertura
+                    </p>
                     {poliza.producto?.limites_cobertura ? (
                       poliza.producto.limites_cobertura.split(',').map((c, i) => (
                         <div
@@ -175,23 +211,26 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                 </div>
               )}
 
-              {/* TAB BENEFICIARIOS */}
               {tab === 'beneficiarios' && (
                 <div className="flex flex-col gap-3">
-                  {poliza.beneficiarios?.length === 0 ? (
-                    <p className="text-sm text-text-soft text-center py-4">No hay beneficiarios registrados.</p>
+                  {!poliza.beneficiarios || poliza.beneficiarios.length === 0 ? (
+                    <p className="text-sm text-text-soft text-center py-4">
+                      No hay beneficiarios registrados.
+                    </p>
                   ) : (
                     poliza.beneficiarios.map((b) => (
                       <div
-                        key={b.id}
+                        key={b.id_beneficiario}
                         className="p-3 rounded-xl border border-border flex justify-between items-center bg-bg-soft"
                       >
                         <div>
-                          <p className="text-sm font-semibold text-text">{b.nombre}</p>
+                          <p className="text-sm font-semibold text-text">
+                            {b.nombres} {b.apellidos}
+                          </p>
                           <p className="text-xs text-text-soft">{b.parentesco}</p>
                         </div>
                         <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg">
-                          {b.porcentaje}
+                          {Number(b.porcentaje).toFixed(0)}%
                         </span>
                       </div>
                     ))
@@ -199,30 +238,33 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                 </div>
               )}
 
-              {/* TAB PAGOS ASOCIADOS */}
               {tab === 'pagos' && (
                 <div className="flex flex-col gap-3">
-                  {poliza.pagos?.length === 0 ? (
+                  {!poliza.pagos || poliza.pagos.length === 0 ? (
                     <p className="text-sm text-text-soft text-center py-4">No hay pagos asociados.</p>
                   ) : (
                     <table className="w-full text-left text-sm">
                       <thead>
                         <tr className="text-xs text-text-soft border-b border-border">
-                          <th className="pb-2 font-medium">Fecha</th>
+                          <th className="pb-2 font-medium">Cuota</th>
+                          <th className="pb-2 font-medium">Vencimiento</th>
                           <th className="pb-2 font-medium">Monto</th>
                           <th className="pb-2 font-medium text-right">Estado</th>
                         </tr>
                       </thead>
                       <tbody>
                         {poliza.pagos.map((p) => (
-                          <tr key={p.id_pago} className="border-b border-border/50 last:border-0">
-                            <td className="py-3 text-text">{formatearFecha(p.fecha)}</td>
+                          <tr key={p.id_cuota} className="border-b border-border/50 last:border-0">
+                            <td className="py-3 text-text">#{p.numero_cuota}</td>
+                            <td className="py-3 text-text">{formatearFecha(p.fecha_vencimiento)}</td>
                             <td className="py-3 text-text font-medium">{formatearMoneda(p.monto)}</td>
                             <td className="py-3 text-right">
                               <span
-                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.estado === 'PAGADO' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  ESTADO_PAGO[p.estado_pago] || 'bg-bg-soft text-text-soft'
+                                }`}
                               >
-                                {p.estado}
+                                {p.estado_pago}
                               </span>
                             </td>
                           </tr>
@@ -233,7 +275,6 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                 </div>
               )}
 
-              {/* TAB HISTORIAL / ENDOSOS */}
               {tab === 'historial' && (
                 <div className="flex flex-col gap-3">
                   {!mostrarFormEndoso && (
@@ -271,13 +312,15 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-text-soft block mb-1">Descripción detallada</label>
+                        <label className="text-xs font-medium text-text-soft block mb-1">
+                          Descripción detallada
+                        </label>
                         <textarea
                           value={descripcionCambio}
                           onChange={(e) => setDescripcionCambio(e.target.value)}
                           required
                           rows={3}
-                          placeholder="Detalla el cambio que necesitas (Ej: Nueva dirección es Av. Sol 123)..."
+                          placeholder="Detalla el cambio que necesitas..."
                           className="w-full px-3 py-2 rounded-lg text-sm border border-border outline-none bg-bg text-text focus:border-primary resize-none"
                         />
                       </div>
@@ -287,7 +330,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                           disabled={enviandoEndoso}
                           className="flex items-center justify-center flex-1 gap-1.5 px-3 py-2.5 rounded-xl bg-primary text-text-inverse text-xs font-semibold hover:bg-primary-hover transition-colors disabled:opacity-50"
                         >
-                          <MdSend size={13} /> {enviandoEndoso ? 'Enviando...' : 'Enviar Solicitud'}
+                          <MdSend size={13} /> {enviandoEndoso ? 'Enviando...' : 'Enviar solicitud'}
                         </button>
                         <button
                           type="button"
@@ -312,7 +355,9 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                           <div className="flex items-center justify-between gap-2">
                             <p className="text-sm font-semibold text-text">{e.tipo_cambio}</p>
                             <span
-                              className={`text-xs px-2 py-0.5 rounded-full font-medium ${ESTADO_ENDOSO[e.estado_aprobacion] || 'bg-bg-soft text-text-soft'}`}
+                              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                ESTADO_ENDOSO[e.estado_aprobacion] || 'bg-bg-soft text-text-soft'
+                              }`}
                             >
                               {e.estado_aprobacion}
                             </span>

@@ -20,7 +20,10 @@ public record SiniestroAdminResponse(
         LocalDate fechaOcurrencia,
         LocalDateTime fechaReporte,
         String estadoResolucion,
-        BigDecimal montoReclamado
+        BigDecimal montoReclamado,
+        String observacionesPerito,
+        BigDecimal montoEstimadoPerito,
+        String informeTecnico
 ) {
     public static SiniestroAdminResponse from(Siniestro s) {
         var poliza = s.getPoliza();
@@ -43,7 +46,10 @@ public record SiniestroAdminResponse(
                 s.getFechaOcurrencia(),
                 s.getFechaReporte(),
                 s.getEstadoResolucion().name(),
-                s.getMontoReclamado()
+                s.getMontoReclamado(),
+                s.getObservacionesPerito(),
+                s.getMontoEstimadoPerito(),
+                s.getInformeTecnico()
         );
     }
 }

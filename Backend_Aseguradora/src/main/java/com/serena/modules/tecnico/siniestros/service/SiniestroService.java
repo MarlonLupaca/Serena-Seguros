@@ -1,21 +1,26 @@
 package com.serena.modules.tecnico.siniestros.service;
 
-import com.serena.modules.soporte.auditoria.service.AuditoriaService;
+import com.serena.modules.core.polizas.entity.Poliza;
+import com.serena.modules.core.polizas.repository.PolizaRepository;
 import com.serena.modules.seguridad.auth.entity.Persona;
 import com.serena.modules.seguridad.auth.entity.Usuario;
 import com.serena.modules.seguridad.auth.repository.PersonaRepository;
-import com.serena.modules.soporte.notificaciones.entity.Notificacion;
-import com.serena.modules.soporte.notificaciones.service.NotificacionService;
 import com.serena.modules.seguridad.clientes.entity.Cliente;
 import com.serena.modules.seguridad.clientes.repository.ClienteRepository;
 import com.serena.modules.seguridad.empleados.entity.Empleado;
 import com.serena.modules.seguridad.empleados.repository.EmpleadoRepository;
-import com.serena.modules.core.polizas.entity.Poliza;
-import com.serena.modules.core.polizas.repository.PolizaRepository;
+import com.serena.modules.soporte.auditoria.entity.AuditoriaAccion;
+import com.serena.modules.soporte.auditoria.repository.AuditoriaRepository;
+import com.serena.modules.soporte.auditoria.service.AuditoriaService;
+import com.serena.modules.soporte.notificaciones.entity.Notificacion;
+import com.serena.modules.soporte.notificaciones.service.NotificacionService;
 import com.serena.modules.tecnico.siniestros.dto.AsignarAnalistaRequest;
 import com.serena.modules.tecnico.siniestros.dto.CambioEstadoSiniestroRequest;
 import com.serena.modules.tecnico.siniestros.dto.CrearSiniestroRequest;
+import com.serena.modules.tecnico.siniestros.dto.PeritoObservacionRequest;
 import com.serena.modules.tecnico.siniestros.dto.SiniestroAdminResponse;
+import com.serena.modules.tecnico.siniestros.dto.SiniestroDetalleResponse;
+import com.serena.modules.tecnico.siniestros.dto.SiniestroDetalleResponse.EventoTimeline;
 import com.serena.modules.tecnico.siniestros.dto.SiniestroResponse;
 import com.serena.modules.tecnico.siniestros.entity.Siniestro;
 import com.serena.modules.tecnico.siniestros.repository.SiniestroRepository;
@@ -37,6 +42,7 @@ public class SiniestroService {
     private final EmpleadoRepository empleadoRepository;
     private final PersonaRepository personaRepository;
     private final AuditoriaService auditoria;
+    private final AuditoriaRepository auditoriaRepository;
     private final NotificacionService notificaciones;
 
     @Transactional(readOnly = true)
@@ -50,14 +56,27 @@ public class SiniestroService {
     }
 
     @Transactional(readOnly = true)
-    public SiniestroResponse miSiniestro(Usuario usuario, Integer idSiniestro) {
+    public SiniestroDetalleResponse miSiniestro(Usuario usuario, Integer idSiniestro) {
         Cliente cliente = clienteDelUsuario(usuario);
         Siniestro siniestro = siniestroRepository.findById(idSiniestro)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Siniestro", idSiniestro));
         if (!siniestro.getPoliza().getCliente().getIdCliente().equals(cliente.getIdCliente())) {
             throw new AccessDeniedException("El siniestro no pertenece al usuario");
         }
-        return SiniestroResponse.from(siniestro);
+        List<EventoTimeline> timeline = construirTimeline(siniestro);
+        return new SiniestroDetalleResponse(
+                siniestro.getIdSiniestro(),
+                siniestro.getPoliza().getIdPoliza(),
+                siniestro.getPoliza().getProducto().getNombre(),
+                siniestro.getPoliza().getProducto().getTipoSeguro().name(),
+                siniestro.getTipoIncidente(),
+                siniestro.getDescripcion(),
+                siniestro.getFechaOcurrencia(),
+                siniestro.getFechaReporte(),
+                siniestro.getEstadoResolucion().name(),
+                siniestro.getMontoReclamado(),
+                timeline
+        );
     }
 
     @Transactional
@@ -76,7 +95,10 @@ public class SiniestroService {
                 .montoReclamado(request.getMontoReclamado())
                 .estadoResolucion(Siniestro.EstadoResolucion.REPORTADO)
                 .build();
-        return SiniestroResponse.from(siniestroRepository.save(siniestro));
+        Siniestro guardado = siniestroRepository.save(siniestro);
+        auditoria.registrar("siniestro_reportado", "siniestros",
+                "SIN-" + guardado.getIdSiniestro() + " reportado por " + usuario.getUsername());
+        return SiniestroResponse.from(guardado);
     }
 
     @Transactional(readOnly = true)
@@ -121,6 +143,45 @@ public class SiniestroService {
         auditoria.registrar("siniestro_asignar", "siniestros",
                 "SIN-" + id + " analista " + request.idEmpleadoAnalista());
         return SiniestroAdminResponse.from(siniestroRepository.save(siniestro));
+    }
+
+    @Transactional
+    public SiniestroAdminResponse registrarObservacionPerito(Integer id, PeritoObservacionRequest request, Usuario usuario) {
+        Siniestro siniestro = buscar(id);
+
+        if (request.observacionesPerito() != null) {
+            siniestro.setObservacionesPerito(request.observacionesPerito());
+        }
+        if (request.montoEstimadoPerito() != null) {
+            siniestro.setMontoEstimadoPerito(request.montoEstimadoPerito());
+        }
+        if (request.informeTecnico() != null) {
+            siniestro.setInformeTecnico(request.informeTecnico());
+        }
+        if (siniestro.getEstadoResolucion() == Siniestro.EstadoResolucion.REPORTADO
+                || siniestro.getEstadoResolucion() == Siniestro.EstadoResolucion.EN_REVISION) {
+            siniestro.setEstadoResolucion(Siniestro.EstadoResolucion.INSPECCION);
+        }
+
+        auditoria.registrar("siniestro_perito", "siniestros",
+                "SIN-" + id + " observacion del perito"
+                        + (request.montoEstimadoPerito() != null ? " monto " + request.montoEstimadoPerito() : ""));
+
+        return SiniestroAdminResponse.from(siniestroRepository.save(siniestro));
+    }
+
+    private List<EventoTimeline> construirTimeline(Siniestro siniestro) {
+        String prefijo = "SIN-" + siniestro.getIdSiniestro();
+        List<AuditoriaAccion> eventos = auditoriaRepository
+                .findByModuloAndDetalleStartingWithOrderByFechaAsc("siniestros", prefijo);
+        return eventos.stream()
+                .map(a -> new EventoTimeline(
+                        a.getAccion(),
+                        a.getDetalle(),
+                        a.getFecha(),
+                        a.getUsername()
+                ))
+                .toList();
     }
 
     private Siniestro buscar(Integer id) {

@@ -9,5 +9,9 @@ public record PerfilResponse(
         String apellidos,
         String documentoIdentidad,
         String telefono,
-        String email
+        String email,
+        String contactoEmergenciaNombre,
+        String contactoEmergenciaRelacion,
+        String contactoEmergenciaTelefono,
+        String contactoEmergenciaCorreo
 ) {}

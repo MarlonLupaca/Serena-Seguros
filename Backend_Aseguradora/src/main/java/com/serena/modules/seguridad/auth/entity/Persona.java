@@ -35,4 +35,16 @@ public class Persona {
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;
+
+    @Column(name = "contacto_emergencia_nombre", length = 150)
+    private String contactoEmergenciaNombre;
+
+    @Column(name = "contacto_emergencia_relacion", length = 50)
+    private String contactoEmergenciaRelacion;
+
+    @Column(name = "contacto_emergencia_telefono", length = 20)
+    private String contactoEmergenciaTelefono;
+
+    @Column(name = "contacto_emergencia_correo", length = 100)
+    private String contactoEmergenciaCorreo;
 }

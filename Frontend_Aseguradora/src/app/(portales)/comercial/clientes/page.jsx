@@ -12,6 +12,7 @@ import {
   MdCalendarToday,
 } from 'react-icons/md';
 import { apiGet, apiPatch } from '@/lib/api';
+import ModalDetalleCliente from './ModalDetalleCliente';
 
 const ESTADO_CRM = {
   NUEVO: { label: 'Nuevo', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-500' },
@@ -35,6 +36,7 @@ export default function ClientesPage() {
   const [filtro, setFiltro] = useState('todos');
   const [actualizandoId, setActualizandoId] = useState(null);
   const [toast, setToast] = useState(null);
+  const [detalleId, setDetalleId] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -157,15 +159,18 @@ export default function ClientesPage() {
               cliente={c}
               actualizando={actualizandoId === c.id_cliente}
               onCambiarEstado={(estado) => cambiarEstado(c.id_cliente, estado)}
+              onVerDetalle={() => setDetalleId(c.id_cliente)}
             />
           ))}
         </div>
       )}
+
+      {detalleId && <ModalDetalleCliente idCliente={detalleId} onClose={() => setDetalleId(null)} />}
     </div>
   );
 }
 
-function ClienteCard({ cliente, onCambiarEstado, actualizando }) {
+function ClienteCard({ cliente, onCambiarEstado, actualizando, onVerDetalle }) {
   const est = ESTADO_CRM[cliente.estado_crm] || ESTADO_CRM.NUEVO;
   const [menu, setMenu] = useState(false);
   const iniciales = ((cliente.nombres || '')[0] || '') + ((cliente.apellidos || '')[0] || '');
@@ -208,6 +213,12 @@ function ClienteCard({ cliente, onCambiarEstado, actualizando }) {
           </div>
         </div>
         <div className="flex flex-col items-end gap-2 shrink-0 relative">
+          <button
+            onClick={onVerDetalle}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
+          >
+            Ver detalle
+          </button>
           <button
             onClick={() => setMenu((v) => !v)}
             disabled={actualizando}

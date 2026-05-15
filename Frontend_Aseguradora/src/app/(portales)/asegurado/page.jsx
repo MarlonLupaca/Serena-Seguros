@@ -24,8 +24,6 @@ import {
 import { apiGet } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 
-import { mockResumenDashboard, mockPromociones } from './inicio/data.js';
-
 const TIPO_ICON = {
   VEHICULAR: { icon: MdDirectionsCar, bg: 'bg-primary/10', text: 'text-primary', bar: 'bg-primary/40' },
   SALUD: { icon: MdHealthAndSafety, bg: 'bg-emerald-100', text: 'text-emerald-600', bar: 'bg-emerald-400' },
@@ -77,21 +75,16 @@ function Card({ children, onClick, className = '' }) {
   return (
     <div
       onClick={onClick}
-      className={`bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''} overflow-hidden ${className}`}
+      className={`bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow ${
+        onClick ? 'cursor-pointer' : ''
+      } overflow-hidden ${className}`}
     >
       {children}
     </div>
   );
 }
 
-const SINIESTRO_ESTADO_BADGE = {
-  REPORTADO: 'bg-primary/10 text-primary',
-  EN_REVISION: 'bg-amber-100 text-amber-700',
-  INSPECCION: 'bg-sky-100 text-sky-700',
-  APROBADO: 'bg-emerald-100 text-emerald-700',
-  RECHAZADO: 'bg-rose-100 text-rose-600',
-  LIQUIDADO: 'bg-emerald-100 text-emerald-700',
-};
+const SINIESTRO_EN_CURSO = ['REPORTADO', 'EN_REVISION', 'INSPECCION'];
 
 export default function Home() {
   const router = useRouter();
@@ -100,30 +93,26 @@ export default function Home() {
   const [polizas, setPolizas] = useState([]);
   const [cuotas, setCuotas] = useState([]);
   const [siniestros, setSiniestros] = useState([]);
-  const [resumen, setResumen] = useState(null);
   const [promociones, setPromociones] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
     Promise.all([
-      // Tus endpoints que ya están funcionando
       apiGet('/mis-polizas').catch(() => []),
       apiGet('/mis-cuotas').catch(() => []),
       apiGet('/mis-siniestros').catch(() => []),
-      // Simulación de los endpoints que faltan crear en el backend
-      new Promise((resolve) => setTimeout(() => resolve(mockResumenDashboard), 100)),
-      new Promise((resolve) => setTimeout(() => resolve(mockPromociones), 100)),
-    ]).then(([p, c, s, res, promo]) => {
+      apiGet('/promociones').catch(() => []),
+    ]).then(([p, c, s, promo]) => {
       setPolizas(p || []);
       setCuotas(c || []);
       setSiniestros(s || []);
-      setResumen(res || null);
       setPromociones(promo || []);
       setCargando(false);
     });
   }, []);
 
-  const polizasActivas = polizas.filter((p) => p.estado_poliza === 'ACTIVA').slice(0, 3);
+  const polizasActivas = polizas.filter((p) => p.estado_poliza === 'ACTIVA');
+  const polizasActivasTop = polizasActivas.slice(0, 3);
   const cuotasPendientes = cuotas
     .filter((c) => c.estado_pago === 'PENDIENTE')
     .sort((a, b) => new Date(a.fecha_vencimiento) - new Date(b.fecha_vencimiento));
@@ -135,8 +124,8 @@ export default function Home() {
     return d != null && d < 0;
   }).length;
 
-  const enCurso = ['REPORTADO', 'EN_REVISION', 'INSPECCION'];
-  const siniestroActivo = siniestros.find((s) => enCurso.includes(s.estado_resolucion));
+  const siniestrosAbiertos = siniestros.filter((s) => SINIESTRO_EN_CURSO.includes(s.estado_resolucion));
+  const siniestroActivo = siniestrosAbiertos[0];
 
   const notificaciones = [];
   if (proximaCuota) {
@@ -157,7 +146,9 @@ export default function Home() {
       color: 'text-rose-500',
       bg: 'bg-rose-50',
       titulo: 'Cuotas vencidas',
-      desc: `Tienes ${cuotasVencidas} cuota${cuotasVencidas > 1 ? 's' : ''} vencida${cuotasVencidas > 1 ? 's' : ''}. Regulariza para mantener tu cobertura.`,
+      desc: `Tienes ${cuotasVencidas} cuota${cuotasVencidas > 1 ? 's' : ''} vencida${
+        cuotasVencidas > 1 ? 's' : ''
+      }. Regulariza para mantener tu cobertura.`,
     });
   }
   if (siniestroActivo) {
@@ -167,7 +158,7 @@ export default function Home() {
       color: 'text-blue-500',
       bg: 'bg-blue-50',
       titulo: 'Siniestro en curso',
-      desc: `Tu caso SIN-${String(siniestroActivo.id_siniestro).padStart(6, '0')} está ${siniestroActivo.estado_resolucion}.`,
+      desc: `Tu caso SIN-${String(siniestroActivo.id_siniestro).padStart(6, '0')} esta ${siniestroActivo.estado_resolucion}.`,
     });
   }
   if (notificaciones.length === 0) {
@@ -186,7 +177,9 @@ export default function Home() {
       <div className="flex justify-between items-center">
         <div>
           <p className="text-xs text-text-soft">Bienvenido de vuelta</p>
-          <p className="text-xl font-bold text-text">{user ? `${user.nombres} ${user.apellidos}` : 'Asegurado'}</p>
+          <p className="text-xl font-bold text-text">
+            {user ? `${user.nombres} ${user.apellidos}` : 'Asegurado'}
+          </p>
         </div>
         <button
           onClick={() => router.push('/asegurado/reportar')}
@@ -202,20 +195,20 @@ export default function Home() {
         </div>
       ) : (
         <>
-          {/* MÓDULO 1: TARJETAS RESUMEN */}
+          {/* Tarjetas resumen */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="p-4 flex flex-col justify-center">
               <div className="flex items-center gap-2 text-text-soft mb-1">
                 <MdShield size={16} />
-                <p className="text-xs font-semibold">Pólizas Activas</p>
+                <p className="text-xs font-semibold">Pólizas activas</p>
               </div>
-              <p className="text-2xl font-bold text-text">{resumen?.total_polizas_activas || 0}</p>
+              <p className="text-2xl font-bold text-text">{polizasActivas.length}</p>
             </Card>
 
             <Card className="p-4 flex flex-col justify-center">
               <div className="flex items-center gap-2 text-text-soft mb-1">
                 <MdCreditCard size={16} />
-                <p className="text-xs font-semibold">Próximo Pago</p>
+                <p className="text-xs font-semibold">Próximo pago</p>
               </div>
               <p className="text-2xl font-bold text-text">
                 {proximaCuota ? formatearMoneda(proximaCuota.monto) : 'S/ 0.00'}
@@ -225,45 +218,36 @@ export default function Home() {
             <Card className="p-4 flex flex-col justify-center">
               <div className="flex items-center gap-2 text-text-soft mb-1">
                 <MdInfo size={16} />
-                <p className="text-xs font-semibold">Siniestros Abiertos</p>
+                <p className="text-xs font-semibold">Siniestros abiertos</p>
               </div>
-              <p className="text-2xl font-bold text-text">{resumen?.siniestros_abiertos || 0}</p>
+              <p className="text-2xl font-bold text-text">{siniestrosAbiertos.length}</p>
             </Card>
 
-            <Card
-              className="p-4 flex flex-col justify-center"
-              onClick={() => resumen?.ultima_cotizacion && router.push('/asegurado/cotizar')}
-            >
+            <Card className="p-4 flex flex-col justify-center" onClick={() => router.push('/asegurado/seguros')}>
               <div className="flex items-center gap-2 text-text-soft mb-1">
                 <MdAssignment size={16} />
-                <p className="text-xs font-semibold">Última Cotización</p>
+                <p className="text-xs font-semibold">Cotizar</p>
               </div>
-              {resumen?.ultima_cotizacion ? (
-                <>
-                  <p className="text-sm font-bold text-text truncate">{resumen.ultima_cotizacion.producto}</p>
-                  <p className="text-xs text-text-soft mt-1">{formatearFecha(resumen.ultima_cotizacion.fecha)}</p>
-                </>
-              ) : (
-                <p className="text-sm text-text-soft mt-1">Sin cotizaciones</p>
-              )}
+              <p className="text-sm font-bold text-text truncate">Simula tu seguro</p>
+              <p className="text-xs text-text-soft mt-1">Pasa a contratacion en minutos</p>
             </Card>
           </div>
 
-          {/* MÓDULO 1: SECCIÓN CENTRAL */}
+          {/* Polizas vigentes + proximo pago */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 flex flex-col">
-              <SectionHeader title="Mis Pólizas Vigentes" onClick={() => router.push('/asegurado/polizas')} />
-              {polizasActivas.length === 0 ? (
+              <SectionHeader title="Mis pólizas vigentes" onClick={() => router.push('/asegurado/polizas')} />
+              {polizasActivasTop.length === 0 ? (
                 <Card onClick={() => router.push('/asegurado/seguros')} className="flex-1">
                   <div className="p-6 text-center">
                     <MdShield size={28} className="text-text-soft mx-auto mb-2 opacity-40" />
-                    <p className="text-sm text-text">No tienes pólizas activas</p>
+                    <p className="text-sm text-text">No tienes polizas activas</p>
                     <p className="text-xs text-text-soft mt-1">Cotiza tu primer seguro.</p>
                   </div>
                 </Card>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
-                  {polizasActivas.map((p) => {
+                  {polizasActivasTop.map((p) => {
                     const t = tipoStyle(p.producto?.tipo_seguro);
                     const Icon = t.icon;
                     return (
@@ -288,13 +272,13 @@ export default function Home() {
 
                           <div className="flex items-center gap-2 mt-2 pt-3 border-t border-border">
                             <button
-                              onClick={() => router.push(`/asegurado/polizas/${p.id_poliza}`)}
+                              onClick={() => router.push(`/asegurado/polizas`)}
                               className="flex-1 text-center py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 rounded-lg transition-colors"
                             >
-                              Ver Póliza
+                              Ver póliza
                             </button>
                             <button
-                              onClick={() => router.push(`/asegurado/renovar/${p.id_poliza}`)}
+                              onClick={() => router.push(`/asegurado/polizas`)}
                               className="flex-1 text-center py-1.5 text-xs font-semibold text-amber-600 hover:bg-amber-50 rounded-lg transition-colors flex items-center justify-center gap-1"
                             >
                               <MdAutorenew size={14} /> Renovar
@@ -309,7 +293,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col">
-              <SectionHeader title="Próximo Pago" onClick={() => router.push('/asegurado/pagos')} />
+              <SectionHeader title="Próximo pago" onClick={() => router.push('/asegurado/pagos')} />
               {proximaCuota ? (
                 <Card onClick={() => router.push('/asegurado/pagos')} className="flex-1 flex flex-col">
                   <div className="h-1 w-full bg-amber-400" />
@@ -318,7 +302,7 @@ export default function Home() {
                       <MdCreditCard size={20} className="text-amber-500" />
                     </div>
                     <div className="flex-1 flex flex-col gap-1">
-                      <p className="text-xs text-text-soft">Póliza asociada</p>
+                      <p className="text-xs text-text-soft">Poliza asociada</p>
                       <p className="text-sm font-bold text-text">{proximaCuota.poliza_nombre}</p>
                       <p className="text-xs text-text-soft flex items-center gap-1 mt-1">
                         <MdCalendarToday size={11} /> Vence: {formatearFecha(proximaCuota.fecha_vencimiento)}
@@ -334,7 +318,7 @@ export default function Home() {
                       }}
                       className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold transition-colors"
                     >
-                      <MdCreditCard size={13} /> Ir a Pagar
+                      <MdCreditCard size={13} /> Ir a pagar
                     </button>
                   </div>
                 </Card>
@@ -350,10 +334,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* MÓDULO 1: ZONA LATERAL/INFERIOR */}
+          {/* Avisos + promociones */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="flex flex-col">
-              <SectionHeader title="Avisos y Notificaciones" />
+              <SectionHeader title="Avisos y notificaciones" />
               <div className="flex flex-col gap-3 flex-1">
                 {notificaciones.map((n) => {
                   const Icon = n.icon;
@@ -375,7 +359,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col">
-              <SectionHeader title="Promociones y Renovaciones" />
+              <SectionHeader title="Promociones y renovaciones" onClick={() => router.push('/asegurado/seguros')} />
               <div className="flex flex-col gap-3 flex-1">
                 {promociones.length === 0 ? (
                   <div className="p-4 text-center text-sm text-text-soft bg-bg rounded-2xl border border-border">
@@ -384,21 +368,20 @@ export default function Home() {
                 ) : (
                   promociones.map((promo) => (
                     <Card
-                      key={promo.id_promo}
-                      onClick={() => router.push(promo.link_accion)}
+                      key={promo.id_promocion}
+                      onClick={() => router.push('/asegurado/seguros')}
                       className="flex-1 border-primary/20 bg-primary/5"
                     >
                       <div className="flex items-start gap-3 p-4 h-full">
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-primary/20">
-                          {promo.tipo === 'RENOVACION' ? (
-                            <MdAutorenew size={16} className="text-primary" />
-                          ) : (
-                            <MdLocalOffer size={16} className="text-primary" />
-                          )}
+                          <MdLocalOffer size={16} className="text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-primary">{promo.titulo}</p>
                           <p className="text-xs text-text-soft mt-0.5 leading-relaxed">{promo.descripcion}</p>
+                          <p className="text-[11px] text-primary mt-1 font-semibold">
+                            {Number(promo.descuento_pct).toFixed(0)}% off · {promo.producto_nombre}
+                          </p>
                         </div>
                         <MdChevronRight size={20} className="text-primary/50 self-center" />
                       </div>

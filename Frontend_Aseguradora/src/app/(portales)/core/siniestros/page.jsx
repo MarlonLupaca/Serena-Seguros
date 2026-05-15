@@ -20,6 +20,8 @@ import {
   MdHandyman,
   MdAdd,
   MdDeleteOutline,
+  MdEngineering,
+  MdSave,
 } from 'react-icons/md';
 import { apiGet, apiPatch, apiPost, apiDelete } from '@/lib/api';
 
@@ -66,6 +68,7 @@ export default function SiniestrosCorePage() {
   const [actualizandoId, setActualizandoId] = useState(null);
   const [modalAsignar, setModalAsignar] = useState(null);
   const [modalProveedores, setModalProveedores] = useState(null);
+  const [modalPerito, setModalPerito] = useState(null);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -179,6 +182,7 @@ export default function SiniestrosCorePage() {
               onCambiarEstado={(estado) => cambiarEstado(s.id_siniestro, estado)}
               onAsignar={() => setModalAsignar(s)}
               onProveedores={() => setModalProveedores(s)}
+              onPerito={() => setModalPerito(s)}
             />
           ))}
         </div>
@@ -203,11 +207,25 @@ export default function SiniestrosCorePage() {
           onToast={mostrarToast}
         />
       )}
+
+      {modalPerito && (
+        <ModalPerito
+          siniestro={modalPerito}
+          onClose={() => setModalPerito(null)}
+          onSuccess={(actualizada) => {
+            setSiniestros((prev) =>
+              prev.map((s) => (s.id_siniestro === actualizada.id_siniestro ? actualizada : s))
+            );
+            setModalPerito(null);
+            mostrarToast('Informe del perito guardado');
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function SiniestroRow({ s, onCambiarEstado, onAsignar, onProveedores, actualizando }) {
+function SiniestroRow({ s, onCambiarEstado, onAsignar, onProveedores, onPerito, actualizando }) {
   const tipoStyle = estiloTipo(s.poliza_tipo);
   const Icon = tipoStyle.icon;
   const est = ESTADOS[s.estado_resolucion] || ESTADOS.REPORTADO;
@@ -263,6 +281,14 @@ function SiniestroRow({ s, onCambiarEstado, onAsignar, onProveedores, actualizan
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
           >
             <MdHandyman size={13} /> Proveedores
+          </button>
+          <button
+            onClick={onPerito}
+            disabled={actualizando}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
+            title={s.observaciones_perito ? 'Ver informe del perito' : 'Registrar informe del perito'}
+          >
+            <MdEngineering size={13} /> {s.observaciones_perito ? 'Ver perito' : 'Perito'}
           </button>
           <button
             onClick={() => setMenu((v) => !v)}
@@ -526,6 +552,149 @@ function ModalProveedores({ siniestro, onClose, onToast }) {
             </button>
           </form>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalPerito({ siniestro, onClose, onSuccess }) {
+  const [observaciones, setObservaciones] = useState(siniestro.observaciones_perito || '');
+  const [monto, setMonto] = useState(
+    siniestro.monto_estimado_perito != null ? String(siniestro.monto_estimado_perito) : ''
+  );
+  const [informe, setInforme] = useState(siniestro.informe_tecnico || '');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+
+  const enviar = async (e) => {
+    e.preventDefault();
+    setEnviando(true);
+    setError('');
+    try {
+      const data = await apiPost(`/siniestros/${siniestro.id_siniestro}/perito/observacion`, {
+        observaciones_perito: observaciones || null,
+        monto_estimado_perito: monto ? Number(monto) : null,
+        informe_tecnico: informe || null,
+      });
+      onSuccess(data);
+    } catch (err) {
+      setError(err.mensaje || 'No se pudo guardar el informe');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div className="bg-bg w-full max-w-lg rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="px-5 py-4 border-b border-border flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+              <MdEngineering size={20} className="text-violet-600" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-text">Informe del perito</p>
+              <p className="text-[11px] text-text-soft">
+                SIN-{String(siniestro.id_siniestro).padStart(6, '0')} · {siniestro.tipo_incidente}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-text-soft hover:text-text">
+            <MdClose size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={enviar} className="p-5 flex flex-col gap-3 overflow-y-auto">
+          {error && (
+            <div className="p-2.5 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">
+              {error}
+            </div>
+          )}
+
+          <div className="bg-bg-soft border border-border rounded-xl p-3 grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <p className="text-text-soft">Cliente</p>
+              <p className="font-semibold text-text">{siniestro.cliente_nombre}</p>
+            </div>
+            <div>
+              <p className="text-text-soft">Monto reclamado</p>
+              <p className="font-semibold text-text">{formatearMoneda(siniestro.monto_reclamado)}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-text-soft">Póliza</p>
+              <p className="font-semibold text-text truncate">
+                POL-{String(siniestro.id_poliza).padStart(6, '0')} · {siniestro.poliza_nombre}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-text-soft block mb-1.5">
+              Observaciones del perito
+            </label>
+            <textarea
+              value={observaciones}
+              onChange={(e) => setObservaciones(e.target.value)}
+              rows={4}
+              maxLength={4000}
+              placeholder="Detalla lo que el perito constato en la inspeccion..."
+              className="w-full px-3 py-2 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-text-soft block mb-1.5">
+                Monto estimado (S/)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={monto}
+                onChange={(e) => setMonto(e.target.value)}
+                placeholder="0.00"
+                className="w-full px-3 py-2 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-text-soft block mb-1.5">
+                Informe técnico (referencia)
+              </label>
+              <input
+                type="text"
+                value={informe}
+                onChange={(e) => setInforme(e.target.value)}
+                maxLength={500}
+                placeholder="Nombre o link del informe"
+                className="w-full px-3 py-2 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <p className="text-[11px] text-text-soft">
+            Al guardar, el caso pasa automaticamente al estado <strong>INSPECCION</strong> si estaba en
+            REPORTADO o EN_REVISION.
+          </p>
+
+          <div className="flex gap-2 mt-2">
+            <button
+              type="submit"
+              disabled={enviando}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-xs font-semibold transition-colors"
+            >
+              <MdSave size={13} /> {enviando ? 'Guardando...' : 'Guardar informe'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={enviando}
+              className="flex-1 py-2.5 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

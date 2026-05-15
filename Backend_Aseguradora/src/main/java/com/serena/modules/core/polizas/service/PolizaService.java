@@ -1,14 +1,11 @@
 package com.serena.modules.core.polizas.service;
 
-import com.serena.modules.seguridad.auth.entity.Usuario;
-import com.serena.modules.seguridad.auth.repository.PersonaRepository;
-import com.serena.modules.seguridad.clientes.entity.Cliente;
-import com.serena.modules.seguridad.clientes.repository.ClienteRepository;
 import com.serena.modules.core.polizas.dto.CambioEstadoPolizaRequest;
 import com.serena.modules.core.polizas.dto.CrearEndosoRequest;
 import com.serena.modules.core.polizas.dto.EmitirPolizaRequest;
 import com.serena.modules.core.polizas.dto.EndosoResponse;
 import com.serena.modules.core.polizas.dto.PolizaDetalleResponse;
+import com.serena.modules.core.polizas.dto.PolizaDetalleResponse.CuotaMini;
 import com.serena.modules.core.polizas.dto.PolizaResponse;
 import com.serena.modules.core.polizas.dto.ProductoMini;
 import com.serena.modules.core.polizas.entity.EndosoPoliza;
@@ -17,6 +14,14 @@ import com.serena.modules.core.polizas.repository.EndosoPolizaRepository;
 import com.serena.modules.core.polizas.repository.PolizaRepository;
 import com.serena.modules.core.productos.entity.ProductoSeguro;
 import com.serena.modules.core.productos.repository.ProductoSeguroRepository;
+import com.serena.modules.finanzas.cuotas.entity.Cuota;
+import com.serena.modules.finanzas.cuotas.repository.CuotaRepository;
+import com.serena.modules.seguridad.auth.entity.Usuario;
+import com.serena.modules.seguridad.auth.repository.PersonaRepository;
+import com.serena.modules.seguridad.clientes.entity.Cliente;
+import com.serena.modules.seguridad.clientes.repository.ClienteRepository;
+import com.serena.modules.seguridad.perfil.dto.BeneficiarioResponse;
+import com.serena.modules.seguridad.perfil.repository.BeneficiarioRepository;
 import com.serena.shared.exception.RecursoNoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -35,6 +40,8 @@ public class PolizaService {
     private final ClienteRepository clienteRepository;
     private final PersonaRepository personaRepository;
     private final ProductoSeguroRepository productoRepository;
+    private final CuotaRepository cuotaRepository;
+    private final BeneficiarioRepository beneficiarioRepository;
 
     @Transactional(readOnly = true)
     public List<PolizaResponse> misPolizas(Usuario usuario, Poliza.EstadoPoliza estado) {
@@ -112,10 +119,70 @@ public class PolizaService {
         ).stream().map(PolizaResponse::from).toList();
     }
 
+    @Transactional(readOnly = true)
+    public String generarContrato(Usuario usuario, Integer idPoliza) {
+        Poliza poliza = obtenerPropia(usuario, idPoliza);
+        var cliente = poliza.getCliente();
+        var persona = cliente.getPersona();
+        var producto = poliza.getProducto();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("==============================================================\n");
+        sb.append("  CONTRATO DE POLIZA - SERENA SEGUROS\n");
+        sb.append("==============================================================\n\n");
+        sb.append("Numero de poliza: POL-").append(String.format("%06d", poliza.getIdPoliza())).append("\n");
+        sb.append("Fecha de emision: ").append(poliza.getFechaEmision()).append("\n");
+        sb.append("Estado: ").append(poliza.getEstadoPoliza().name()).append("\n\n");
+
+        sb.append("-------------------- DATOS DEL ASEGURADO --------------------\n");
+        sb.append("Nombres: ").append(persona.getNombres()).append(" ").append(persona.getApellidos()).append("\n");
+        sb.append("Documento: ").append(persona.getDocumentoIdentidad()).append("\n");
+        sb.append("Email: ").append(persona.getEmail()).append("\n");
+        sb.append("Telefono: ").append(persona.getTelefono() != null ? persona.getTelefono() : "-").append("\n\n");
+
+        sb.append("-------------------- PRODUCTO CONTRATADO --------------------\n");
+        sb.append("Producto: ").append(producto.getNombre()).append("\n");
+        sb.append("Tipo: ").append(producto.getTipoSeguro().name()).append("\n");
+        sb.append("Prima total: S/ ").append(poliza.getPrimaTotal()).append("\n");
+        sb.append("Vigencia: ").append(poliza.getVigenciaInicio()).append(" a ").append(poliza.getVigenciaFin()).append("\n\n");
+
+        sb.append("------------------------ BENEFICIARIOS ----------------------\n");
+        var beneficiarios = beneficiarioRepository.findByPersonaOrderByIdBeneficiarioAsc(persona);
+        if (beneficiarios.isEmpty()) {
+            sb.append("Sin beneficiarios registrados\n");
+        } else {
+            beneficiarios.forEach(b -> sb.append("- ")
+                    .append(b.getNombres()).append(" ").append(b.getApellidos())
+                    .append(" (").append(b.getParentesco()).append(") ")
+                    .append(b.getPorcentaje()).append("%\n"));
+        }
+        sb.append("\n");
+
+        sb.append("------------------------ PAGOS / CUOTAS ---------------------\n");
+        var cuotas = cuotaRepository.findByPolizaOrderByNumeroCuotaAsc(poliza);
+        cuotas.forEach(c -> sb.append("Cuota ").append(c.getNumeroCuota())
+                .append(" - Vence: ").append(c.getFechaVencimiento())
+                .append(" - S/ ").append(c.getMonto())
+                .append(" - ").append(c.getEstadoPago().name()).append("\n"));
+
+        sb.append("\n==============================================================\n");
+        sb.append("Documento generado automaticamente por Serena Seguros.\n");
+        sb.append("==============================================================\n");
+        return sb.toString();
+    }
+
     private PolizaDetalleResponse aDetalle(Poliza poliza) {
         List<EndosoResponse> endosos = endosoRepository
                 .findByPolizaOrderByFechaSolicitudDesc(poliza)
                 .stream().map(EndosoResponse::from).toList();
+        List<BeneficiarioResponse> beneficiarios = beneficiarioRepository
+                .findByPersonaOrderByIdBeneficiarioAsc(poliza.getCliente().getPersona())
+                .stream().map(BeneficiarioResponse::from).toList();
+        List<CuotaMini> pagos = cuotaRepository
+                .findByPolizaOrderByNumeroCuotaAsc(poliza)
+                .stream()
+                .map(this::aCuotaMini)
+                .toList();
         return new PolizaDetalleResponse(
                 poliza.getIdPoliza(),
                 poliza.getEstadoPoliza().name(),
@@ -124,7 +191,19 @@ public class PolizaService {
                 poliza.getVigenciaFin(),
                 poliza.getFechaEmision(),
                 ProductoMini.from(poliza.getProducto()),
-                endosos
+                endosos,
+                beneficiarios,
+                pagos
+        );
+    }
+
+    private CuotaMini aCuotaMini(Cuota c) {
+        return new CuotaMini(
+                c.getIdCuota(),
+                c.getNumeroCuota(),
+                c.getMonto(),
+                c.getFechaVencimiento(),
+                c.getEstadoPago().name()
         );
     }
 

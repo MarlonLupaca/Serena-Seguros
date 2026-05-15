@@ -15,4 +15,6 @@ public interface AuditoriaRepository extends JpaRepository<AuditoriaAccion, Inte
     List<AuditoriaAccion> findByModuloOrderByFechaDesc(String modulo, Pageable pageable);
 
     List<AuditoriaAccion> findByUsernameOrderByFechaDesc(String username, Pageable pageable);
+
+    List<AuditoriaAccion> findByModuloAndDetalleStartingWithOrderByFechaAsc(String modulo, String prefijo);
 }
