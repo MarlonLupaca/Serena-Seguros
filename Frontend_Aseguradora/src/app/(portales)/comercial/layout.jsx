@@ -23,7 +23,6 @@ const employeeMenu = [
     section: 'Principal',
     items: [
       { label: 'Inicio', icon: MdHome, href: '/comercial' },
-      { label: 'Cotizaciones', icon: MdRequestQuote, href: '/comercial/cotizaciones' },
       { label: 'Mis comisiones', icon: CiMoneyBill, href: '/comercial/comisiones' },
     ],
   },
@@ -33,14 +32,7 @@ const employeeMenu = [
       { label: 'Leads', icon: MdAssignmentInd, href: '/comercial/leads' },
       { label: 'Clientes', icon: MdPeople, href: '/comercial/clientes' },
       { label: 'Campañas', icon: MdCampaign, href: '/comercial/campanas' },
-      { label: 'Segmentación', icon: MdPieChart, href: '/comercial/segmentacion' },
-    ],
-  },
-  {
-    section: 'Cartera',
-    items: [
-      { label: 'Pólizas', icon: MdDescription, href: '/comercial/polizas' },
-      { label: 'Siniestros', icon: MdWarning, href: '/comercial/siniestros' },
+      { label: 'Renovaciones', icon: MdPieChart, href: '/comercial/renovaciones' },
     ],
   },
   {

@@ -96,7 +96,7 @@ const AppHeader = ({ title, subtitle, searchPlaceholder = 'Buscar...', indicator
   }
 
   return (
-    <header className="flex h-20 w-full items-center justify-between px-8 sticky top-0 bg-gradient-pastel backdrop-blur z-40">
+    <header className="flex h-20 w-full items-center justify-between px-8 sticky top-0 bg-gradient-pastel backdrop-blur z-40 pl-18 lg:pl-14">
       <div>
         <p className="text-xl text-primary-hover font-bold">{title}</p>
         {subtitle && <p className="text-[0.7rem] text-black/50">{subtitle}</p>}
@@ -151,11 +151,15 @@ const AppHeader = ({ title, subtitle, searchPlaceholder = 'Buscar...', indicator
                         n.leida ? '' : 'bg-primary/5'
                       }`}
                     >
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ${TIPO_COLOR[n.tipo] || TIPO_COLOR.GENERAL}`}>
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ${TIPO_COLOR[n.tipo] || TIPO_COLOR.GENERAL}`}
+                      >
                         {n.tipo}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-xs ${n.leida ? 'text-text-soft' : 'font-bold text-text'} truncate`}>{n.titulo}</p>
+                        <p className={`text-xs ${n.leida ? 'text-text-soft' : 'font-bold text-text'} truncate`}>
+                          {n.titulo}
+                        </p>
                         {n.mensaje && <p className="text-[11px] text-text-soft line-clamp-2">{n.mensaje}</p>}
                         <p className="text-[10px] text-text-mute mt-0.5">{formatearFecha(n.fecha)}</p>
                       </div>
@@ -167,10 +171,6 @@ const AppHeader = ({ title, subtitle, searchPlaceholder = 'Buscar...', indicator
             </div>
           )}
         </div>
-
-        <button className="rounded-full p-2.5 text-text-soft hover:bg-bg-soft hover:text-primary transition-all">
-          <IoSettingsOutline size={22} />
-        </button>
 
         {indicatorValue && (
           <>

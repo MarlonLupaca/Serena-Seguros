@@ -97,3 +97,21 @@ export function formatearFecha(iso) {
   if (isNaN(d)) return iso;
   return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
+
+// data.js (Añadir al final)
+
+// Simulación del detalle de un siniestro para ver la línea de tiempo y observaciones
+export const mockDetalleSiniestro = {
+  id_siniestro: 123,
+  estado_actual: 'OBSERVADO',
+  linea_tiempo: [
+    { fecha: '2026-05-12T14:20:00Z', estado: 'REPORTADO', detalle: 'Siniestro reportado por el cliente.' },
+    { fecha: '2026-05-13T09:00:00Z', estado: 'EN_REVISION', detalle: 'Documentación en evaluación por el analista.' },
+    {
+      fecha: '2026-05-14T10:30:00Z',
+      estado: 'OBSERVADO',
+      detalle: 'Por favor, adjunta una foto más clara del daño vehicular para proceder.',
+    },
+  ],
+  requiere_respuesta: true,
+};

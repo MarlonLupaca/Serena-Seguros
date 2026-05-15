@@ -12,7 +12,7 @@ const ACCESOS_RAPIDOS = [
   { label: 'Asegurado', username: 'asegurado_demo', password: 'demo12345', url: '/icons/cliente.png' },
   { label: 'Comercial', username: 'comercial_demo', password: 'demo12345', url: '/icons/empleado.png' },
   { label: 'Tecnico', username: 'tecnico_demo', password: 'demo12345', url: '/icons/cliente.png' },
-  { label: 'Operativo', username: 'operativo_demo', password: 'demo12345', url: '/icons/empleado.png' },
+  { label: 'Finanzas', username: 'operativo_demo', password: 'demo12345', url: '/icons/empleado.png' },
   { label: 'Ejecutivo', username: 'ejecutivo_demo', password: 'demo12345', url: '/icons/admin.png' },
 ];
 
