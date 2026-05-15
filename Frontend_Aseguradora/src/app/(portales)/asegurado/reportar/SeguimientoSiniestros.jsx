@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MdTimeline, MdClose, MdHistory } from 'react-icons/md';
-import { apiGet } from '@/lib/api';
+import { MdTimeline, MdClose, MdHistory, MdInsertDriveFile, MdDownload } from 'react-icons/md';
+import { apiGet, apiDownloadFile } from '@/lib/api';
 import { formatearFecha } from './data';
 
 const ESTADO_BADGE = {
@@ -88,6 +88,7 @@ function ModalLineaTiempo({ id, onClose }) {
   }, [id]);
 
   const eventos = detalle?.timeline || [];
+  const documentos = detalle?.documentos || [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -106,34 +107,69 @@ function ModalLineaTiempo({ id, onClose }) {
             <p className="text-center text-xs text-rose-500">{error}</p>
           ) : !detalle ? (
             <p className="text-center text-xs text-text-soft">Cargando historial...</p>
-          ) : eventos.length === 0 ? (
-            <div className="text-center py-6">
-              <MdHistory size={28} className="mx-auto text-text-soft opacity-40 mb-2" />
-              <p className="text-xs text-text-soft">
-                Aun no hay movimientos registrados para este caso.
-              </p>
-              <p className="text-[11px] text-text-soft mt-1">
-                Estado actual:{' '}
-                <span className="font-semibold">{detalle.estado_resolucion}</span>
-              </p>
-            </div>
           ) : (
-            <div className="relative border-l-2 border-border ml-3 flex flex-col gap-6">
-              {eventos.map((evento, idx) => (
-                <div key={idx} className="relative pl-6">
-                  <span
-                    className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 border-bg ${
-                      idx === eventos.length - 1 ? 'bg-primary' : 'bg-text-soft'
-                    }`}
-                  />
-                  <p className="text-xs font-bold text-text">{evento.accion}</p>
-                  <p className="text-[10px] text-text-soft mb-1">
-                    {formatearFecha(evento.fecha)}
-                    {evento.autor ? ` · ${evento.autor}` : ''}
+            <div className="flex flex-col gap-5">
+              {eventos.length === 0 ? (
+                <div className="text-center py-6">
+                  <MdHistory size={28} className="mx-auto text-text-soft opacity-40 mb-2" />
+                  <p className="text-xs text-text-soft">
+                    Aun no hay movimientos registrados para este caso.
                   </p>
-                  <p className="text-xs text-text-soft leading-relaxed">{evento.detalle}</p>
+                  <p className="text-[11px] text-text-soft mt-1">
+                    Estado actual:{' '}
+                    <span className="font-semibold">{detalle.estado_resolucion}</span>
+                  </p>
                 </div>
-              ))}
+              ) : (
+                <div className="relative border-l-2 border-border ml-3 flex flex-col gap-6">
+                  {eventos.map((evento, idx) => (
+                    <div key={idx} className="relative pl-6">
+                      <span
+                        className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 border-bg ${
+                          idx === eventos.length - 1 ? 'bg-primary' : 'bg-text-soft'
+                        }`}
+                      />
+                      <p className="text-xs font-bold text-text">{evento.accion}</p>
+                      <p className="text-[10px] text-text-soft mb-1">
+                        {formatearFecha(evento.fecha)}
+                        {evento.autor ? ` · ${evento.autor}` : ''}
+                      </p>
+                      <p className="text-xs text-text-soft leading-relaxed">{evento.detalle}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {documentos.length > 0 && (
+                <div className="border-t border-border pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-soft mb-2">
+                    Evidencias adjuntas ({documentos.length})
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {documentos.map((doc) => (
+                      <div
+                        key={doc.id_documento}
+                        className="flex items-center gap-2 p-2 rounded-lg border border-border bg-bg-soft"
+                      >
+                        <MdInsertDriveFile size={16} className="text-primary shrink-0" />
+                        <p className="text-xs text-text flex-1 truncate">{doc.nombre_archivo}</p>
+                        <button
+                          onClick={() =>
+                            apiDownloadFile(
+                              `/mis-documentos/${doc.id_documento}/archivo`,
+                              doc.nombre_archivo
+                            )
+                          }
+                          className="p-1 rounded hover:bg-bg text-text-soft"
+                          title="Descargar"
+                        >
+                          <MdDownload size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

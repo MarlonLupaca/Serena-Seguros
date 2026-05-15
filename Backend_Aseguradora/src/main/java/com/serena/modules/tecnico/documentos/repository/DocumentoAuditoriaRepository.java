@@ -16,4 +16,8 @@ public interface DocumentoAuditoriaRepository
     List<DocumentoAuditoria> findByUsuarioCreadorAndTablaReferenciaOrderByFechaCargaDesc(
             Usuario usuario, String tabla
     );
+
+    List<DocumentoAuditoria> findByTablaReferenciaAndIdReferenciaOrderByFechaCargaDesc(
+            String tabla, Integer idReferencia
+    );
 }

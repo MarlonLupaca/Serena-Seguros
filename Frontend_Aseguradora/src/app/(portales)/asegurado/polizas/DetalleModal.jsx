@@ -11,6 +11,8 @@ import {
   MdPeople,
   MdPayment,
   MdDownload,
+  MdDescription,
+  MdInsertDriveFile,
 } from 'react-icons/md';
 import { apiGet, apiPost, apiDownloadFile } from '@/lib/api';
 import { ESTADO_STYLES, estiloTipo, formatearFecha, formatearMoneda } from './data';
@@ -157,6 +159,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                 { id: 'cobertura', label: 'Cobertura', icon: MdShield },
                 { id: 'beneficiarios', label: 'Beneficiarios', icon: MdPeople },
                 { id: 'pagos', label: 'Pagos', icon: MdPayment },
+                { id: 'documentos', label: 'Documentos', icon: MdDescription },
                 { id: 'historial', label: 'Endosos', icon: MdHistory },
               ].map((t) => {
                 const TIcon = t.icon;
@@ -271,6 +274,44 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                         ))}
                       </tbody>
                     </table>
+                  )}
+                </div>
+              )}
+
+              {tab === 'documentos' && (
+                <div className="flex flex-col gap-3">
+                  {!poliza.documentos || poliza.documentos.length === 0 ? (
+                    <p className="text-sm text-text-soft text-center py-4">
+                      No hay documentos adjuntos a esta póliza.
+                    </p>
+                  ) : (
+                    poliza.documentos.map((doc) => (
+                      <div
+                        key={doc.id_documento}
+                        className="p-3 rounded-xl border border-border bg-bg-soft flex items-center gap-3"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <MdInsertDriveFile size={18} className="text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-text truncate">{doc.nombre_archivo}</p>
+                          <p className="text-[11px] text-text-soft">
+                            DOC-{String(doc.id_documento).padStart(6, '0')} · {formatearFecha(doc.fecha_carga)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() =>
+                            apiDownloadFile(
+                              `/mis-documentos/${doc.id_documento}/archivo`,
+                              doc.nombre_archivo
+                            )
+                          }
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:bg-bg text-text-soft text-xs font-medium transition-colors"
+                        >
+                          <MdDownload size={12} /> Descargar
+                        </button>
+                      </div>
+                    ))
                   )}
                 </div>
               )}

@@ -14,6 +14,8 @@ import com.serena.modules.soporte.auditoria.repository.AuditoriaRepository;
 import com.serena.modules.soporte.auditoria.service.AuditoriaService;
 import com.serena.modules.soporte.notificaciones.entity.Notificacion;
 import com.serena.modules.soporte.notificaciones.service.NotificacionService;
+import com.serena.modules.tecnico.documentos.dto.DocumentoResponse;
+import com.serena.modules.tecnico.documentos.service.DocumentoService;
 import com.serena.modules.tecnico.siniestros.dto.AsignarAnalistaRequest;
 import com.serena.modules.tecnico.siniestros.dto.CambioEstadoSiniestroRequest;
 import com.serena.modules.tecnico.siniestros.dto.CrearSiniestroRequest;
@@ -44,6 +46,7 @@ public class SiniestroService {
     private final AuditoriaService auditoria;
     private final AuditoriaRepository auditoriaRepository;
     private final NotificacionService notificaciones;
+    private final DocumentoService documentoService;
 
     @Transactional(readOnly = true)
     public List<SiniestroResponse> misSiniestros(Usuario usuario) {
@@ -64,6 +67,8 @@ public class SiniestroService {
             throw new AccessDeniedException("El siniestro no pertenece al usuario");
         }
         List<EventoTimeline> timeline = construirTimeline(siniestro);
+        List<DocumentoResponse> documentos = documentoService
+                .listarPorReferencia("siniestro", siniestro.getIdSiniestro());
         return new SiniestroDetalleResponse(
                 siniestro.getIdSiniestro(),
                 siniestro.getPoliza().getIdPoliza(),
@@ -75,7 +80,8 @@ public class SiniestroService {
                 siniestro.getFechaReporte(),
                 siniestro.getEstadoResolucion().name(),
                 siniestro.getMontoReclamado(),
-                timeline
+                timeline,
+                documentos
         );
     }
 
@@ -112,6 +118,12 @@ public class SiniestroService {
     @Transactional(readOnly = true)
     public SiniestroAdminResponse obtenerAdmin(Integer id) {
         return SiniestroAdminResponse.from(buscar(id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<DocumentoResponse> documentosDelSiniestro(Integer id) {
+        buscar(id);
+        return documentoService.listarPorReferencia("siniestro", id);
     }
 
     @Transactional
