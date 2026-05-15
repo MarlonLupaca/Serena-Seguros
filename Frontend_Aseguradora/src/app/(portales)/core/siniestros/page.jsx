@@ -22,8 +22,10 @@ import {
   MdDeleteOutline,
   MdEngineering,
   MdSave,
+  MdDownload,
+  MdInsertDriveFile,
 } from 'react-icons/md';
-import { apiGet, apiPatch, apiPost, apiDelete } from '@/lib/api';
+import { apiGet, apiPatch, apiPost, apiDelete, apiDownloadFile } from '@/lib/api';
 
 const ESTADOS = {
   REPORTADO: { label: 'Reportado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
@@ -565,6 +567,21 @@ function ModalPerito({ siniestro, onClose, onSuccess }) {
   const [informe, setInforme] = useState(siniestro.informe_tecnico || '');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
+  const [documentos, setDocumentos] = useState([]);
+
+  useEffect(() => {
+    apiGet(`/siniestros/${siniestro.id_siniestro}/documentos`)
+      .then((data) => setDocumentos(data || []))
+      .catch(() => setDocumentos([]));
+  }, [siniestro.id_siniestro]);
+
+  const descargarDoc = async (doc) => {
+    try {
+      await apiDownloadFile(`/documentos/${doc.id_documento}/archivo`, doc.nombre_archivo);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo descargar');
+    }
+  };
 
   const enviar = async (e) => {
     e.preventDefault();
@@ -671,6 +688,33 @@ function ModalPerito({ siniestro, onClose, onSuccess }) {
               />
             </div>
           </div>
+
+          {documentos.length > 0 && (
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-soft mb-2">
+                Evidencias del cliente ({documentos.length})
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {documentos.map((doc) => (
+                  <div
+                    key={doc.id_documento}
+                    className="flex items-center gap-2 p-2 rounded-lg border border-border bg-bg-soft"
+                  >
+                    <MdInsertDriveFile size={14} className="text-primary shrink-0" />
+                    <p className="text-xs text-text flex-1 truncate">{doc.nombre_archivo}</p>
+                    <button
+                      type="button"
+                      onClick={() => descargarDoc(doc)}
+                      className="p-1 rounded hover:bg-bg text-text-soft"
+                      title="Descargar"
+                    >
+                      <MdDownload size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <p className="text-[11px] text-text-soft">
             Al guardar, el caso pasa automaticamente al estado <strong>INSPECCION</strong> si estaba en

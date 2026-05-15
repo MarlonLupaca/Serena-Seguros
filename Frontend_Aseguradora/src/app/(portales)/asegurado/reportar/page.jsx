@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { MdCheck, MdArrowForward, MdArrowBack, MdVerified } from 'react-icons/md';
-import { apiGet, apiPost } from '@/lib/api';
+import { apiGet, apiPost, apiUploadFile } from '@/lib/api';
 import { STEPS } from './data';
 import StepPoliza from './StepPoliza';
 import StepTipo from './StepTipo';
@@ -71,6 +71,20 @@ export default function ReportarSiniestro() {
       };
 
       const data = await apiPost('/mis-siniestros', payload);
+
+      if (files.length > 0 && data?.id_siniestro) {
+        for (const f of files) {
+          try {
+            const fd = new FormData();
+            fd.append('archivo', f);
+            fd.append('tabla_referencia', 'siniestro');
+            fd.append('id_referencia', String(data.id_siniestro));
+            await apiUploadFile('/mis-documentos', fd);
+          } catch (errFile) {
+            console.warn('No se pudo subir', f.name, errFile);
+          }
+        }
+      }
 
       setSiniestroCreado(data);
       setDone(true);

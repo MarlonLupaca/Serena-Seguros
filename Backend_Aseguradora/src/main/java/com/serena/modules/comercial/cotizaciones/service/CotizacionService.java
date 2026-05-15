@@ -2,6 +2,7 @@ package com.serena.modules.comercial.cotizaciones.service;
 
 import com.serena.modules.comercial.cotizaciones.dto.AsignarAgenteRequest;
 import com.serena.modules.comercial.cotizaciones.dto.CambioEstadoCotizacionRequest;
+import com.serena.modules.comercial.cotizaciones.dto.ContratacionResponse;
 import com.serena.modules.comercial.cotizaciones.dto.ContratarCotizacionRequest;
 import com.serena.modules.comercial.cotizaciones.dto.CotizacionResponse;
 import com.serena.modules.comercial.cotizaciones.dto.CrearCotizacionRequest;
@@ -124,7 +125,7 @@ public class CotizacionService {
     }
 
     @Transactional
-    public CotizacionResponse contratar(Usuario usuario, Integer idCotizacion, ContratarCotizacionRequest request) {
+    public ContratacionResponse contratar(Usuario usuario, Integer idCotizacion, ContratarCotizacionRequest request) {
         LeadCotizacion lead = cotizacionRepository.findById(idCotizacion)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cotizacion", idCotizacion));
 
@@ -144,10 +145,19 @@ public class CotizacionService {
                 .vigenciaInicio(LocalDate.now().plusDays(1))
                 .vigenciaFin(LocalDate.now().plusDays(1).plusYears(1))
                 .build();
-        polizaRepository.save(poliza);
+        Poliza polizaGuardada = polizaRepository.save(poliza);
 
         lead.setEstadoKanban(LeadCotizacion.EstadoKanban.GANADO);
-        return CotizacionResponse.from(cotizacionRepository.save(lead));
+        cotizacionRepository.save(lead);
+
+        return new ContratacionResponse(
+                lead.getIdCotizacion(),
+                polizaGuardada.getIdPoliza(),
+                polizaGuardada.getEstadoPoliza().name(),
+                polizaGuardada.getPrimaTotal(),
+                polizaGuardada.getVigenciaInicio(),
+                polizaGuardada.getVigenciaFin()
+        );
     }
 
     @Transactional(readOnly = true)

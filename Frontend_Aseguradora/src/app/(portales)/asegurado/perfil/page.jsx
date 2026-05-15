@@ -6,6 +6,7 @@ import ModalContrasena from './ModalContrasena';
 import SeccionDatosPersonales from './SeccionDatosPersonales';
 import SeccionContactoEmergencia from './SeccionContactoEmergencia';
 import SeccionBeneficiarios from './SeccionBeneficiarios';
+import SeccionDocumentos from './SeccionDocumentos';
 import SeccionPreferencias from './SeccionPreferencias';
 import SeccionSeguridad from './SeccionSeguridad';
 
@@ -45,6 +46,7 @@ export default function ModuloPerfil() {
           <SeccionDatosPersonales onGuardar={mostrarToast} />
           <SeccionContactoEmergencia onGuardar={mostrarToast} />
           <SeccionBeneficiarios onGuardar={mostrarToast} />
+          <SeccionDocumentos onGuardar={mostrarToast} />
           <SeccionPreferencias onGuardar={mostrarToast} />
           <SeccionSeguridad onAbrirContrasena={() => setModalContrasena(true)} />
         </div>

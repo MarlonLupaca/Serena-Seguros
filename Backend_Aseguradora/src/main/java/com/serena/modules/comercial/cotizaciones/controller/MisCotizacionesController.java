@@ -1,5 +1,6 @@
 package com.serena.modules.comercial.cotizaciones.controller;
 
+import com.serena.modules.comercial.cotizaciones.dto.ContratacionResponse;
 import com.serena.modules.comercial.cotizaciones.dto.ContratarCotizacionRequest;
 import com.serena.modules.comercial.cotizaciones.dto.CotizacionResponse;
 import com.serena.modules.comercial.cotizaciones.dto.CrearCotizacionRequest;
@@ -43,7 +44,7 @@ public class MisCotizacionesController {
     }
 
     @PostMapping("/{id}/contratar")
-    public ResponseEntity<CotizacionResponse> contratar(
+    public ResponseEntity<ContratacionResponse> contratar(
             @AuthenticationPrincipal Usuario usuario,
             @PathVariable Integer id,
             @Valid @RequestBody ContratarCotizacionRequest request

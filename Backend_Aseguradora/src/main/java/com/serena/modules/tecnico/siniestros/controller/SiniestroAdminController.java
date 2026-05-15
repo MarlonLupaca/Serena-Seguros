@@ -1,6 +1,7 @@
 package com.serena.modules.tecnico.siniestros.controller;
 
 import com.serena.modules.seguridad.auth.entity.Usuario;
+import com.serena.modules.tecnico.documentos.dto.DocumentoResponse;
 import com.serena.modules.tecnico.siniestros.dto.AsignarAnalistaRequest;
 import com.serena.modules.tecnico.siniestros.dto.CambioEstadoSiniestroRequest;
 import com.serena.modules.tecnico.siniestros.dto.PeritoObservacionRequest;
@@ -59,5 +60,10 @@ public class SiniestroAdminController {
             @AuthenticationPrincipal Usuario usuario
     ) {
         return ResponseEntity.ok(siniestroService.registrarObservacionPerito(id, request, usuario));
+    }
+
+    @GetMapping("/{id}/documentos")
+    public ResponseEntity<List<DocumentoResponse>> documentos(@PathVariable Integer id) {
+        return ResponseEntity.ok(siniestroService.documentosDelSiniestro(id));
     }
 }

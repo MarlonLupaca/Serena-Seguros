@@ -30,6 +30,14 @@ public class DocumentoService {
         return docs.stream().map(DocumentoResponse::from).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<DocumentoResponse> listarPorReferencia(String tabla, Integer idReferencia) {
+        return repository.findByTablaReferenciaAndIdReferenciaOrderByFechaCargaDesc(tabla, idReferencia)
+                .stream()
+                .map(DocumentoResponse::from)
+                .toList();
+    }
+
     @Transactional
     public DocumentoResponse subir(Usuario usuario,
                                    String tablaReferencia,
@@ -55,15 +63,14 @@ public class DocumentoService {
         if (!d.getUsuarioCreador().getIdUsuario().equals(usuario.getIdUsuario())) {
             throw new AccessDeniedException("El documento no pertenece al usuario");
         }
-        Resource resource = storage.leer(d.getRutaArchivo());
-        if (!resource.exists() || !resource.isReadable()) {
-            throw new RecursoNoEncontradoException("Archivo fisico", id);
-        }
-        String nombreOriginal = d.getRutaArchivo();
-        if (nombreOriginal.contains("_")) {
-            nombreOriginal = nombreOriginal.substring(nombreOriginal.indexOf('_') + 1);
-        }
-        return new DescargaArchivo(resource, nombreOriginal);
+        return abrirArchivo(d);
+    }
+
+    @Transactional(readOnly = true)
+    public DescargaArchivo descargarAdmin(Integer id) throws IOException {
+        DocumentoAuditoria d = repository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Documento", id));
+        return abrirArchivo(d);
     }
 
     @Transactional
@@ -74,6 +81,18 @@ public class DocumentoService {
             throw new AccessDeniedException("El documento no pertenece al usuario");
         }
         repository.delete(d);
+    }
+
+    private DescargaArchivo abrirArchivo(DocumentoAuditoria d) throws IOException {
+        Resource resource = storage.leer(d.getRutaArchivo());
+        if (!resource.exists() || !resource.isReadable()) {
+            throw new RecursoNoEncontradoException("Archivo fisico", d.getIdDocumento());
+        }
+        String nombreOriginal = d.getRutaArchivo();
+        if (nombreOriginal.contains("_")) {
+            nombreOriginal = nombreOriginal.substring(nombreOriginal.indexOf('_') + 1);
+        }
+        return new DescargaArchivo(resource, nombreOriginal);
     }
 
     public record DescargaArchivo(Resource resource, String nombreOriginal) {}

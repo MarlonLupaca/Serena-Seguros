@@ -22,6 +22,8 @@ import com.serena.modules.seguridad.clientes.entity.Cliente;
 import com.serena.modules.seguridad.clientes.repository.ClienteRepository;
 import com.serena.modules.seguridad.perfil.dto.BeneficiarioResponse;
 import com.serena.modules.seguridad.perfil.repository.BeneficiarioRepository;
+import com.serena.modules.tecnico.documentos.dto.DocumentoResponse;
+import com.serena.modules.tecnico.documentos.service.DocumentoService;
 import com.serena.shared.exception.RecursoNoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -42,6 +44,7 @@ public class PolizaService {
     private final ProductoSeguroRepository productoRepository;
     private final CuotaRepository cuotaRepository;
     private final BeneficiarioRepository beneficiarioRepository;
+    private final DocumentoService documentoService;
 
     @Transactional(readOnly = true)
     public List<PolizaResponse> misPolizas(Usuario usuario, Poliza.EstadoPoliza estado) {
@@ -183,6 +186,8 @@ public class PolizaService {
                 .stream()
                 .map(this::aCuotaMini)
                 .toList();
+        List<DocumentoResponse> documentos = documentoService
+                .listarPorReferencia("poliza", poliza.getIdPoliza());
         return new PolizaDetalleResponse(
                 poliza.getIdPoliza(),
                 poliza.getEstadoPoliza().name(),
@@ -193,7 +198,8 @@ public class PolizaService {
                 ProductoMini.from(poliza.getProducto()),
                 endosos,
                 beneficiarios,
-                pagos
+                pagos,
+                documentos
         );
     }
 

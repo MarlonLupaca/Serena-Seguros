@@ -1,8 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { MdClose, MdCheckCircle, MdArrowForward, MdArrowBack, MdUploadFile } from 'react-icons/md';
-import { apiPost } from '@/lib/api';
+import {
+  MdClose,
+  MdCheckCircle,
+  MdArrowForward,
+  MdArrowBack,
+  MdUploadFile,
+  MdAttachFile,
+  MdDeleteOutline,
+} from 'react-icons/md';
+import { apiPost, apiUploadFile } from '@/lib/api';
 import { estiloTipo, formatearMoneda } from './data';
 
 export default function ModalCotizar({ producto, onClose }) {
@@ -24,6 +32,7 @@ export default function ModalCotizar({ producto, onClose }) {
   const [cotizacionGuardada, setCotizacionGuardada] = useState(null);
   const [terminosAceptados, setTerminosAceptados] = useState(false);
   const [polizaGenerada, setPolizaGenerada] = useState(null);
+  const [documentos, setDocumentos] = useState([]);
 
   const tipoStyle = estiloTipo(producto.tipo_seguro);
   const Icon = tipoStyle.icon;
@@ -96,6 +105,21 @@ export default function ModalCotizar({ producto, onClose }) {
         acepta_terminos: true,
       });
       setPolizaGenerada(resp);
+
+      if (documentos.length > 0 && resp?.id_poliza) {
+        for (const f of documentos) {
+          try {
+            const fd = new FormData();
+            fd.append('archivo', f);
+            fd.append('tabla_referencia', 'poliza');
+            fd.append('id_referencia', String(resp.id_poliza));
+            await apiUploadFile('/mis-documentos', fd);
+          } catch (errFile) {
+            console.warn('No se pudo subir', f.name, errFile);
+          }
+        }
+      }
+
       setStep(4);
     } catch (e) {
       setError(e.mensaje || 'No se pudo contratar');
@@ -311,12 +335,48 @@ export default function ModalCotizar({ producto, onClose }) {
 
               <div>
                 <p className="text-sm font-bold text-text mb-2">Adjuntar documentos requeridos</p>
-                <div className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center gap-2 hover:bg-bg-soft transition-colors cursor-pointer">
-                  <MdUploadFile size={24} className="text-text-soft" />
-                  <p className="text-xs text-text-soft text-center">
-                    Sube tu DNI y documentos adicionales (PDF o JPG)
+                <label className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center gap-2 hover:bg-bg-soft transition-colors cursor-pointer">
+                  <MdUploadFile size={24} className="text-primary" />
+                  <p className="text-xs text-text font-medium">
+                    {documentos.length > 0 ? 'Agregar más archivos' : 'Sube tu DNI, recibo de servicios u otros'}
                   </p>
-                </div>
+                  <p className="text-[11px] text-text-soft text-center">PDF, JPG, PNG · Máx. 10 MB por archivo</p>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx"
+                    className="hidden"
+                    onChange={(e) => {
+                      const nuevos = Array.from(e.target.files || []).filter(
+                        (f) => f.size < 10 * 1024 * 1024
+                      );
+                      setDocumentos((prev) => [...prev, ...nuevos]);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+                {documentos.length > 0 && (
+                  <div className="mt-2 flex flex-col gap-1.5">
+                    {documentos.map((f, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-bg-soft"
+                      >
+                        <MdAttachFile size={14} className="text-primary shrink-0" />
+                        <p className="text-xs text-text flex-1 truncate">{f.name}</p>
+                        <p className="text-[11px] text-text-soft shrink-0">
+                          {(f.size / 1024).toFixed(0)} KB
+                        </p>
+                        <button
+                          onClick={() => setDocumentos((prev) => prev.filter((_, idx) => idx !== i))}
+                          className="p-1 rounded hover:bg-rose-100 text-text-soft hover:text-rose-500"
+                        >
+                          <MdDeleteOutline size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <label className="flex items-start gap-3 cursor-pointer mt-2">
