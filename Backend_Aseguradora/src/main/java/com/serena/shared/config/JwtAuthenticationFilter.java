@@ -33,6 +33,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+
+        String path = request.getRequestURI();
+
+        // 1. IGNORAR RUTAS PÚBLICAS (Swagger y Auth)
+        // Esto le dice al filtro que se haga a un lado y deje pasar la petición
+        if (path.startsWith("/v3/api-docs") ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/api/v1/auth")) {
+
+            filterChain.doFilter(request, response);
+            return; // Corta la ejecución de este filtro aquí mismo
+        }
+
+        // 2. LÓGICA NORMAL PARA RUTAS PROTEGIDAS
         String header = request.getHeader(HEADER_AUTH);
 
         if (header != null && header.startsWith(PREFIX_BEARER)) {
@@ -60,6 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
+        // Continúa la cadena para las rutas protegidas
         filterChain.doFilter(request, response);
     }
 }

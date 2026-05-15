@@ -26,35 +26,29 @@ import {
 const operativoMenu = [
   {
     section: 'Principal',
-    items: [{ label: 'Inicio', icon: MdHome, href: '/operativo' }],
+    items: [{ label: 'Inicio', icon: MdHome, href: '/finanzas' }],
   },
   {
     section: 'Recursos Humanos',
     items: [
-      { label: 'Empleados', icon: MdBadge, href: '/operativo/empleados' },
-      { label: 'Vacaciones y permisos', icon: MdEventAvailable, href: '/operativo/vacaciones' },
-      { label: 'Nómina', icon: MdPayments, href: '/operativo/nomina' },
-      { label: 'Evaluaciones', icon: MdAssessment, href: '/operativo/evaluaciones' },
+      { label: 'Empleados', icon: MdBadge, href: '/finanzas/empleados' },
+      { label: 'Nómina', icon: MdPayments, href: '/finanzas/nomina' },
     ],
   },
   {
     section: 'Logística',
     items: [
-      { label: 'Activos fijos', icon: MdDomain, href: '/operativo/activos' },
-      { label: 'Inventario', icon: MdInventory, href: '/operativo/inventario' },
-      { label: 'Compras', icon: MdShoppingCart, href: '/operativo/compras' },
-      { label: 'Flota vehicular', icon: MdDirectionsCar, href: '/operativo/flota' },
-      { label: 'Proveedores', icon: MdStorefront, href: '/operativo/proveedores' },
+      { label: 'Activos fijos', icon: MdDomain, href: '/finanzas/activos' },
+      { label: 'Compras', icon: MdShoppingCart, href: '/finanzas/compras' },
     ],
   },
   {
     section: 'Finanzas',
     items: [
-      { label: 'Cobranza', icon: MdPriceCheck, href: '/operativo/cobranza' },
-      { label: 'Facturación', icon: MdReceiptLong, href: '/operativo/facturacion' },
-      { label: 'Tesorería', icon: MdAccountBalanceWallet, href: '/operativo/tesoreria' },
-      { label: 'Contabilidad', icon: MdAccountBalance, href: '/operativo/contabilidad' },
-      { label: 'Presupuesto', icon: MdCalculate, href: '/operativo/presupuesto' },
+      { label: 'Cobranza', icon: MdPriceCheck, href: '/finanzas/cobranza' },
+      { label: 'Tesorería', icon: MdAccountBalanceWallet, href: '/finanzas/tesoreria' },
+      { label: 'Contabilidad', icon: MdAccountBalance, href: '/finanzas/contabilidad' },
+      { label: 'Presupuesto', icon: MdCalculate, href: '/finanzas/presupuesto' },
     ],
   },
 ];

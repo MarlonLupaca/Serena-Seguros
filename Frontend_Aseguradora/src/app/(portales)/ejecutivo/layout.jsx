@@ -29,27 +29,17 @@ const adminMenu = [
   },
 
   {
-    section: 'Desempeño Core',
-    items: [
-      { label: 'Producción', icon: MdTrendingUp, href: '/ejecutivo/produccion' },
-      { label: 'Comercial', icon: MdBusinessCenter, href: '/ejecutivo/comercial' },
-      { label: 'Siniestralidad', icon: MdQueryStats, href: '/ejecutivo/siniestralidad' },
-    ],
-  },
-  {
     section: 'Estrategia y Finanzas',
     items: [
-      { label: 'Financiero', icon: MdAccountBalance, href: '/ejecutivo/financiero' },
       { label: 'Objetivos', icon: MdTrackChanges, href: '/ejecutivo/objetivos' },
-      { label: 'Simulaciones', icon: MdInsights, href: '/ejecutivo/simulaciones' },
+      { label: 'Escenarios', icon: MdInsights, href: '/ejecutivo/escenarios' },
     ],
   },
   {
     section: 'Administración',
     items: [
-      { label: 'Informes', icon: MdAssessment, href: '/ejecutivo/informes' },
+      { label: 'Reportes', icon: MdAssessment, href: '/ejecutivo/reportes' },
       { label: 'Auditoria', icon: MdHistory, href: '/ejecutivo/auditoria' },
-      { label: 'Configuración', icon: MdSettings, href: '/ejecutivo/configuracion' },
     ],
   },
 ];

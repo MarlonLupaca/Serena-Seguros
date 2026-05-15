@@ -1,5 +1,5 @@
 import { MdWarning } from 'react-icons/md';
-import { TIPOS, estiloTipo, formatearMoneda } from './data';
+import { TIPOS, estiloTipo } from './data';
 
 export default function StepResumen({ data, polizas }) {
   const pol = (polizas || []).find((p) => p.id_poliza === data.poliza);
@@ -18,8 +18,6 @@ export default function StepResumen({ data, polizas }) {
       value: data.desc.length > 100 ? data.desc.slice(0, 100) + '…' : data.desc,
       muted: true,
     },
-    ...(data.personas ? [{ label: 'Involucrados', value: data.personas }] : []),
-    { label: 'Monto reclamado', value: formatearMoneda(data.monto) },
     {
       label: 'Archivos adjuntos',
       value: data.files.length ? `${data.files.length} archivo${data.files.length > 1 ? 's' : ''}` : 'Ninguno',
@@ -64,9 +62,7 @@ export default function StepResumen({ data, polizas }) {
         <MdWarning size={16} className="text-primary mt-0.5 shrink-0" />
         <div>
           <p className="text-xs font-semibold text-primary mb-0.5">¿Todo correcto?</p>
-          <p className="text-xs text-primary/80">
-            Una vez enviado, se generará tu número de caso. La hora y el lugar van incluidos en la descripción.
-          </p>
+          <p className="text-xs text-primary/80">Una vez enviado, se generará tu número de caso para seguimiento.</p>
         </div>
       </div>
     </div>

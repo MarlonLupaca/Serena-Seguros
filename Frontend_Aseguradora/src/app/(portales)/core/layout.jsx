@@ -16,30 +16,28 @@ import {
   MdHandshake,
   MdFolder,
   MdTune,
+  MdInbox,
+  MdMonetizationOn,
+  MdCategory,
 } from 'react-icons/md';
 
-// 1. Configuramos el menú específico para Operaciones / Seguross
 const segurosMenu = [
   {
     section: 'Principal',
     items: [
       { label: 'Inicio', icon: MdHome, href: '/core' },
-      { label: 'Clientes', icon: MdPeople, href: '/core/clientes' },
+      { label: 'Bandeja', icon: MdInbox, href: '/core/bandeja' },
     ],
   },
   {
     section: 'Pólizas',
-    items: [
-      { label: 'Emisiones', icon: MdAssignmentTurnedIn, href: '/core/emisiones' },
-      { label: 'Endosos', icon: MdEditDocument, href: '/core/endosos' },
-      { label: 'Renovaciones', icon: MdAutorenew, href: '/core/renovaciones' },
-    ],
+    items: [{ label: 'Emisiones', icon: MdAssignmentTurnedIn, href: '/core/emisiones' }],
   },
   {
     section: 'Siniestros',
     items: [
       { label: 'Siniestros', icon: MdWarning, href: '/core/siniestros' },
-      { label: 'Evaluaciones', icon: MdFactCheck, href: '/core/evaluaciones' },
+      { label: 'Validaciones', icon: MdFactCheck, href: '/core/validaciones' },
     ],
   },
   {
@@ -52,7 +50,7 @@ const segurosMenu = [
   },
   {
     section: 'Configuración',
-    items: [{ label: 'Productos y tarifas', icon: MdTune, href: '/core/productos' }],
+    items: [{ label: 'Tarifas', icon: MdMonetizationOn, href: '/core/tarifas' }],
   },
 ];
 

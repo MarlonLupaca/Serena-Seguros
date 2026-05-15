@@ -63,17 +63,17 @@ public class SiniestroService {
     @Transactional
     public SiniestroResponse reportar(Usuario usuario, CrearSiniestroRequest request) {
         Cliente cliente = clienteDelUsuario(usuario);
-        Poliza poliza = polizaRepository.findById(request.idPoliza())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Poliza", request.idPoliza()));
+        Poliza poliza = polizaRepository.findById(request.getIdPoliza())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Poliza", request.getIdPoliza()));
         if (!poliza.getCliente().getIdCliente().equals(cliente.getIdCliente())) {
             throw new AccessDeniedException("La poliza no pertenece al usuario");
         }
         Siniestro siniestro = Siniestro.builder()
                 .poliza(poliza)
-                .tipoIncidente(request.tipoIncidente())
-                .descripcion(request.descripcion())
-                .fechaOcurrencia(request.fechaOcurrencia())
-                .montoReclamado(request.montoReclamado())
+                .tipoIncidente(request.getTipoIncidente())
+                .descripcion(request.getDescripcion())
+                .fechaOcurrencia(request.getFechaOcurrencia())
+                .montoReclamado(request.getMontoReclamado())
                 .estadoResolucion(Siniestro.EstadoResolucion.REPORTADO)
                 .build();
         return SiniestroResponse.from(siniestroRepository.save(siniestro));

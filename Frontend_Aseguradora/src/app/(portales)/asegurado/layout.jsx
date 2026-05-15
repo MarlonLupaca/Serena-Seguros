@@ -12,9 +12,8 @@ const clientMenu = [
     section: 'Principal',
     items: [
       { label: 'Inicio', icon: MdHome, href: '/asegurado' },
-      { label: 'Cotizar seguros', icon: MdShield, href: '/asegurado/seguros' },
+      { label: 'Cotizar y contratar', icon: MdShield, href: '/asegurado/seguros' },
       { label: 'Mis pólizas', icon: MdDescription, href: '/asegurado/polizas' },
-      { label: 'Solicitar endoso', icon: MdPostAdd, href: '/asegurado/endeso' },
     ],
   },
   {
@@ -24,10 +23,6 @@ const clientMenu = [
   {
     section: 'Pagos',
     items: [{ label: 'Mis pagos', icon: MdPayment, href: '/asegurado/pagos' }],
-  },
-  {
-    section: 'Documentos',
-    items: [{ label: 'Mis documentos', icon: MdFolder, href: '/asegurado/documentos' }],
   },
   {
     section: 'Cuenta',

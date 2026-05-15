@@ -1,11 +1,4 @@
-import {
-  MdCalendarToday,
-  MdAccessTime,
-  MdLocationOn,
-  MdNotes,
-  MdPeople,
-  MdAttachMoney,
-} from 'react-icons/md';
+import { MdCalendarToday, MdAccessTime, MdLocationOn, MdNotes } from 'react-icons/md';
 
 export default function StepDetalle({ form, onChange, errors }) {
   return (
@@ -59,22 +52,6 @@ export default function StepDetalle({ form, onChange, errors }) {
 
       <div>
         <label className="flex items-center gap-1.5 text-xs text-text-soft mb-1.5">
-          <MdAttachMoney size={13} /> Monto reclamado *
-        </label>
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={form.monto}
-          onChange={(e) => onChange('monto', e.target.value)}
-          placeholder="Ej. 3500.00"
-          className={`w-full px-3 py-2 rounded-xl text-sm border outline-none bg-bg text-text transition-colors ${errors.monto ? 'border-rose-400' : 'border-border focus:border-primary'}`}
-        />
-        {errors.monto && <p className="text-xs text-rose-500 mt-1">{errors.monto}</p>}
-      </div>
-
-      <div>
-        <label className="flex items-center gap-1.5 text-xs text-text-soft mb-1.5">
           <MdNotes size={13} /> Descripción de lo ocurrido *
           <span className="text-text-soft/60 font-normal">(mín. 30 caracteres)</span>
         </label>
@@ -82,7 +59,7 @@ export default function StepDetalle({ form, onChange, errors }) {
           value={form.desc}
           onChange={(e) => onChange('desc', e.target.value)}
           maxLength={500}
-          rows={3}
+          rows={4}
           placeholder="Describe brevemente cómo ocurrió el siniestro..."
           className={`w-full px-3 py-2 rounded-xl text-sm border outline-none bg-bg text-text transition-colors resize-none ${errors.desc ? 'border-rose-400' : 'border-border focus:border-primary'}`}
         />
@@ -92,20 +69,6 @@ export default function StepDetalle({ form, onChange, errors }) {
             {form.desc.length}/500
           </p>
         </div>
-      </div>
-
-      <div>
-        <label className="flex items-center gap-1.5 text-xs text-text-soft mb-1.5">
-          <MdPeople size={13} /> Personas involucradas
-          <span className="text-text-soft/60 font-normal">(opcional)</span>
-        </label>
-        <input
-          type="text"
-          value={form.personas}
-          onChange={(e) => onChange('personas', e.target.value)}
-          placeholder="Nombres, relación o número de personas"
-          className="w-full px-3 py-2 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary transition-colors"
-        />
       </div>
     </div>
   );

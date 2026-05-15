@@ -10,7 +10,7 @@ import StepDetalle from './StepDetalle';
 import StepEvidencia from './StepEvidencia';
 import StepResumen from './StepResumen';
 import SuccessScreen from './SuccessScreen';
-import SeguimientoSiniestros from './seguimiento/SeguimientoSiniestros';
+import SeguimientoSiniestros from './SeguimientoSiniestros';
 
 export default function ReportarSiniestro() {
   const [polizas, setPolizas] = useState([]);
@@ -23,7 +23,8 @@ export default function ReportarSiniestro() {
   const [poliza, setPoliza] = useState(null);
   const [tipo, setTipo] = useState(null);
   const [files, setFiles] = useState([]);
-  const [form, setForm] = useState({ fecha: '', hora: '', lugar: '', desc: '', personas: '', monto: '' });
+
+  const [form, setForm] = useState({ fecha: '', hora: '', lugar: '', desc: '' });
   const [errors, setErrors] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [errorEnvio, setErrorEnvio] = useState('');
@@ -51,7 +52,7 @@ export default function ReportarSiniestro() {
     if (!form.hora) errs.hora = 'Ingresa la hora aproximada.';
     if (!form.lugar.trim()) errs.lugar = 'El lugar del incidente es requerido.';
     if (form.desc.trim().length < 30) errs.desc = 'Describe el evento con al menos 30 caracteres.';
-    if (!form.monto || Number(form.monto) <= 0) errs.monto = 'Ingresa un monto reclamado mayor a 0.';
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -60,18 +61,22 @@ export default function ReportarSiniestro() {
     setEnviando(true);
     setErrorEnvio('');
     try {
-      const data = await apiPost('/mis-siniestros', {
-        id_poliza: poliza,
-        tipo_incidente: tipo,
-        descripcion: `${form.desc}\nLugar: ${form.lugar}\nHora: ${form.hora}${form.personas ? `\nInvolucrados: ${form.personas}` : ''}`,
-        fecha_ocurrencia: form.fecha,
-        monto_reclamado: Number(form.monto),
-      });
+      // CORRECCIÓN EXACTA: Nombres de variables en camelCase tal cual lo pide el DTO de Spring Boot
+      const payload = {
+        idPoliza: poliza,
+        tipoIncidente: tipo,
+        descripcion: `${form.desc}\nLugar: ${form.lugar}\nHora: ${form.hora}`,
+        fechaOcurrencia: form.fecha,
+        montoReclamado: 0.01, // Se envía este valor por debajo para cumplir la validación @DecimalMin
+      };
+
+      const data = await apiPost('/mis-siniestros', payload);
+
       setSiniestroCreado(data);
       setDone(true);
       setReloadKey((k) => k + 1);
     } catch (e) {
-      setErrorEnvio(e.mensaje || 'No se pudo enviar el reporte');
+      setErrorEnvio(e.mensaje || 'No se pudo enviar el reporte revisa los datos.');
     } finally {
       setEnviando(false);
     }
@@ -79,6 +84,7 @@ export default function ReportarSiniestro() {
 
   const handleNext = () => {
     if (step === 3 && !validateStep3()) return;
+
     if (step < STEPS.length) {
       setStep((s) => s + 1);
     } else {
@@ -106,7 +112,7 @@ export default function ReportarSiniestro() {
     setPoliza(null);
     setTipo(null);
     setFiles([]);
-    setForm({ fecha: '', hora: '', lugar: '', desc: '', personas: '', monto: '' });
+    setForm({ fecha: '', hora: '', lugar: '', desc: '' });
     setErrorEnvio('');
   };
 
@@ -128,106 +134,100 @@ export default function ReportarSiniestro() {
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-transparent flex flex-col px-8">
-        <div className="py-5">
-          <p className="text-xl font-bold text-text leading-tight">Reportar siniestro</p>
-          <p className="text-sm text-text-soft mt-0.5">
-            Completa el formulario y recibirás un número de caso al instante.
-          </p>
-        </div>
+    <div className="min-h-screen bg-transparent flex flex-col px-8">
+      <div className="py-5">
+        <p className="text-xl font-bold text-text leading-tight">Reportar siniestro</p>
+        <p className="text-sm text-text-soft mt-0.5">
+          Completa el formulario y recibirás un número de caso al instante.
+        </p>
+      </div>
 
-        <div className="bg-bg border border-border rounded-2xl px-6 py-4 mb-6 flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-1.5 bg-bg-soft rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all duration-500"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-            <span className="text-xs font-semibold text-primary tabular-nums w-8 text-right">{pct}%</span>
+      <div className="bg-bg border border-border rounded-2xl px-6 py-4 mb-6 flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-1.5 bg-bg-soft rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
           </div>
-          <div className="flex items-center">
-            {STEPS.map((s, i) => (
-              <div key={s.id} className="flex items-center flex-1 last:flex-none">
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                      s.id < step
-                        ? 'bg-primary text-text-inverse'
-                        : s.id === step
-                          ? 'bg-primary text-text-inverse ring-2 ring-primary/25'
-                          : 'bg-bg-soft border border-border text-text-soft'
-                    }`}
-                  >
-                    {s.id < step ? <MdCheck size={13} /> : s.id}
-                  </div>
-                  <span
-                    className={`text-xs hidden sm:block ${s.id === step ? 'font-semibold text-primary' : 'text-text-soft'}`}
-                  >
-                    {s.label}
-                  </span>
+          <span className="text-xs font-semibold text-primary tabular-nums w-8 text-right">{pct}%</span>
+        </div>
+        <div className="flex items-center">
+          {STEPS.map((s, i) => (
+            <div key={s.id} className="flex items-center flex-1 last:flex-none">
+              <div className="flex items-center gap-1.5">
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    s.id < step
+                      ? 'bg-primary text-text-inverse'
+                      : s.id === step
+                        ? 'bg-primary text-text-inverse ring-2 ring-primary/25'
+                        : 'bg-bg-soft border border-border text-text-soft'
+                  }`}
+                >
+                  {s.id < step ? <MdCheck size={13} /> : s.id}
                 </div>
-                {i < STEPS.length - 1 && (
-                  <div className={`flex-1 h-px mx-2 transition-colors ${s.id < step ? 'bg-primary' : 'bg-border'}`} />
-                )}
+                <span
+                  className={`text-xs hidden sm:block ${s.id === step ? 'font-semibold text-primary' : 'text-text-soft'}`}
+                >
+                  {s.label}
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex-1 w-full flex flex-col gap-4 pb-8">
-          {errorEnvio && (
-            <div className="p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">
-              {errorEnvio}
+              {i < STEPS.length - 1 && (
+                <div className={`flex-1 h-px mx-2 transition-colors ${s.id < step ? 'bg-primary' : 'bg-border'}`} />
+              )}
             </div>
-          )}
-
-          {step === 1 && (
-            <StepPoliza
-              polizaId={poliza}
-              onChange={setPoliza}
-              polizas={polizas}
-              cargando={cargandoPolizas}
-              error={errorCarga}
-            />
-          )}
-          {step === 2 && <StepTipo tipoId={tipo} onChange={setTipo} />}
-          {step === 3 && <StepDetalle form={form} onChange={updateForm} errors={errors} />}
-          {step === 4 && (
-            <StepEvidencia
-              files={files}
-              onAdd={(f) => setFiles((prev) => [...prev, ...f])}
-              onRemove={(i) => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-            />
-          )}
-          {step === 5 && <StepResumen data={{ poliza, tipo, ...form, files }} polizas={polizas} />}
-
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={handleNext}
-              disabled={!canNext || enviando}
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {nextLabel}
-              {step < 5 && <MdArrowForward size={16} />}
-            </button>
-            {step > 1 && (
-              <button
-                onClick={() => {
-                  setErrors({});
-                  setStep((s) => s - 1);
-                }}
-                disabled={enviando}
-                className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl border border-border hover:bg-bg-soft text-sm font-medium text-text-soft transition-colors disabled:opacity-50"
-              >
-                <MdArrowBack size={15} /> Volver
-              </button>
-            )}
-          </div>
+          ))}
         </div>
       </div>
-      <SeguimientoSiniestros key={reloadKey} />
-    </>
+
+      <div className="flex-1 w-full flex flex-col gap-4 pb-8">
+        {errorEnvio && (
+          <div className="p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">
+            {errorEnvio}
+          </div>
+        )}
+
+        {step === 1 && (
+          <StepPoliza
+            polizaId={poliza}
+            onChange={setPoliza}
+            polizas={polizas}
+            cargando={cargandoPolizas}
+            error={errorCarga}
+          />
+        )}
+        {step === 2 && <StepTipo tipoId={tipo} onChange={setTipo} />}
+        {step === 3 && <StepDetalle form={form} onChange={updateForm} errors={errors} />}
+        {step === 4 && (
+          <StepEvidencia
+            files={files}
+            onAdd={(f) => setFiles((prev) => [...prev, ...f])}
+            onRemove={(i) => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
+          />
+        )}
+        {step === 5 && <StepResumen data={{ poliza, tipo, ...form, files }} polizas={polizas} />}
+
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={handleNext}
+            disabled={!canNext || enviando}
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {nextLabel}
+            {step < 5 && <MdArrowForward size={16} />}
+          </button>
+          {step > 1 && (
+            <button
+              onClick={() => {
+                setErrors({});
+                setStep((s) => s - 1);
+              }}
+              disabled={enviando}
+              className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl border border-border hover:bg-bg-soft text-sm font-medium text-text-soft transition-colors disabled:opacity-50"
+            >
+              <MdArrowBack size={15} /> Volver
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

@@ -9,7 +9,7 @@ export const PORTAL_TO_PATH = {
   ASEGURADO: '/asegurado',
   COMERCIAL: '/comercial',
   TECNICO: '/core',
-  OPERATIVO: '/operativo',
+  OPERATIVO: '/finanzas',
   EJECUTIVO: '/ejecutivo',
 };
 
