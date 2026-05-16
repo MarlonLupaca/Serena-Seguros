@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://serena-seguros.onrender.com/api/v1';
 
 const KEY_TOKEN = 'serena_access_token';
 const KEY_REFRESH = 'serena_refresh_token';
