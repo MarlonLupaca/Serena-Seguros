@@ -5,7 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +22,7 @@ import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
-@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -33,10 +35,18 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowedOrigins(List.of("http://localhost:3000"));
+        
+        // Configuramos para permitir localhost y cualquier dominio de producción (Vercel)
+        cors.setAllowedOriginPatterns(List.of(
+                "http://localhost:3000",
+                "https://*.vercel.app",
+                "*" // Permitir todo para la sustentación
+        ));
+        
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cors.setAllowedHeaders(List.of("*"));
         cors.setAllowCredentials(true);
+        cors.setExposedHeaders(List.of("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cors);
@@ -54,12 +64,11 @@ public class SecurityConfig {
         };
     }
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm ->
                         sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -83,7 +92,7 @@ public class SecurityConfig {
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 );
+
         return http.build();
     }
-
 }
