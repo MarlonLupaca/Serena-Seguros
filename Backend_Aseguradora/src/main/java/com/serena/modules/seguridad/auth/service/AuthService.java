@@ -22,6 +22,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+// ✅ IMPORTANTE: NUEVOS IMPORTS
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -75,8 +79,20 @@ public class AuthService {
         String refreshToken = jwtTokenProvider
                 .generarRefreshToken(usuario.getIdUsuario());
 
-        auditoria.registrar(usuario.getIdUsuario(), usuario.getUsername(),
-                "registro", "auth", "Portal: " + request.portalAcceso());
+        // 🔥 CORRECCIÓN CLAVE:
+        // Ejecutar auditoría DESPUÉS del commit para evitar locks
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                auditoria.registrar(
+                        usuario.getIdUsuario(),
+                        usuario.getUsername(),
+                        "registro",
+                        "auth",
+                        "Portal: " + request.portalAcceso()
+                );
+            }
+        });
 
         return usuarioMapper.toAuthResponse(
                 usuario, persona, accessToken, refreshToken

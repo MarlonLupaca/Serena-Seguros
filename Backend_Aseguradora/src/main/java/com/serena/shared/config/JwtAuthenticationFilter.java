@@ -29,30 +29,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final UsuarioRepository usuarioRepository;
 
+    /**
+     * Define qué rutas NO deben ser procesadas por este filtro.
+     * Al usar getServletPath(), evitamos problemas con el context-path.
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        return path.startsWith("/api/v1/auth/") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/swagger-ui");
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String path = request.getRequestURI();
-
-        // 1. IGNORAR RUTAS PÚBLICAS (Swagger y Auth)
-        // Esto le dice al filtro que se haga a un lado y deje pasar la petición
-        if (path.startsWith("/v3/api-docs") ||
-                path.startsWith("/swagger-ui") ||
-                path.startsWith("/api/v1/auth")) {
-
-            filterChain.doFilter(request, response);
-            return; // Corta la ejecución de este filtro aquí mismo
-        }
-
-        // 2. LÓGICA NORMAL PARA RUTAS PROTEGIDAS
         String header = request.getHeader(HEADER_AUTH);
 
         if (header != null && header.startsWith(PREFIX_BEARER)) {
             String token = header.substring(PREFIX_BEARER.length());
             try {
                 Claims claims = jwtTokenProvider.validarToken(token);
+                // Asumiendo que el subject es el ID del usuario
                 Integer userId = Integer.parseInt(claims.getSubject());
 
                 usuarioRepository.findById(userId).ifPresent(usuario -> {
@@ -60,21 +60,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         var authority = new SimpleGrantedAuthority(
                                 "ROLE_" + usuario.getPortalAcceso().name()
                         );
+
                         var auth = new UsernamePasswordAuthenticationToken(
                                 usuario, null, List.of(authority)
                         );
+
                         auth.setDetails(
                                 new WebAuthenticationDetailsSource().buildDetails(request)
                         );
+
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     }
                 });
             } catch (JwtException | NumberFormatException e) {
+                // Si el token es inválido o el ID no es numérico, limpiamos el contexto
                 SecurityContextHolder.clearContext();
             }
         }
 
-        // Continúa la cadena para las rutas protegidas
+        // Continuar con la cadena de filtros
         filterChain.doFilter(request, response);
     }
 }
