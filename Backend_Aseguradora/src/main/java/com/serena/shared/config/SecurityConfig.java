@@ -35,14 +35,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cors = new CorsConfiguration();
-        
-        // Configuramos para permitir localhost y cualquier dominio de producción (Vercel)
         cors.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
                 "https://*.vercel.app",
-                "*" // Permitir todo para la sustentación
+                "*"
         ));
-        
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cors.setAllowedHeaders(List.of("*"));
         cors.setAllowCredentials(true);
@@ -59,7 +56,7 @@ public class SecurityConfig {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write(
-                    "{\"mensaje\":\"No autenticado\",\"status\":401}"
+                    "{\"mensaje\":\"No autenticado o token inválido\",\"status\":401}"
             );
         };
     }
@@ -74,16 +71,12 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v1/auth/login",
-                                "/api/v1/auth/registro",
-                                // --- RUTAS DE SWAGGER PERMITIDAS ---
-                                "/v3/api-docs",
+                                "/api/v1/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
-                                // -----------------------------------
                         ).permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated()   // Todo lo demás requiere JWT
                 )
                 .exceptionHandling(eh ->
                         eh.authenticationEntryPoint(authenticationEntryPoint())
