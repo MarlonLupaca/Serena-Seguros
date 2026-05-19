@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   MdClose,
   MdCheckCircle,
@@ -9,104 +9,192 @@ import {
   MdUploadFile,
   MdAttachFile,
   MdDeleteOutline,
+  MdAdd,
+  MdLock,
 } from 'react-icons/md';
-import { apiPost, apiUploadFile } from '@/lib/api';
+import { apiGet, apiPost, apiUploadFile } from '@/lib/api';
+import FormularioRiesgo from '@/components/riesgo/FormularioRiesgo';
+import { valoresIniciales, validarCampos } from '@/lib/riesgo/camposPorTipo';
 import { estiloTipo, formatearMoneda } from './data';
 
-export default function ModalCotizar({ producto, onClose }) {
-  const [step, setStep] = useState(1);
-  const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState('');
+const PASOS = [
+  'Datos del riesgo',
+  'Cotizacion preliminar',
+  'Propuesta formal',
+  'Beneficiarios',
+  'Documentos y declaracion',
+  'Pago 1.ra cuota',
+  'Confirmacion',
+];
 
-  const [formData, setFormData] = useState({
-    edad: '',
-    direccion: '',
-    monto_asegurado: '',
-    vehiculo_modelo: '',
-    cobertura_deseada: 'estandar',
-    beneficiarios: '1',
-  });
-
-  const [planes, setPlanes] = useState([]);
-  const [planSeleccionado, setPlanSeleccionado] = useState(null);
-  const [cotizacionGuardada, setCotizacionGuardada] = useState(null);
-  const [terminosAceptados, setTerminosAceptados] = useState(false);
-  const [polizaGenerada, setPolizaGenerada] = useState(null);
-  const [documentos, setDocumentos] = useState([]);
-
+export default function ModalCotizar({ producto, onClose, prefill }) {
   const tipoStyle = estiloTipo(producto.tipo_seguro);
   const Icon = tipoStyle.icon;
 
-  const handleSimular = async () => {
-    if (!formData.edad || (producto.tipo_seguro === 'VEHICULAR' && !formData.vehiculo_modelo)) {
-      setError('Por favor, completa los datos obligatorios.');
+  const [paso, setPaso] = useState(1);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState('');
+
+  const [datosRiesgo, setDatosRiesgo] = useState(() => ({
+    ...valoresIniciales(producto.tipo_seguro),
+    ...(prefill?.datosRiesgo || {}),
+  }));
+  const [sumaAsegurada, setSumaAsegurada] = useState(
+    prefill?.sumaAsegurada ? String(prefill.sumaAsegurada) : ''
+  );
+
+  const [cotizacion, setCotizacion] = useState(prefill?.cotizacion || null);
+  const [evaluacion, setEvaluacion] = useState(null);
+  const [propuesta, setPropuesta] = useState(null);
+
+  const [beneficiariosCatalogo, setBeneficiariosCatalogo] = useState([]);
+  const [beneficiarios, setBeneficiarios] = useState([
+    { id_beneficiario: null, nombres: '', apellidos: '', parentesco: '', documento_identidad: '', porcentaje: 100 },
+  ]);
+
+  const [documentos, setDocumentos] = useState([]);
+  const [terminos, setTerminos] = useState(false);
+  const [declaracion, setDeclaracion] = useState(false);
+
+  const [polizaEmitida, setPolizaEmitida] = useState(null);
+  const [cuotaPrincipal, setCuotaPrincipal] = useState(null);
+  const [pagoConfirmado, setPagoConfirmado] = useState(false);
+
+  useEffect(() => {
+    apiGet('/perfil/beneficiarios')
+      .then((res) => setBeneficiariosCatalogo(res || []))
+      .catch(() => setBeneficiariosCatalogo([]));
+  }, []);
+
+  const sumaPorcentaje = useMemo(
+    () => beneficiarios.reduce((acc, b) => acc + Number(b.porcentaje || 0), 0),
+    [beneficiarios]
+  );
+
+  // ----- Step 1: Datos del riesgo y avance a cotizacion preliminar -----
+  const irACotizacionPreliminar = async () => {
+    const faltantes = validarCampos(producto.tipo_seguro, datosRiesgo);
+    if (faltantes.length) {
+      setError('Completa los campos obligatorios: ' + faltantes.join(', '));
+      return;
+    }
+    if (!sumaAsegurada || Number(sumaAsegurada) <= 0) {
+      setError('Indica una suma asegurada valida');
       return;
     }
     setCargando(true);
     setError('');
     try {
-      const resp = await apiPost('/cotizar/simular', {
-        producto_interes: producto.tipo_seguro,
-        edad: Number(formData.edad),
-        monto_asegurado: formData.monto_asegurado ? Number(formData.monto_asegurado) : null,
-        ubicacion: formData.direccion || null,
-      });
-      setPlanes(resp.planes || []);
-      setStep(2);
-    } catch (e) {
-      setError(e.mensaje || 'No se pudo simular');
-    } finally {
-      setCargando(false);
-    }
-  };
-
-  const handleGuardarCotizacion = async () => {
-    if (!planSeleccionado) return;
-    setCargando(true);
-    setError('');
-    try {
-      const resp = await apiPost('/mis-cotizaciones/guardar', {
-        producto_interes: producto.tipo_seguro,
-        id_producto: producto.id_producto,
-        prima_estimada: planSeleccionado.prima_mensual,
-        nivel_plan: planSeleccionado.nivel,
-      });
-      setCotizacionGuardada(resp);
-      alert(`Cotizacion guardada (ID ${resp.id_cotizacion}). Puedes contratarla mas adelante.`);
-      onClose();
-    } catch (e) {
-      setError(e.mensaje || 'No se pudo guardar la cotizacion');
-    } finally {
-      setCargando(false);
-    }
-  };
-
-  const handleContratar = async () => {
-    if (!terminosAceptados) {
-      setError('Debes aceptar los terminos y condiciones.');
-      return;
-    }
-    if (!planSeleccionado) return;
-    setCargando(true);
-    setError('');
-    try {
-      let cot = cotizacionGuardada;
-      if (!cot) {
-        cot = await apiPost('/mis-cotizaciones/guardar', {
+      let lead = cotizacion;
+      if (!lead) {
+        lead = await apiPost('/mis-cotizaciones', {
           producto_interes: producto.tipo_seguro,
           id_producto: producto.id_producto,
-          prima_estimada: planSeleccionado.prima_mensual,
-          nivel_plan: planSeleccionado.nivel,
         });
-        setCotizacionGuardada(cot);
+        setCotizacion(lead);
       }
-      const resp = await apiPost(`/mis-cotizaciones/${cot.id_cotizacion}/contratar`, {
-        id_producto: producto.id_producto,
-        acepta_terminos: true,
+      const evalResp = await apiPost(`/mis-cotizaciones/${lead.id_cotizacion}/evaluacion`, {
+        datos_riesgo: datosRiesgo,
+        suma_asegurada: Number(sumaAsegurada),
       });
-      setPolizaGenerada(resp);
+      setEvaluacion(evalResp);
+      setPaso(2);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo registrar la evaluacion');
+    } finally {
+      setCargando(false);
+    }
+  };
 
-      if (documentos.length > 0 && resp?.id_poliza) {
+  // ----- Step 2: solicitar propuesta formal -----
+  const generarPropuesta = async (frecuencia = 'MENSUAL') => {
+    if (!cotizacion) return;
+    setCargando(true);
+    setError('');
+    try {
+      const resp = await apiPost(`/mis-cotizaciones/${cotizacion.id_cotizacion}/propuesta`, {
+        suma_asegurada: Number(sumaAsegurada),
+        deducible: 250,
+        frecuencia_pago: frecuencia,
+        vigencia_meses: 12,
+      });
+      setPropuesta(resp);
+      setPaso(3);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo generar la propuesta');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  // ----- Step 4: beneficiarios -----
+  const agregarBeneficiario = () =>
+    setBeneficiarios((prev) => [
+      ...prev,
+      { id_beneficiario: null, nombres: '', apellidos: '', parentesco: '', documento_identidad: '', porcentaje: 0 },
+    ]);
+  const eliminarBeneficiario = (idx) =>
+    setBeneficiarios((prev) => prev.filter((_, i) => i !== idx));
+  const cambiarBeneficiario = (idx, campo, valor) =>
+    setBeneficiarios((prev) => prev.map((b, i) => (i === idx ? { ...b, [campo]: valor } : b)));
+
+  const importarDesdeCatalogo = (idx, idBeneficiarioStr) => {
+    const idBeneficiario = idBeneficiarioStr ? Number(idBeneficiarioStr) : null;
+    const fuente = beneficiariosCatalogo.find((c) => c.id_beneficiario === idBeneficiario);
+    if (!fuente) {
+      cambiarBeneficiario(idx, 'id_beneficiario', null);
+      return;
+    }
+    setBeneficiarios((prev) =>
+      prev.map((b, i) =>
+        i === idx
+          ? {
+              id_beneficiario: fuente.id_beneficiario,
+              nombres: fuente.nombres,
+              apellidos: fuente.apellidos,
+              parentesco: fuente.parentesco,
+              documento_identidad: fuente.documento_identidad || '',
+              porcentaje: b.porcentaje || 100,
+            }
+          : b
+      )
+    );
+  };
+
+  // ----- Step 5: aceptar propuesta (emite poliza PENDIENTE) -----
+  const aceptarPropuesta = async () => {
+    if (!terminos || !declaracion) {
+      setError('Debes aceptar terminos y declarar veracidad.');
+      return;
+    }
+    if (!propuesta || !cotizacion) return;
+    setCargando(true);
+    setError('');
+    try {
+      const resp = await apiPost(`/mis-cotizaciones/${cotizacion.id_cotizacion}/aceptar`, {
+        acepta_terminos: terminos,
+        declaracion_veraz: declaracion,
+      });
+      setPolizaEmitida(resp);
+
+      // designar beneficiarios
+      try {
+        await apiPost(`/mis-polizas/${resp.id_poliza}/beneficiarios`, {
+          beneficiarios: beneficiarios.map((b) => ({
+            id_beneficiario: b.id_beneficiario || null,
+            nombres: b.nombres,
+            apellidos: b.apellidos,
+            parentesco: b.parentesco,
+            documento_identidad: b.documento_identidad || null,
+            porcentaje: Number(b.porcentaje),
+          })),
+        });
+      } catch (eBen) {
+        console.warn('No se pudieron designar beneficiarios', eBen);
+      }
+
+      // subir documentos
+      if (documentos.length > 0) {
         for (const f of documentos) {
           try {
             const fd = new FormData();
@@ -114,15 +202,41 @@ export default function ModalCotizar({ producto, onClose }) {
             fd.append('tabla_referencia', 'poliza');
             fd.append('id_referencia', String(resp.id_poliza));
             await apiUploadFile('/mis-documentos', fd);
-          } catch (errFile) {
-            console.warn('No se pudo subir', f.name, errFile);
+          } catch (eFile) {
+            console.warn('No se pudo subir', f.name, eFile);
           }
         }
       }
 
-      setStep(4);
+      // localizar la primera cuota
+      try {
+        const cuotas = await apiGet('/mis-cuotas?estado=PENDIENTE');
+        const primera = (cuotas || [])
+          .filter((c) => c.id_poliza === resp.id_poliza)
+          .sort((a, b) => a.numero_cuota - b.numero_cuota)[0];
+        setCuotaPrincipal(primera);
+      } catch (eCuotas) {
+        console.warn('No se pudo cargar las cuotas', eCuotas);
+      }
+      setPaso(6);
     } catch (e) {
-      setError(e.mensaje || 'No se pudo contratar');
+      setError(e.mensaje || 'No se pudo emitir la poliza');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  // ----- Step 6: pagar primera cuota -----
+  const pagarPrimeraCuota = async () => {
+    if (!cuotaPrincipal) return;
+    setCargando(true);
+    setError('');
+    try {
+      await apiPost(`/mis-cuotas/${cuotaPrincipal.id_cuota}/pagar`);
+      setPagoConfirmado(true);
+      setPaso(7);
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo procesar el pago');
     } finally {
       setCargando(false);
     }
@@ -130,19 +244,16 @@ export default function ModalCotizar({ producto, onClose }) {
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl bg-bg rounded-2xl border border-border overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-3xl bg-bg rounded-2xl border border-border overflow-hidden flex flex-col max-h-[92vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
-            {step > 1 && step < 4 && (
-              <button onClick={() => setStep(step - 1)} className="text-text-soft hover:text-text">
+            {paso > 1 && paso < 7 && (
+              <button onClick={() => setPaso(paso - 1)} className="text-text-soft hover:text-text">
                 <MdArrowBack size={20} />
               </button>
             )}
             <p className="text-sm font-bold text-text">
-              {step === 1 && 'Paso 1: Datos para cotizar'}
-              {step === 2 && 'Paso 2: Compara planes'}
-              {step === 3 && 'Paso 3: Contratacion'}
-              {step === 4 && '¡Poliza activa!'}
+              Paso {paso}: {PASOS[paso - 1]}
             </p>
           </div>
           <button
@@ -161,186 +272,237 @@ export default function ModalCotizar({ producto, onClose }) {
             </div>
           )}
 
-          {step === 1 && (
+          <div className="flex items-center gap-3 bg-bg-soft rounded-xl p-3 mb-4">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tipoStyle.accentBg}`}>
+              <Icon size={20} className={tipoStyle.accentText} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-text">{producto.nombre}</p>
+              <p className="text-xs text-text-soft">{producto.tipo_seguro}</p>
+            </div>
+          </div>
+
+          {paso === 1 && (
             <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 bg-bg-soft rounded-xl p-3 mb-2">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tipoStyle.accentBg}`}>
-                  <Icon size={20} className={tipoStyle.accentText} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-text">{producto.nombre}</p>
-                  <p className="text-xs text-text-soft">{producto.tipo_seguro}</p>
-                </div>
+              <FormularioRiesgo
+                tipoSeguro={producto.tipo_seguro}
+                valores={datosRiesgo}
+                onChange={setDatosRiesgo}
+              />
+              <div>
+                <label className="text-xs font-medium text-text-soft block mb-1.5">
+                  Suma asegurada deseada (S/) *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={sumaAsegurada}
+                  onChange={(e) => setSumaAsegurada(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
+                  placeholder="Ej: 50000"
+                />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-text-soft block mb-1.5">Edad del asegurado *</label>
-                  <input
-                    type="number"
-                    value={formData.edad}
-                    onChange={(e) => setFormData({ ...formData, edad: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
-                    placeholder="Ej: 30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-text-soft block mb-1.5">Direccion / Distrito</label>
-                  <input
-                    type="text"
-                    value={formData.direccion}
-                    onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
-                    placeholder="Distrito de residencia"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-text-soft block mb-1.5">Monto asegurado (S/)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.monto_asegurado}
-                    onChange={(e) => setFormData({ ...formData, monto_asegurado: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
-                    placeholder="Ej: 50000"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-text-soft block mb-1.5">Cobertura deseada</label>
-                  <select
-                    value={formData.cobertura_deseada}
-                    onChange={(e) => setFormData({ ...formData, cobertura_deseada: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
-                  >
-                    <option value="basica">Basica / Esencial</option>
-                    <option value="estandar">Cobertura estandar</option>
-                    <option value="completa">Todo riesgo</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-text-soft block mb-1.5">N° beneficiarios</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.beneficiarios}
-                    onChange={(e) => setFormData({ ...formData, beneficiarios: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
-                  />
-                </div>
-
-                {producto.tipo_seguro === 'VEHICULAR' && (
-                  <div className="col-span-2">
-                    <label className="text-xs font-medium text-text-soft block mb-1.5">Modelo del vehiculo *</label>
-                    <input
-                      type="text"
-                      value={formData.vehiculo_modelo}
-                      onChange={(e) => setFormData({ ...formData, vehiculo_modelo: e.target.value })}
-                      className="w-full px-3 py-2.5 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
-                      placeholder="Ej: Toyota Yaris 2023"
-                    />
-                  </div>
-                )}
-              </div>
-
               <button
-                onClick={handleSimular}
+                onClick={irACotizacionPreliminar}
                 disabled={cargando}
-                className="mt-4 w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-sm font-semibold transition-colors"
+                className="mt-2 w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-sm font-semibold transition-colors"
               >
-                {cargando ? 'Calculando planes...' : 'Ver precios y planes'} <MdArrowForward size={16} />
+                {cargando ? 'Evaluando riesgo...' : 'Calcular cotizacion preliminar'} <MdArrowForward size={16} />
               </button>
             </div>
           )}
 
-          {step === 2 && (
+          {paso === 2 && (
             <div className="flex flex-col gap-4">
-              <p className="text-sm text-text-soft mb-2">Selecciona el plan que mejor se adapte a ti:</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {planes.map((plan) => (
-                  <div
-                    key={plan.nivel}
-                    onClick={() => setPlanSeleccionado(plan)}
-                    className={`border rounded-2xl p-4 cursor-pointer transition-all ${
-                      planSeleccionado?.nivel === plan.nivel
-                        ? 'border-primary bg-primary/5 shadow-sm'
-                        : 'border-border hover:border-text-soft bg-bg'
-                    }`}
-                  >
-                    <p className="text-sm font-bold text-text">{plan.nombre}</p>
-                    <p className="text-xl font-black text-text mt-2">
-                      {formatearMoneda(plan.prima_mensual)}{' '}
-                      <span className="text-xs font-normal text-text-soft">/mes</span>
-                    </p>
-
-                    <div className="mt-4 pt-4 border-t border-border flex flex-col gap-2">
-                      <p className="text-xs text-text-soft">
-                        <span className="font-semibold text-text">Cobertura:</span>{' '}
-                        {formatearMoneda(plan.cobertura)}
-                      </p>
-                      <p className="text-xs text-text-soft">
-                        <span className="font-semibold text-text">Deducible:</span>{' '}
-                        {formatearMoneda(plan.deducible)}
-                      </p>
-                      <p className="text-xs text-text-soft">
-                        <span className="font-semibold text-text">Prima anual:</span>{' '}
-                        {formatearMoneda(plan.prima_anual)}
-                      </p>
-                      <ul className="mt-2 flex flex-col gap-1">
-                        {plan.beneficios.map((b, i) => (
-                          <li key={i} className="text-[11px] text-text-soft flex items-start gap-1">
-                            <MdCheckCircle size={12} className="text-emerald-500 shrink-0 mt-0.5" /> {b}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                ))}
+              <div className="bg-bg-soft rounded-xl p-4 border border-border">
+                <p className="text-xs text-text-soft mb-1">Factor de riesgo aplicado</p>
+                <p className="text-2xl font-bold text-text">
+                  x {evaluacion?.factor_riesgo}
+                </p>
+                <p className="text-xs text-text-soft mt-1">
+                  Calculado a partir de los datos del riesgo declarados.
+                </p>
               </div>
-
-              <div className="flex flex-col gap-2 mt-2">
-                <button
-                  onClick={() => setStep(3)}
-                  disabled={!planSeleccionado}
-                  className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-sm font-semibold transition-colors"
-                >
-                  Continuar con {planSeleccionado ? planSeleccionado.nombre : 'el plan'}
-                </button>
-
-                <button
-                  onClick={handleGuardarCotizacion}
-                  disabled={!planSeleccionado || cargando}
-                  className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl border border-border hover:bg-bg-soft disabled:opacity-50 text-text text-sm font-semibold transition-colors"
-                >
-                  Guardar cotizacion para despues
-                </button>
+              <p className="text-sm text-text-soft">
+                Selecciona la frecuencia de pago para generar la propuesta formal:
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {['MENSUAL', 'TRIMESTRAL', 'ANUAL', 'UNICO'].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => generarPropuesta(f)}
+                    disabled={cargando}
+                    className="px-3 py-3 rounded-xl border border-border hover:border-primary hover:bg-primary/5 text-sm font-semibold text-text transition-colors disabled:opacity-50"
+                  >
+                    {f}
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
-          {step === 3 && planSeleccionado && (
-            <div className="flex flex-col gap-5">
-              <div className="bg-bg-soft rounded-xl p-4 border border-border">
-                <p className="text-xs text-text-soft">Estas a punto de contratar:</p>
-                <div className="flex justify-between items-end mt-1">
-                  <p className="text-base font-bold text-text">
-                    {producto.nombre} · {planSeleccionado.nombre}
-                  </p>
-                  <p className="text-lg font-bold text-text">
-                    {formatearMoneda(planSeleccionado.prima_mensual)}{' '}
-                    <span className="text-xs font-normal text-text-soft">/mes</span>
-                  </p>
-                </div>
+          {paso === 3 && propuesta && (
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-3">
+                <Resumen label="Prima calculada" valor={formatearMoneda(propuesta.prima_calculada)} />
+                <Resumen label="Suma asegurada" valor={formatearMoneda(propuesta.suma_asegurada)} />
+                <Resumen label="Deducible" valor={formatearMoneda(propuesta.deducible)} />
+                <Resumen
+                  label="Pagos"
+                  valor={`${propuesta.numero_cuotas} ${propuesta.frecuencia_pago.toLowerCase()}`}
+                />
+                <Resumen label="Vigencia" valor={`${propuesta.vigencia_meses} meses`} />
+                <Resumen label="Oferta valida hasta" valor={propuesta.valida_hasta} />
               </div>
 
               <div>
-                <p className="text-sm font-bold text-text mb-2">Adjuntar documentos requeridos</p>
+                <p className="text-sm font-bold text-text mb-2">Coberturas</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-left border-b border-border">
+                        <th className="py-2 font-semibold text-text">Cobertura</th>
+                        <th className="py-2 font-semibold text-text">Descripcion</th>
+                        <th className="py-2 font-semibold text-text text-right">Limite</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {propuesta.coberturas.map((c, i) => (
+                        <tr key={i} className="border-b border-border/50">
+                          <td className="py-2 font-medium text-text">{c.nombre}</td>
+                          <td className="py-2 text-text-soft">{c.descripcion}</td>
+                          <td className="py-2 text-text text-right">
+                            {c.limite ? formatearMoneda(c.limite) : 'Incluido'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {propuesta.exclusiones_texto && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+                  <p className="font-semibold mb-1">Exclusiones</p>
+                  <p>{propuesta.exclusiones_texto}</p>
+                </div>
+              )}
+
+              <button
+                onClick={() => setPaso(4)}
+                className="mt-2 w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-sm font-semibold transition-colors"
+              >
+                Acepto avanzar con esta propuesta <MdArrowForward size={16} />
+              </button>
+            </div>
+          )}
+
+          {paso === 4 && (
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-text-soft">
+                Designa los beneficiarios de esta poliza. La suma de porcentajes debe ser exactamente 100%.
+              </p>
+              {beneficiarios.map((b, idx) => (
+                <div key={idx} className="border border-border rounded-xl p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {beneficiariosCatalogo.length > 0 && (
+                    <div className="md:col-span-2">
+                      <label className="text-xs font-medium text-text-soft block mb-1.5">
+                        Importar desde mi perfil
+                      </label>
+                      <select
+                        value={b.id_beneficiario || ''}
+                        onChange={(e) => importarDesdeCatalogo(idx, e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
+                      >
+                        <option value="">Crear uno nuevo</option>
+                        {beneficiariosCatalogo.map((c) => (
+                          <option key={c.id_beneficiario} value={c.id_beneficiario}>
+                            {c.nombres} {c.apellidos} ({c.parentesco})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  <input
+                    placeholder="Nombres"
+                    value={b.nombres}
+                    onChange={(e) => cambiarBeneficiario(idx, 'nombres', e.target.value)}
+                    className="px-3 py-2 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
+                  />
+                  <input
+                    placeholder="Apellidos"
+                    value={b.apellidos}
+                    onChange={(e) => cambiarBeneficiario(idx, 'apellidos', e.target.value)}
+                    className="px-3 py-2 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
+                  />
+                  <input
+                    placeholder="Parentesco"
+                    value={b.parentesco}
+                    onChange={(e) => cambiarBeneficiario(idx, 'parentesco', e.target.value)}
+                    className="px-3 py-2 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
+                  />
+                  <input
+                    placeholder="Documento (opcional)"
+                    value={b.documento_identidad}
+                    onChange={(e) => cambiarBeneficiario(idx, 'documento_identidad', e.target.value)}
+                    className="px-3 py-2 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
+                  />
+                  <div>
+                    <label className="text-xs font-medium text-text-soft block mb-1.5">Porcentaje</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={b.porcentaje}
+                      onChange={(e) => cambiarBeneficiario(idx, 'porcentaje', Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
+                    />
+                  </div>
+                  {beneficiarios.length > 1 && (
+                    <button
+                      onClick={() => eliminarBeneficiario(idx)}
+                      className="md:col-span-2 flex items-center justify-center gap-1 py-2 rounded-xl border border-rose-200 text-rose-500 text-xs font-semibold hover:bg-rose-50"
+                    >
+                      <MdDeleteOutline size={14} /> Quitar beneficiario
+                    </button>
+                  )}
+                </div>
+              ))}
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={agregarBeneficiario}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-sm font-semibold text-text"
+                >
+                  <MdAdd size={16} /> Agregar beneficiario
+                </button>
+                <p
+                  className={`text-sm font-bold ${
+                    sumaPorcentaje === 100 ? 'text-emerald-600' : 'text-rose-500'
+                  }`}
+                >
+                  Suma: {sumaPorcentaje}%
+                </p>
+              </div>
+              <button
+                onClick={() => setPaso(5)}
+                disabled={sumaPorcentaje !== 100}
+                className="mt-2 w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-sm font-semibold transition-colors"
+              >
+                Continuar
+              </button>
+            </div>
+          )}
+
+          {paso === 5 && (
+            <div className="flex flex-col gap-4">
+              <div>
+                <p className="text-sm font-bold text-text mb-2">Documentos requeridos</p>
                 <label className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center gap-2 hover:bg-bg-soft transition-colors cursor-pointer">
                   <MdUploadFile size={24} className="text-primary" />
                   <p className="text-xs text-text font-medium">
-                    {documentos.length > 0 ? 'Agregar más archivos' : 'Sube tu DNI, recibo de servicios u otros'}
+                    {documentos.length > 0 ? 'Agregar mas archivos' : 'Sube DNI, recibo de servicios u otros'}
                   </p>
-                  <p className="text-[11px] text-text-soft text-center">PDF, JPG, PNG · Máx. 10 MB por archivo</p>
+                  <p className="text-[11px] text-text-soft text-center">PDF, JPG, PNG · Maximo 10 MB por archivo</p>
                   <input
                     type="file"
                     multiple
@@ -364,9 +526,6 @@ export default function ModalCotizar({ producto, onClose }) {
                       >
                         <MdAttachFile size={14} className="text-primary shrink-0" />
                         <p className="text-xs text-text flex-1 truncate">{f.name}</p>
-                        <p className="text-[11px] text-text-soft shrink-0">
-                          {(f.size / 1024).toFixed(0)} KB
-                        </p>
                         <button
                           onClick={() => setDocumentos((prev) => prev.filter((_, idx) => idx !== i))}
                           className="p-1 rounded hover:bg-rose-100 text-text-soft hover:text-rose-500"
@@ -378,46 +537,95 @@ export default function ModalCotizar({ producto, onClose }) {
                   </div>
                 )}
               </div>
-
-              <label className="flex items-start gap-3 cursor-pointer mt-2">
+              <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
+                  checked={declaracion}
+                  onChange={(e) => setDeclaracion(e.target.checked)}
                   className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-primary"
-                  checked={terminosAceptados}
-                  onChange={(e) => setTerminosAceptados(e.target.checked)}
                 />
                 <p className="text-xs text-text-soft leading-relaxed">
-                  Acepto los terminos y condiciones de la poliza, declaro que los datos ingresados son verdaderos
-                  y autorizo el cobro.
+                  Declaro que toda la informacion entregada es veraz (principio de buena fe).
                 </p>
               </label>
-
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={terminos}
+                  onChange={(e) => setTerminos(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                />
+                <p className="text-xs text-text-soft leading-relaxed">
+                  Acepto los terminos, condiciones y exclusiones de la propuesta.
+                </p>
+              </label>
               <button
-                onClick={handleContratar}
-                disabled={cargando}
+                onClick={aceptarPropuesta}
+                disabled={cargando || !terminos || !declaracion}
                 className="mt-2 w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-sm font-semibold transition-colors"
               >
-                {cargando ? 'Procesando pago y emision...' : 'Confirmar compra y emitir poliza'}
+                {cargando ? 'Emitiendo poliza...' : 'Aceptar y emitir poliza'} <MdArrowForward size={16} />
               </button>
             </div>
           )}
 
-          {step === 4 && polizaGenerada && (
-            <div className="p-6 flex flex-col items-center text-center gap-3">
+          {paso === 6 && polizaEmitida && (
+            <div className="flex flex-col gap-4">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <p className="text-sm font-bold text-emerald-800">
+                  Poliza POL-{String(polizaEmitida.id_poliza).padStart(6, '0')} emitida
+                </p>
+                <p className="text-xs text-emerald-700 mt-1">
+                  Estado actual: <span className="font-semibold">{polizaEmitida.estado_poliza}</span>. Se activara al
+                  pagar la primera cuota.
+                </p>
+              </div>
+              {cuotaPrincipal ? (
+                <div className="bg-bg-soft rounded-xl p-4 border border-border">
+                  <p className="text-xs text-text-soft">Primera cuota</p>
+                  <p className="text-2xl font-bold text-text mt-1">{formatearMoneda(cuotaPrincipal.monto)}</p>
+                  <p className="text-xs text-text-soft mt-1">
+                    Vence: <span className="font-semibold text-text">{cuotaPrincipal.fecha_vencimiento}</span>
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-text-soft">
+                  No se encontro la cuota inicial. Puedes pagarla luego desde la seccion Pagos.
+                </p>
+              )}
+              <button
+                onClick={pagarPrimeraCuota}
+                disabled={cargando || !cuotaPrincipal}
+                className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-sm font-semibold transition-colors"
+              >
+                {cargando ? 'Procesando pago...' : (<><MdLock size={14} /> Pagar y activar poliza</>)}
+              </button>
+              <button
+                onClick={() => setPaso(7)}
+                className="w-full py-2.5 rounded-xl border border-border hover:bg-bg-soft text-text text-sm font-semibold"
+              >
+                Pagar mas tarde
+              </button>
+            </div>
+          )}
+
+          {paso === 7 && polizaEmitida && (
+            <div className="p-2 flex flex-col items-center text-center gap-3">
               <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-2">
                 <MdCheckCircle size={32} className="text-emerald-600" />
               </div>
-              <div>
-                <p className="text-xl font-bold text-text">¡Contratacion exitosa!</p>
-                <p className="text-sm text-text-soft mt-1 leading-relaxed">
-                  Tu cotizacion paso a contratacion. Revisa &quot;Mis polizas&quot; para ver el estado.
-                </p>
-              </div>
+              <p className="text-xl font-bold text-text">
+                {pagoConfirmado ? '¡Poliza activa!' : 'Poliza emitida'}
+              </p>
+              <p className="text-sm text-text-soft leading-relaxed">
+                {pagoConfirmado
+                  ? 'Tu poliza esta vigente. Revisa tus pagos y beneficiarios en Mis polizas.'
+                  : 'Tu poliza fue emitida en estado PENDIENTE. Activa la cobertura pagando la primera cuota.'}
+              </p>
               <div className="bg-bg-soft rounded-xl px-5 py-4 w-full mt-2">
-                <Linea label="Cotizacion" val={`COT-${polizaGenerada.id_cotizacion}`} />
-                <Linea label="Plan" val={planSeleccionado.nombre} />
-                <Linea label="Estado" val={polizaGenerada.estado_kanban} />
-                <Linea label="Prima mensual" val={formatearMoneda(planSeleccionado.prima_mensual)} />
+                <Linea label="Poliza" val={`POL-${String(polizaEmitida.id_poliza).padStart(6, '0')}`} />
+                <Linea label="Estado" val={pagoConfirmado ? 'ACTIVA' : polizaEmitida.estado_poliza} />
+                <Linea label="Prima total" val={formatearMoneda(polizaEmitida.prima_total)} />
               </div>
               <button
                 onClick={onClose}
@@ -429,6 +637,15 @@ export default function ModalCotizar({ producto, onClose }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function Resumen({ label, valor }) {
+  return (
+    <div className="bg-bg-soft rounded-xl p-3 border border-border">
+      <p className="text-xs text-text-soft">{label}</p>
+      <p className="text-sm font-bold text-text mt-1">{valor}</p>
     </div>
   );
 }

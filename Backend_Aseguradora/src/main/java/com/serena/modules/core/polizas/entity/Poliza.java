@@ -1,5 +1,6 @@
 package com.serena.modules.core.polizas.entity;
 
+import com.serena.modules.comercial.propuestas.entity.PropuestaPoliza;
 import com.serena.modules.seguridad.clientes.entity.Cliente;
 import com.serena.modules.core.productos.entity.ProductoSeguro;
 import jakarta.persistence.*;
@@ -32,8 +33,29 @@ public class Poliza {
     @JoinColumn(name = "id_producto", nullable = false)
     private ProductoSeguro producto;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_propuesta")
+    private PropuestaPoliza propuesta;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_poliza_padre")
+    private Poliza polizaPadre;
+
     @Column(name = "prima_total", nullable = false, precision = 10, scale = 2)
     private BigDecimal primaTotal;
+
+    @Column(name = "suma_asegurada", precision = 12, scale = 2)
+    private BigDecimal sumaAsegurada;
+
+    @Column(name = "deducible", precision = 10, scale = 2)
+    private BigDecimal deducible;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "frecuencia_pago")
+    private FrecuenciaPago frecuenciaPago;
+
+    @Column(name = "numero_cuotas")
+    private Integer numeroCuotas;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado_poliza", nullable = false)
@@ -52,5 +74,9 @@ public class Poliza {
 
     public enum EstadoPoliza {
         ACTIVA, PENDIENTE, VENCIDA, CANCELADA
+    }
+
+    public enum FrecuenciaPago {
+        UNICO, MENSUAL, TRIMESTRAL, ANUAL
     }
 }

@@ -194,11 +194,64 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
             <div className="flex-1 overflow-y-auto p-5">
               {tab === 'cobertura' && (
                 <div className="flex flex-col gap-4">
+                  {(poliza.suma_asegurada || poliza.deducible || poliza.frecuencia_pago) && (
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {poliza.suma_asegurada && (
+                        <div className="bg-bg-soft rounded-xl p-3">
+                          <p className="text-text-soft">Suma asegurada</p>
+                          <p className="font-semibold text-text mt-0.5">
+                            {formatearMoneda(poliza.suma_asegurada)}
+                          </p>
+                        </div>
+                      )}
+                      {poliza.deducible !== null && poliza.deducible !== undefined && (
+                        <div className="bg-bg-soft rounded-xl p-3">
+                          <p className="text-text-soft">Deducible</p>
+                          <p className="font-semibold text-text mt-0.5">{formatearMoneda(poliza.deducible)}</p>
+                        </div>
+                      )}
+                      {poliza.frecuencia_pago && (
+                        <div className="bg-bg-soft rounded-xl p-3">
+                          <p className="text-text-soft">Frecuencia de pago</p>
+                          <p className="font-semibold text-text mt-0.5">{poliza.frecuencia_pago}</p>
+                        </div>
+                      )}
+                      {poliza.numero_cuotas && (
+                        <div className="bg-bg-soft rounded-xl p-3">
+                          <p className="text-text-soft">Numero de cuotas</p>
+                          <p className="font-semibold text-text mt-0.5">{poliza.numero_cuotas}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-text-soft mb-2">
-                      Cobertura
+                      Coberturas contratadas
                     </p>
-                    {poliza.producto?.limites_cobertura ? (
+                    {poliza.propuesta && poliza.propuesta.coberturas?.length > 0 ? (
+                      <div className="flex flex-col">
+                        {poliza.propuesta.coberturas.map((c, i) => (
+                          <div
+                            key={i}
+                            className="flex flex-col gap-0.5 py-2 border-b border-border last:border-0"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-start gap-2">
+                                <MdCheck size={15} className="text-primary mt-0.5 shrink-0" />
+                                <p className="text-sm font-semibold text-text">{c.nombre}</p>
+                              </div>
+                              <p className="text-xs font-semibold text-text shrink-0">
+                                {c.limite ? formatearMoneda(c.limite) : 'Incluido'}
+                              </p>
+                            </div>
+                            {c.descripcion && (
+                              <p className="text-xs text-text-soft ml-6">{c.descripcion}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : poliza.producto?.limites_cobertura ? (
                       poliza.producto.limites_cobertura.split(',').map((c, i) => (
                         <div
                           key={i}
@@ -212,6 +265,14 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                       <p className="text-sm text-text-soft">Sin información de cobertura.</p>
                     )}
                   </div>
+
+                  {poliza.propuesta?.exclusiones_texto && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+                      <p className="font-semibold mb-1">Exclusiones</p>
+                      <p>{poliza.propuesta.exclusiones_texto}</p>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-2 text-xs mt-2">
                     <div className="bg-bg-soft rounded-xl p-3">
                       <p className="text-text-soft">Inicio vigencia</p>
@@ -234,14 +295,17 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                   ) : (
                     poliza.beneficiarios.map((b) => (
                       <div
-                        key={b.id_beneficiario}
+                        key={b.id_poliza_beneficiario}
                         className="p-3 rounded-xl border border-border flex justify-between items-center bg-bg-soft"
                       >
                         <div>
                           <p className="text-sm font-semibold text-text">
                             {b.nombres} {b.apellidos}
                           </p>
-                          <p className="text-xs text-text-soft">{b.parentesco}</p>
+                          <p className="text-xs text-text-soft">
+                            {b.parentesco}
+                            {b.documento_identidad ? ` · ${b.documento_identidad}` : ''}
+                          </p>
                         </div>
                         <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg">
                           {Number(b.porcentaje).toFixed(0)}%

@@ -24,6 +24,7 @@ import {
   MdSave,
   MdDownload,
   MdInsertDriveFile,
+  MdPaid,
 } from 'react-icons/md';
 import { apiGet, apiPatch, apiPost, apiDelete, apiDownloadFile } from '@/lib/api';
 
@@ -71,6 +72,7 @@ export default function SiniestrosCorePage() {
   const [modalAsignar, setModalAsignar] = useState(null);
   const [modalProveedores, setModalProveedores] = useState(null);
   const [modalPerito, setModalPerito] = useState(null);
+  const [modalIndemnizar, setModalIndemnizar] = useState(null);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -185,6 +187,7 @@ export default function SiniestrosCorePage() {
               onAsignar={() => setModalAsignar(s)}
               onProveedores={() => setModalProveedores(s)}
               onPerito={() => setModalPerito(s)}
+              onIndemnizar={() => setModalIndemnizar(s)}
             />
           ))}
         </div>
@@ -223,11 +226,23 @@ export default function SiniestrosCorePage() {
           }}
         />
       )}
+
+      {modalIndemnizar && (
+        <ModalIndemnizar
+          siniestro={modalIndemnizar}
+          onClose={() => setModalIndemnizar(null)}
+          onSuccess={() => {
+            setModalIndemnizar(null);
+            mostrarToast('Indemnizacion registrada');
+            cargar();
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function SiniestroRow({ s, onCambiarEstado, onAsignar, onProveedores, onPerito, actualizando }) {
+function SiniestroRow({ s, onCambiarEstado, onAsignar, onProveedores, onPerito, onIndemnizar, actualizando }) {
   const tipoStyle = estiloTipo(s.poliza_tipo);
   const Icon = tipoStyle.icon;
   const est = ESTADOS[s.estado_resolucion] || ESTADOS.REPORTADO;
@@ -292,6 +307,16 @@ function SiniestroRow({ s, onCambiarEstado, onAsignar, onProveedores, onPerito, 
           >
             <MdEngineering size={13} /> {s.observaciones_perito ? 'Ver perito' : 'Perito'}
           </button>
+          {(s.estado_resolucion === 'APROBADO' || s.estado_resolucion === 'LIQUIDADO') && (
+            <button
+              onClick={onIndemnizar}
+              disabled={actualizando}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald-200 hover:bg-emerald-50 text-emerald-700 text-xs font-semibold transition-colors disabled:opacity-50"
+              title="Liquidar e indemnizar"
+            >
+              <MdPaid size={13} /> {s.estado_resolucion === 'LIQUIDADO' ? 'Ver indemnizacion' : 'Liquidar e indemnizar'}
+            </button>
+          )}
           <button
             onClick={() => setMenu((v) => !v)}
             disabled={actualizando}
@@ -728,6 +753,195 @@ function ModalPerito({ siniestro, onClose, onSuccess }) {
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-xs font-semibold transition-colors"
             >
               <MdSave size={13} /> {enviando ? 'Guardando...' : 'Guardar informe'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={enviando}
+              className="flex-1 py-2.5 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ModalIndemnizar({ siniestro, onClose, onSuccess }) {
+  const [historial, setHistorial] = useState([]);
+  const [beneficiarios, setBeneficiarios] = useState([]);
+  const [montoAprobado, setMontoAprobado] = useState(
+    siniestro.monto_estimado_perito != null
+      ? String(siniestro.monto_estimado_perito)
+      : siniestro.monto_reclamado != null
+      ? String(siniestro.monto_reclamado)
+      : ''
+  );
+  const [montoPagado, setMontoPagado] = useState('');
+  const [medioPago, setMedioPago] = useState('TRANSFERENCIA');
+  const [idPolizaBeneficiario, setIdPolizaBeneficiario] = useState('');
+  const [observaciones, setObservaciones] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    apiGet(`/siniestros/${siniestro.id_siniestro}/indemnizacion`)
+      .then((data) => setHistorial(data || []))
+      .catch(() => setHistorial([]));
+    apiGet(`/polizas/${siniestro.id_poliza}`)
+      .then((data) => setBeneficiarios(data?.beneficiarios || []))
+      .catch(() => setBeneficiarios([]));
+  }, [siniestro.id_siniestro, siniestro.id_poliza]);
+
+  const enviar = async (e) => {
+    e.preventDefault();
+    setEnviando(true);
+    setError('');
+    try {
+      await apiPost(`/siniestros/${siniestro.id_siniestro}/indemnizacion`, {
+        monto_aprobado: Number(montoAprobado),
+        monto_pagado: montoPagado ? Number(montoPagado) : 0,
+        medio_pago: medioPago,
+        id_poliza_beneficiario: idPolizaBeneficiario ? Number(idPolizaBeneficiario) : null,
+        observaciones: observaciones || null,
+      });
+      onSuccess();
+    } catch (err) {
+      setError(err.mensaje || 'No se pudo registrar la indemnizacion');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div className="bg-bg w-full max-w-lg rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="px-5 py-4 border-b border-border flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <MdPaid size={20} className="text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-text">Liquidar e indemnizar</p>
+              <p className="text-[11px] text-text-soft">
+                SIN-{String(siniestro.id_siniestro).padStart(6, '0')} · {siniestro.tipo_incidente}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-text-soft hover:text-text">
+            <MdClose size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={enviar} className="p-5 flex flex-col gap-3 overflow-y-auto">
+          {error && (
+            <div className="p-2.5 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">
+              {error}
+            </div>
+          )}
+
+          {historial.length > 0 && (
+            <div className="bg-bg-soft border border-border rounded-xl p-3">
+              <p className="text-xs font-semibold text-text-soft mb-2">
+                Indemnizaciones previas ({historial.length})
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {historial.map((i) => (
+                  <div key={i.id_indemnizacion} className="flex justify-between text-xs">
+                    <span className="text-text-soft">
+                      {i.medio_pago} {i.beneficiario_nombre ? `· ${i.beneficiario_nombre}` : ''}
+                    </span>
+                    <span className="font-semibold text-text">{formatearMoneda(i.monto_aprobado)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-text-soft block mb-1.5">Monto aprobado (S/) *</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                value={montoAprobado}
+                onChange={(e) => setMontoAprobado(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-text-soft block mb-1.5">Monto pagado (S/)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={montoPagado}
+                onChange={(e) => setMontoPagado(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-text-soft block mb-1.5">Medio de pago</label>
+            <select
+              value={medioPago}
+              onChange={(e) => setMedioPago(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
+            >
+              <option value="TRANSFERENCIA">Transferencia bancaria</option>
+              <option value="CHEQUE">Cheque</option>
+              <option value="REPARACION_DIRECTA">Reparacion directa</option>
+              <option value="OTRO">Otro</option>
+            </select>
+          </div>
+
+          {beneficiarios.length > 0 && (
+            <div>
+              <label className="text-xs font-medium text-text-soft block mb-1.5">
+                Pagar a beneficiario (opcional)
+              </label>
+              <select
+                value={idPolizaBeneficiario}
+                onChange={(e) => setIdPolizaBeneficiario(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
+              >
+                <option value="">Pago directo al asegurado</option>
+                {beneficiarios.map((b) => (
+                  <option key={b.id_poliza_beneficiario} value={b.id_poliza_beneficiario}>
+                    {b.nombres} {b.apellidos} ({b.parentesco}) · {Number(b.porcentaje).toFixed(0)}%
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="text-xs font-medium text-text-soft block mb-1.5">Observaciones</label>
+            <textarea
+              value={observaciones}
+              onChange={(e) => setObservaciones(e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary resize-none"
+            />
+          </div>
+
+          <p className="text-[11px] text-text-soft">
+            Al confirmar, el siniestro pasa a <strong>LIQUIDADO</strong> y se notifica al asegurado.
+          </p>
+
+          <div className="flex gap-2 mt-2">
+            <button
+              type="submit"
+              disabled={enviando || !montoAprobado}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-semibold transition-colors"
+            >
+              <MdAttachMoney size={13} />
+              {enviando ? 'Registrando...' : 'Registrar indemnizacion'}
             </button>
             <button
               type="button"

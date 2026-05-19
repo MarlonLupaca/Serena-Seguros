@@ -3,7 +3,7 @@ import { MdChevronRight, MdPictureAsPdf, MdAutorenew } from 'react-icons/md';
 import { apiDownloadFile } from '@/lib/api';
 import { ESTADO_STYLES, estiloTipo, formatearFecha, formatearMoneda } from './data';
 
-export default function PolizaCard({ p, onVerDetalle }) {
+export default function PolizaCard({ p, onVerDetalle, onRenovar }) {
   const [descargando, setDescargando] = useState(false);
   const tipoStyle = estiloTipo(p.producto?.tipo_seguro);
   const Icon = tipoStyle.icon;
@@ -69,11 +69,11 @@ export default function PolizaCard({ p, onVerDetalle }) {
             <MdPictureAsPdf size={18} />
           </button>
 
-          {(p.estado_poliza === 'VENCIDA' || p.estado_poliza === 'ACTIVA') && (
+          {(p.estado_poliza === 'VENCIDA' || p.estado_poliza === 'ACTIVA') && onRenovar && (
             <button
               className="p-2 rounded-xl border border-border text-text-soft hover:text-amber-600 hover:bg-amber-50 transition-colors"
               title="Renovar poliza"
-              onClick={onVerDetalle}
+              onClick={() => onRenovar(p)}
             >
               <MdAutorenew size={18} />
             </button>
