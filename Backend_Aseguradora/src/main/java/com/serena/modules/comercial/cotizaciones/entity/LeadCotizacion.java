@@ -1,5 +1,8 @@
 package com.serena.modules.comercial.cotizaciones.entity;
 
+import com.serena.modules.core.polizas.entity.Poliza;
+import com.serena.modules.core.productos.entity.ProductoSeguro;
+import com.serena.modules.seguridad.clientes.entity.Cliente;
 import com.serena.modules.seguridad.empleados.entity.Empleado;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,6 +29,14 @@ public class LeadCotizacion {
     @JoinColumn(name = "id_empleado_agente", nullable = false)
     private Empleado empleadoAgente;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_cliente")
+    private Cliente cliente;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_producto")
+    private ProductoSeguro producto;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "producto_interes", nullable = false)
     private ProductoInteres productoInteres;
@@ -34,6 +45,15 @@ public class LeadCotizacion {
     @Column(name = "estado_kanban", nullable = false)
     @Builder.Default
     private EstadoKanban estadoKanban = EstadoKanban.NUEVO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_origen", nullable = false)
+    @Builder.Default
+    private TipoOrigen tipoOrigen = TipoOrigen.NUEVA;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_poliza_origen")
+    private Poliza polizaOrigen;
 
     @Column(name = "prima_estimada", precision = 10, scale = 2)
     private BigDecimal primaEstimada;
@@ -48,5 +68,9 @@ public class LeadCotizacion {
 
     public enum EstadoKanban {
         NUEVO, CONTACTADO, EN_PROPUESTA, NEGOCIACION, GANADO, PERDIDO
+    }
+
+    public enum TipoOrigen {
+        NUEVA, RENOVACION
     }
 }

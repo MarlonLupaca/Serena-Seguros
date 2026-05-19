@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { MdShield } from 'react-icons/md';
-import { apiGet } from '@/lib/api';
+import { apiGet, apiPost } from '@/lib/api';
 import PolizaKPIs from './PolizaKPIs';
 import PolizaFilters from './PolizaFilters';
 import PolizaCard from './PolizaCard';
 import DetalleModal from './DetalleModal';
+import ModalCotizar from '../seguros/ModalCotizar';
 
 export default function Polizas() {
   const [polizas, setPolizas] = useState([]);
@@ -16,6 +17,8 @@ export default function Polizas() {
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [filtroTipo, setFiltroTipo] = useState('todos');
   const [busqueda, setBusqueda] = useState('');
+  const [renovando, setRenovando] = useState(false);
+  const [contextoRenovacion, setContextoRenovacion] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -31,6 +34,33 @@ export default function Polizas() {
       setError(e.mensaje || 'No se pudieron cargar las polizas');
     } finally {
       setCargando(false);
+    }
+  };
+
+  const iniciarRenovacion = async (poliza) => {
+    setRenovando(true);
+    setError('');
+    try {
+      const [cotizacion, datosRiesgo] = await Promise.all([
+        apiPost(`/mis-polizas/${poliza.id_poliza}/renovar`),
+        apiGet(`/mis-polizas/${poliza.id_poliza}/datos-riesgo`).catch(() => ({})),
+      ]);
+      setContextoRenovacion({
+        producto: {
+          id_producto: poliza.producto?.id_producto,
+          nombre: poliza.producto?.nombre,
+          tipo_seguro: poliza.producto?.tipo_seguro,
+        },
+        prefill: {
+          cotizacion,
+          datosRiesgo: datosRiesgo || {},
+          sumaAsegurada: poliza.suma_asegurada,
+        },
+      });
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo iniciar la renovacion');
+    } finally {
+      setRenovando(false);
     }
   };
 
@@ -88,9 +118,17 @@ export default function Polizas() {
         ) : (
           <div className="flex flex-col gap-3">
             {filtradas.map((p) => (
-              <PolizaCard key={p.id_poliza} p={p} onVerDetalle={() => setDetalleId(p.id_poliza)} />
+              <PolizaCard
+                key={p.id_poliza}
+                p={p}
+                onVerDetalle={() => setDetalleId(p.id_poliza)}
+                onRenovar={iniciarRenovacion}
+              />
             ))}
           </div>
+        )}
+        {renovando && (
+          <p className="text-xs text-text-soft text-center">Iniciando flujo de renovacion...</p>
         )}
       </div>
 
@@ -99,6 +137,17 @@ export default function Polizas() {
           idPoliza={detalleId}
           onClose={() => setDetalleId(null)}
           onEndosoCreado={cargar}
+        />
+      )}
+
+      {contextoRenovacion && (
+        <ModalCotizar
+          producto={contextoRenovacion.producto}
+          prefill={contextoRenovacion.prefill}
+          onClose={() => {
+            setContextoRenovacion(null);
+            cargar();
+          }}
         />
       )}
     </div>

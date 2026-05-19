@@ -73,17 +73,45 @@ CREATE TABLE producto_seguro (
     estado ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO' NOT NULL
 ) ENGINE=InnoDB;
 
+-- Propuesta formal generada tras la evaluacion de riesgo.
+-- La FK hacia lead_cotizacion se agrega al final del script porque la tabla aun no existe.
+CREATE TABLE propuesta_poliza (
+    id_propuesta INT AUTO_INCREMENT PRIMARY KEY,
+    id_cotizacion INT NOT NULL,
+    suma_asegurada DECIMAL(12,2) NOT NULL,
+    deducible DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    prima_calculada DECIMAL(10,2) NOT NULL,
+    frecuencia_pago ENUM('UNICO', 'MENSUAL', 'TRIMESTRAL', 'ANUAL') DEFAULT 'MENSUAL' NOT NULL,
+    numero_cuotas INT DEFAULT 12 NOT NULL,
+    coberturas_json JSON NOT NULL,
+    exclusiones_texto TEXT NULL,
+    vigencia_meses INT DEFAULT 12 NOT NULL,
+    valida_hasta DATE NOT NULL,
+    estado ENUM('EMITIDA', 'ACEPTADA', 'RECHAZADA', 'EXPIRADA') DEFAULT 'EMITIDA' NOT NULL,
+    fecha_emision DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    fecha_aceptacion DATETIME NULL,
+    INDEX idx_propuesta_estado (estado, valida_hasta)
+) ENGINE=InnoDB;
+
 CREATE TABLE poliza (
     id_poliza INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT NOT NULL,
     id_producto INT NOT NULL,
+    id_propuesta INT NULL,
+    id_poliza_padre INT NULL,
     prima_total DECIMAL(10,2) NOT NULL,
+    suma_asegurada DECIMAL(12,2) NULL,
+    deducible DECIMAL(10,2) NULL,
+    frecuencia_pago ENUM('UNICO', 'MENSUAL', 'TRIMESTRAL', 'ANUAL') NULL,
+    numero_cuotas INT NULL,
     estado_poliza ENUM('ACTIVA', 'PENDIENTE', 'VENCIDA', 'CANCELADA') DEFAULT 'PENDIENTE' NOT NULL,
     vigencia_inicio DATE NOT NULL,
     vigencia_fin DATE NOT NULL,
     fecha_emision DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
-    FOREIGN KEY (id_producto) REFERENCES producto_seguro(id_producto)
+    FOREIGN KEY (id_producto) REFERENCES producto_seguro(id_producto),
+    FOREIGN KEY (id_propuesta) REFERENCES propuesta_poliza(id_propuesta) ON DELETE SET NULL,
+    FOREIGN KEY (id_poliza_padre) REFERENCES poliza(id_poliza) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE endoso_poliza (
@@ -112,11 +140,30 @@ CREATE TABLE reaseguro (
 CREATE TABLE lead_cotizacion (
     id_cotizacion INT AUTO_INCREMENT PRIMARY KEY,
     id_empleado_agente INT NOT NULL,
+    id_cliente INT NULL,
+    id_producto INT NULL,
     producto_interes ENUM('VEHICULAR', 'SALUD', 'VIDA', 'HOGAR', 'VIAJE', 'EMPRESA') NOT NULL,
     estado_kanban ENUM('NUEVO', 'CONTACTADO', 'EN_PROPUESTA', 'NEGOCIACION', 'GANADO', 'PERDIDO') DEFAULT 'NUEVO' NOT NULL,
+    tipo_origen ENUM('NUEVA', 'RENOVACION') DEFAULT 'NUEVA' NOT NULL,
+    id_poliza_origen INT NULL,
     prima_estimada DECIMAL(10,2) NULL,
     fecha_ingreso DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_empleado_agente) REFERENCES empleado(id_empleado)
+    FOREIGN KEY (id_empleado_agente) REFERENCES empleado(id_empleado),
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE SET NULL,
+    FOREIGN KEY (id_producto) REFERENCES producto_seguro(id_producto) ON DELETE SET NULL,
+    FOREIGN KEY (id_poliza_origen) REFERENCES poliza(id_poliza) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE evaluacion_riesgo (
+    id_evaluacion INT AUTO_INCREMENT PRIMARY KEY,
+    id_cotizacion INT NOT NULL UNIQUE,
+    tipo_seguro ENUM('VEHICULAR', 'SALUD', 'VIDA', 'HOGAR', 'VIAJE', 'EMPRESA') NOT NULL,
+    datos_riesgo JSON NOT NULL,
+    factor_riesgo DECIMAL(5,2) DEFAULT 1.00 NOT NULL,
+    estado_suscripcion ENUM('PENDIENTE', 'ACEPTADA', 'RECHAZADA') DEFAULT 'PENDIENTE' NOT NULL,
+    motivo_rechazo TEXT NULL,
+    fecha_evaluacion DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (id_cotizacion) REFERENCES lead_cotizacion(id_cotizacion) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE campana_marketing (
@@ -180,6 +227,21 @@ CREATE TABLE siniestro_proveedor (
     PRIMARY KEY (id_siniestro, id_proveedor),
     FOREIGN KEY (id_siniestro) REFERENCES siniestro(id_siniestro) ON DELETE CASCADE,
     FOREIGN KEY (id_proveedor) REFERENCES proveedor_red(id_proveedor) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- La FK a poliza_beneficiario se agrega al final del script porque la tabla aun no existe.
+CREATE TABLE indemnizacion (
+    id_indemnizacion INT AUTO_INCREMENT PRIMARY KEY,
+    id_siniestro INT NOT NULL,
+    id_poliza_beneficiario INT NULL,
+    monto_aprobado DECIMAL(12,2) NOT NULL,
+    monto_pagado DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    medio_pago ENUM('TRANSFERENCIA', 'CHEQUE', 'REPARACION_DIRECTA', 'OTRO') DEFAULT 'TRANSFERENCIA' NOT NULL,
+    fecha_aprobacion DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    fecha_pago DATETIME NULL,
+    observaciones TEXT NULL,
+    FOREIGN KEY (id_siniestro) REFERENCES siniestro(id_siniestro) ON DELETE CASCADE,
+    INDEX idx_indem_siniestro (id_siniestro)
 ) ENGINE=InnoDB;
 
 CREATE TABLE documento_auditoria (
@@ -300,6 +362,21 @@ CREATE TABLE beneficiario (
     documento_identidad VARCHAR(20) NULL,
     porcentaje DECIMAL(5,2) NOT NULL DEFAULT 100.00,
     FOREIGN KEY (id_persona) REFERENCES persona(id_persona) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Snapshot de beneficiarios por poliza. id_beneficiario apunta al catalogo del perfil (opcional).
+CREATE TABLE poliza_beneficiario (
+    id_poliza_beneficiario INT AUTO_INCREMENT PRIMARY KEY,
+    id_poliza INT NOT NULL,
+    id_beneficiario INT NULL,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    parentesco VARCHAR(50) NOT NULL,
+    documento_identidad VARCHAR(20) NULL,
+    porcentaje DECIMAL(5,2) NOT NULL,
+    FOREIGN KEY (id_poliza) REFERENCES poliza(id_poliza) ON DELETE CASCADE,
+    FOREIGN KEY (id_beneficiario) REFERENCES beneficiario(id_beneficiario) ON DELETE SET NULL,
+    INDEX idx_polben_poliza (id_poliza)
 ) ENGINE=InnoDB;
 
 CREATE TABLE preferencia_notificacion (
@@ -481,3 +558,15 @@ CREATE TABLE riesgo_corporativo (
     FOREIGN KEY (registrado_por) REFERENCES usuario(id_usuario) ON DELETE SET NULL,
     INDEX idx_riesgo_severidad (severidad, fecha_registro)
 ) ENGINE=InnoDB;
+
+-- ========================================================
+-- 13. FOREIGN KEYS DIFERIDAS (dependencias circulares entre dominios)
+-- ========================================================
+
+ALTER TABLE propuesta_poliza
+    ADD CONSTRAINT fk_propuesta_lead
+    FOREIGN KEY (id_cotizacion) REFERENCES lead_cotizacion(id_cotizacion) ON DELETE CASCADE;
+
+ALTER TABLE indemnizacion
+    ADD CONSTRAINT fk_indem_polben
+    FOREIGN KEY (id_poliza_beneficiario) REFERENCES poliza_beneficiario(id_poliza_beneficiario) ON DELETE SET NULL;
