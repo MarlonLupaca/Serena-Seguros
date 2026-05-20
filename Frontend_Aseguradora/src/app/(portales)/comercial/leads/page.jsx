@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -61,9 +62,7 @@ export default function LeadsPage() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [actualizandoId, setActualizandoId] = useState(null);
-  const [toast, setToast] = useState(null);
-
-  useEffect(() => {
+useEffect(() => {
     cargar();
   }, []);
 
@@ -89,20 +88,14 @@ export default function LeadsPage() {
       } else {
         setLeads((prev) => prev.map((l) => (l.id_cotizacion === id ? actualizada : l)));
       }
-      mostrarToast('Estado actualizado');
+      toast.success('Estado actualizado');
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo actualizar');
+      toast.error(e.mensaje || 'No se pudo actualizar');
     } finally {
       setActualizandoId(null);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const filtrados = leads.filter((l) => {
+const filtrados = leads.filter((l) => {
     const matchBusq =
       busqueda === '' ||
       String(l.id_cotizacion).includes(busqueda.toLowerCase()) ||
@@ -118,11 +111,6 @@ export default function LeadsPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>

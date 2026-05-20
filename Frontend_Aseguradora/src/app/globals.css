@@ -22,6 +22,20 @@
 
   --color-bg-deep: #001a4d;
   --color-text-mute: #8592a8;
+
+  /* Semantic status colors */
+  --color-success: #10b981;
+  --color-success-soft: #d1fae5;
+  --color-success-text: #065f46;
+  --color-danger: #ef4444;
+  --color-danger-soft: #fef2f2;
+  --color-danger-text: #991b1b;
+  --color-warning: #f59e0b;
+  --color-warning-soft: #fef3c7;
+  --color-warning-text: #92400e;
+  --color-info: #3b82f6;
+  --color-info-soft: #dbeafe;
+  --color-info-text: #1e40af;
 }
 
 ::-webkit-scrollbar {

@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -27,6 +28,7 @@ import {
   MdPaid,
 } from 'react-icons/md';
 import { apiGet, apiPatch, apiPost, apiDelete, apiDownloadFile } from '@/lib/api';
+import ModalConfirm from '../../componentsMain/ModalConfirm';
 
 const ESTADOS = {
   REPORTADO: { label: 'Reportado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
@@ -73,9 +75,7 @@ export default function SiniestrosCorePage() {
   const [modalProveedores, setModalProveedores] = useState(null);
   const [modalPerito, setModalPerito] = useState(null);
   const [modalIndemnizar, setModalIndemnizar] = useState(null);
-  const [toast, setToast] = useState(null);
-
-  useEffect(() => {
+useEffect(() => {
     cargar();
   }, []);
 
@@ -91,20 +91,14 @@ export default function SiniestrosCorePage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const cambiarEstado = async (id, estado) => {
+const cambiarEstado = async (id, estado) => {
     setActualizandoId(id);
     try {
       const data = await apiPatch(`/siniestros/${id}/estado`, { estado_resolucion: estado });
       setSiniestros((prev) => prev.map((s) => (s.id_siniestro === id ? data : s)));
-      mostrarToast('Estado actualizado');
+      toast.success('Estado actualizado');
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo actualizar');
+      toast.error(e.mensaje || 'No se pudo actualizar');
     } finally {
       setActualizandoId(null);
     }
@@ -128,11 +122,6 @@ export default function SiniestrosCorePage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div>
         <h1 className="text-base font-bold text-text">Bandeja de siniestros</h1>
@@ -200,7 +189,7 @@ export default function SiniestrosCorePage() {
           onSuccess={(actualizada) => {
             setSiniestros((prev) => prev.map((s) => (s.id_siniestro === actualizada.id_siniestro ? actualizada : s)));
             setModalAsignar(null);
-            mostrarToast('Analista asignado');
+            toast.success('Analista asignado');
           }}
         />
       )}
@@ -209,7 +198,7 @@ export default function SiniestrosCorePage() {
         <ModalProveedores
           siniestro={modalProveedores}
           onClose={() => setModalProveedores(null)}
-          onToast={mostrarToast}
+          onToast={(msg) => toast.success(msg)}
         />
       )}
 
@@ -222,7 +211,7 @@ export default function SiniestrosCorePage() {
               prev.map((s) => (s.id_siniestro === actualizada.id_siniestro ? actualizada : s))
             );
             setModalPerito(null);
-            mostrarToast('Informe del perito guardado');
+            toast.success('Informe del perito guardado');
           }}
         />
       )}
@@ -233,7 +222,7 @@ export default function SiniestrosCorePage() {
           onClose={() => setModalIndemnizar(null)}
           onSuccess={() => {
             setModalIndemnizar(null);
-            mostrarToast('Indemnizacion registrada');
+            toast.success('Indemnizacion registrada');
             cargar();
           }}
         />
@@ -378,7 +367,7 @@ function ModalAsignar({ siniestro, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-bg w-full max-w-sm rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">Asignar analista</p>
@@ -440,6 +429,7 @@ function ModalProveedores({ siniestro, onClose, onToast }) {
   const [costo, setCosto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
+  const [confirmacion, setConfirmacion] = useState(null);
 
   const cargar = async () => {
     setCargando(true);
@@ -482,15 +472,19 @@ function ModalProveedores({ siniestro, onClose, onToast }) {
     }
   };
 
-  const quitar = async (idProveedor) => {
-    if (!confirm('Quitar este proveedor del caso?')) return;
-    try {
-      await apiDelete(`/siniestros/${siniestro.id_siniestro}/proveedores/${idProveedor}`);
-      onToast('Proveedor quitado');
-      cargar();
-    } catch (e) {
-      setError(e.mensaje || 'No se pudo quitar');
-    }
+  const quitar = (idProveedor) => {
+    setConfirmacion({
+      mensaje: '¿Quitar este proveedor del caso?',
+      accion: async () => {
+        try {
+          await apiDelete(`/siniestros/${siniestro.id_siniestro}/proveedores/${idProveedor}`);
+          onToast('Proveedor quitado');
+          cargar();
+        } catch (e) {
+          setError(e.mensaje || 'No se pudo quitar');
+        }
+      },
+    });
   };
 
   const yaAsignados = new Set(asignados.map((a) => a.id_proveedor));
@@ -498,7 +492,7 @@ function ModalProveedores({ siniestro, onClose, onToast }) {
   const totalCosto = asignados.reduce((acc, a) => acc + Number(a.costo_servicio || 0), 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-bg w-full max-w-lg rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
@@ -579,6 +573,15 @@ function ModalProveedores({ siniestro, onClose, onToast }) {
             </button>
           </form>
         </div>
+        <ModalConfirm
+          abierto={!!confirmacion}
+          titulo="Confirmar accion"
+          mensaje={confirmacion?.mensaje}
+          textoConfirmar="Quitar"
+          variante="danger"
+          onConfirmar={confirmacion?.accion}
+          onCancelar={() => setConfirmacion(null)}
+        />
       </div>
     </div>
   );
@@ -627,7 +630,7 @@ function ModalPerito({ siniestro, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <div className="bg-bg w-full max-w-lg rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="px-5 py-4 border-b border-border flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -816,7 +819,7 @@ function ModalIndemnizar({ siniestro, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <div className="bg-bg w-full max-w-lg rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="px-5 py-4 border-b border-border flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">

@@ -1,31 +1,19 @@
-// Catalogos visuales (badges, iconos por tipo) y helpers de formato.
-// El detalle de poliza (beneficiarios + pagos + endosos) viene de /mis-polizas/{id}.
-// La descarga del contrato pasa por /mis-polizas/{id}/contrato (apiDownloadFile).
-
-import {
-  MdDirectionsCar,
-  MdHealthAndSafety,
-  MdFavorite,
-  MdHome,
-  MdFlight,
-  MdBusiness,
-  MdShield,
-} from 'react-icons/md';
+export { TIPO_SEGURO as TIPO_STYLES, estiloTipo } from '@/lib/tipoSeguroConfig';
 
 export const ESTADO_STYLES = {
   ACTIVA: {
-    dot: 'bg-emerald-500',
-    badge: 'bg-emerald-100 text-emerald-700',
+    dot: 'bg-success',
+    badge: 'bg-success-soft text-success-text',
     label: 'Activa',
   },
   PENDIENTE: {
-    dot: 'bg-amber-400',
-    badge: 'bg-amber-100 text-amber-700',
+    dot: 'bg-warning',
+    badge: 'bg-warning-soft text-warning-text',
     label: 'Pendiente',
   },
   VENCIDA: {
-    dot: 'bg-rose-400',
-    badge: 'bg-rose-100 text-rose-600',
+    dot: 'bg-danger',
+    badge: 'bg-danger-soft text-danger-text',
     label: 'Vencida',
   },
   CANCELADA: {
@@ -34,25 +22,6 @@ export const ESTADO_STYLES = {
     label: 'Cancelada',
   },
 };
-
-export const TIPO_STYLES = {
-  VEHICULAR: { icon: MdDirectionsCar, accentBg: 'bg-primary/10', accentText: 'text-primary' },
-  SALUD: { icon: MdHealthAndSafety, accentBg: 'bg-emerald-100', accentText: 'text-emerald-600' },
-  VIDA: { icon: MdFavorite, accentBg: 'bg-rose-100', accentText: 'text-rose-500' },
-  HOGAR: { icon: MdHome, accentBg: 'bg-amber-100', accentText: 'text-amber-600' },
-  VIAJE: { icon: MdFlight, accentBg: 'bg-sky-100', accentText: 'text-sky-600' },
-  EMPRESA: { icon: MdBusiness, accentBg: 'bg-violet-100', accentText: 'text-violet-600' },
-};
-
-export function estiloTipo(tipo) {
-  return (
-    TIPO_STYLES[tipo] || {
-      icon: MdShield,
-      accentBg: 'bg-bg-soft',
-      accentText: 'text-text-soft',
-    }
-  );
-}
 
 export function formatearMoneda(v) {
   if (v == null) return '—';

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   MdCreditCard,
@@ -10,31 +11,18 @@ import {
   MdInfo,
   MdCalendarToday,
   MdChevronRight,
-  MdShield,
-  MdDirectionsCar,
-  MdHealthAndSafety,
-  MdFavorite,
-  MdHome,
-  MdFlight,
-  MdBusiness,
   MdAssignment,
   MdLocalOffer,
   MdAutorenew,
+  MdShield,
 } from 'react-icons/md';
 import { apiGet } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
-
-const TIPO_ICON = {
-  VEHICULAR: { icon: MdDirectionsCar, bg: 'bg-primary/10', text: 'text-primary', bar: 'bg-primary/40' },
-  SALUD: { icon: MdHealthAndSafety, bg: 'bg-emerald-100', text: 'text-emerald-600', bar: 'bg-emerald-400' },
-  VIDA: { icon: MdFavorite, bg: 'bg-rose-100', text: 'text-rose-500', bar: 'bg-rose-400' },
-  HOGAR: { icon: MdHome, bg: 'bg-amber-100', text: 'text-amber-600', bar: 'bg-amber-400' },
-  VIAJE: { icon: MdFlight, bg: 'bg-sky-100', text: 'text-sky-600', bar: 'bg-sky-400' },
-  EMPRESA: { icon: MdBusiness, bg: 'bg-violet-100', text: 'text-violet-600', bar: 'bg-violet-400' },
-};
+import { estiloTipo } from '@/lib/tipoSeguroConfig';
 
 function tipoStyle(tipo) {
-  return TIPO_ICON[tipo] || { icon: MdShield, bg: 'bg-bg-soft', text: 'text-text-soft', bar: 'bg-border' };
+  const s = estiloTipo(tipo);
+  return { imagen: s.imagen, bg: s.accentBg, text: s.accentText, bar: s.bar };
 }
 
 function formatearMoneda(v) {
@@ -249,14 +237,13 @@ export default function Home() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
                   {polizasActivasTop.map((p) => {
                     const t = tipoStyle(p.producto?.tipo_seguro);
-                    const Icon = t.icon;
                     return (
                       <Card key={p.id_poliza} className="flex flex-col relative">
                         <div className={`h-1 w-full ${t.bar}`} />
                         <div className="p-4 flex flex-col gap-3 flex-1">
                           <div className="flex justify-between items-start">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg}`}>
-                              <Icon size={20} className={t.text} />
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} overflow-hidden`}>
+                              <Image src={t.imagen} width={24} height={24} alt="" className="object-contain" />
                             </div>
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Activa

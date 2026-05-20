@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -39,8 +40,7 @@ export default function ValidacionesPage() {
   const [filtro, setFiltro] = useState('PENDIENTE');
   const [busqueda, setBusqueda] = useState('');
   const [seleccionada, setSeleccionada] = useState(null);
-  const [toast, setToast] = useState(null);
-  const [accion, setAccion] = useState(null);
+const [accion, setAccion] = useState(null);
   const [motivo, setMotivo] = useState('');
   const [enviando, setEnviando] = useState(false);
 
@@ -61,13 +61,7 @@ export default function ValidacionesPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const filtradas = validaciones.filter((v) => {
+const filtradas = validaciones.filter((v) => {
     const matchFiltro = filtro === 'todos' || v.estado === filtro;
     const t = busqueda.toLowerCase();
     const matchBusq =
@@ -85,7 +79,7 @@ export default function ValidacionesPage() {
       const data = await apiPatch(`/validaciones/${seleccionada.id_validacion}/aprobar`);
       actualizarTras(data, 'Validación aprobada');
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo aprobar');
+      toast.error(e.mensaje || 'No se pudo aprobar');
     } finally {
       setEnviando(false);
     }
@@ -99,7 +93,7 @@ export default function ValidacionesPage() {
       const data = await apiPatch(`/validaciones/${seleccionada.id_validacion}/${ruta}`, { motivo: motivo.trim() });
       actualizarTras(data, ruta === 'rechazar' ? 'Validación rechazada' : 'Se solicitó corrección al cliente');
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo guardar');
+      toast.error(e.mensaje || 'No se pudo guardar');
     } finally {
       setEnviando(false);
     }
@@ -110,7 +104,7 @@ export default function ValidacionesPage() {
     setSeleccionada(data);
     setAccion(null);
     setMotivo('');
-    mostrarToast(msg);
+    toast.success(msg);
   };
 
   const counts = Object.keys(ESTADOS).reduce(
@@ -120,11 +114,6 @@ export default function ValidacionesPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div>
         <h1 className="text-base font-bold text-text">Validación de identidad y documentos</h1>
@@ -384,7 +373,7 @@ function Campo({ icono: Icono, label, valor }) {
 
 function ModalMotivo({ titulo, motivo, setMotivo, enviando, onCancelar, onConfirmar }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">{titulo}</p>

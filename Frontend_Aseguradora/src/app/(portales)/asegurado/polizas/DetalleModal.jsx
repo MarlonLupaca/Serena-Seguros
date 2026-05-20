@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import {
   MdClose,
   MdShield,
@@ -17,6 +18,7 @@ import {
 } from 'react-icons/md';
 import { apiGet, apiPost, apiDelete, apiDownloadFile } from '@/lib/api';
 import { ESTADO_STYLES, estiloTipo, formatearFecha, formatearMoneda } from './data';
+import ModalConfirm from '../../componentsMain/ModalConfirm';
 
 const ESTADO_ENDOSO = {
   PENDIENTE: 'bg-amber-100 text-amber-700',
@@ -41,6 +43,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
   const [enviandoEndoso, setEnviandoEndoso] = useState(false);
   const [errorEndoso, setErrorEndoso] = useState('');
   const [descargando, setDescargando] = useState(false);
+  const [confirmacion, setConfirmacion] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -81,14 +84,18 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
     }
   };
 
-  const eliminarDocumento = async (idDocumento) => {
-    if (!confirm('Eliminar este documento? Esta accion no se puede deshacer.')) return;
-    try {
-      await apiDelete(`/mis-documentos/${idDocumento}`);
-      await cargar();
-    } catch (e) {
-      setError(e.mensaje || 'No se pudo eliminar el documento');
-    }
+  const eliminarDocumento = (idDocumento) => {
+    setConfirmacion({
+      mensaje: 'Eliminar este documento? Esta accion no se puede deshacer.',
+      accion: async () => {
+        try {
+          await apiDelete(`/mis-documentos/${idDocumento}`);
+          await cargar();
+        } catch (e) {
+          setError(e.mensaje || 'No se pudo eliminar el documento');
+        }
+      },
+    });
   };
 
   const descargarContrato = async () => {
@@ -107,8 +114,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
 
   const tipoStyle = poliza
     ? estiloTipo(poliza.producto?.tipo_seguro)
-    : { icon: MdShield, accentBg: 'bg-bg-soft', accentText: 'text-text-soft' };
-  const Icon = tipoStyle.icon;
+    : { imagen: '/icons/sbs.png', accentBg: 'bg-bg-soft', accentText: 'text-text-soft' };
   const est = poliza ? ESTADO_STYLES[poliza.estado_poliza] || ESTADO_STYLES.PENDIENTE : null;
 
   return (
@@ -117,7 +123,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
         <div className={`${tipoStyle.accentBg} px-5 py-4 flex items-start justify-between`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-bg/70 flex items-center justify-center">
-              <Icon size={20} className={tipoStyle.accentText} />
+              <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
             </div>
             <div>
               <p className="text-sm font-bold text-text">{poliza?.producto?.nombre || 'Detalle de póliza'}</p>
@@ -499,6 +505,15 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
           </>
         )}
       </div>
+      <ModalConfirm
+        abierto={!!confirmacion}
+        titulo="Confirmar eliminacion"
+        mensaje={confirmacion?.mensaje}
+        textoConfirmar="Eliminar"
+        variante="danger"
+        onConfirmar={confirmacion?.accion}
+        onCancelar={() => setConfirmacion(null)}
+      />
     </div>
   );
 }

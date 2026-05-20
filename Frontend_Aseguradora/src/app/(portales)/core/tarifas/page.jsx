@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -19,6 +20,7 @@ import {
   MdEventNote,
 } from 'react-icons/md';
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api';
+import ModalConfirm from '../../componentsMain/ModalConfirm';
 
 const TIPOS = ['VEHICULAR', 'SALUD', 'VIDA', 'HOGAR', 'VIAJE', 'EMPRESA'];
 
@@ -52,9 +54,8 @@ export default function TarifasPage() {
   const [busq, setBusq] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('todos');
   const [modal, setModal] = useState(null);
-  const [toast, setToast] = useState(null);
-
-  useEffect(() => {
+  const [confirmacion, setConfirmacion] = useState(null);
+useEffect(() => {
     cargar();
   }, []);
 
@@ -70,21 +71,19 @@ export default function TarifasPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const eliminar = async (p) => {
-    if (!confirm(`¿Desactivar el producto "${p.nombre}"?`)) return;
-    try {
-      await apiDelete(`/productos/${p.id_producto}`);
-      mostrarToast('Producto desactivado');
-      cargar();
-    } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo desactivar');
-    }
+const eliminar = (p) => {
+    setConfirmacion({
+      mensaje: `¿Desactivar el producto "${p.nombre}"?`,
+      accion: async () => {
+        try {
+          await apiDelete(`/productos/${p.id_producto}`);
+          toast.success('Producto desactivado');
+          cargar();
+        } catch (e) {
+          toast.error(e.mensaje || 'No se pudo desactivar');
+        }
+      },
+    });
   };
 
   const filtrados = productos.filter((p) => {
@@ -101,11 +100,6 @@ export default function TarifasPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
@@ -180,13 +174,23 @@ export default function TarifasPage() {
         </div>
       )}
 
+      <ModalConfirm
+        abierto={!!confirmacion}
+        titulo="Confirmar desactivacion"
+        mensaje={confirmacion?.mensaje}
+        textoConfirmar="Desactivar"
+        variante="danger"
+        onConfirmar={confirmacion?.accion}
+        onCancelar={() => setConfirmacion(null)}
+      />
+
       {modal && (
         <ModalProducto
           producto={modal.producto || null}
           onClose={() => setModal(null)}
           onSuccess={() => {
             setModal(null);
-            mostrarToast(modal.producto ? 'Producto actualizado' : 'Producto creado');
+            toast.success(modal.producto ? 'Producto actualizado' : 'Producto creado');
             cargar();
           }}
         />
@@ -311,7 +315,7 @@ function ModalProducto({ producto, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col max-h-[92vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">

@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -28,9 +29,7 @@ export default function CampanasPage() {
   const [busq, setBusq] = useState('');
   const [modalNueva, setModalNueva] = useState(false);
   const [modalEnvio, setModalEnvio] = useState(null);
-  const [toast, setToast] = useState(null);
-
-  useEffect(() => {
+useEffect(() => {
     cargar();
   }, []);
 
@@ -46,13 +45,7 @@ export default function CampanasPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const filtradas = campanas.filter((c) =>
+const filtradas = campanas.filter((c) =>
     busq === '' ? true : (c.asunto || '').toLowerCase().includes(busq.toLowerCase())
   );
 
@@ -65,11 +58,6 @@ export default function CampanasPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
@@ -134,7 +122,7 @@ export default function CampanasPage() {
           onClose={() => setModalNueva(false)}
           onSuccess={() => {
             setModalNueva(false);
-            mostrarToast('Campaña creada');
+            toast.success('Campaña creada');
             cargar();
           }}
         />
@@ -145,7 +133,7 @@ export default function CampanasPage() {
           onClose={() => setModalEnvio(null)}
           onSuccess={() => {
             setModalEnvio(null);
-            mostrarToast('Envío registrado');
+            toast.success('Envío registrado');
             cargar();
           }}
         />
@@ -228,7 +216,7 @@ function ModalNuevaCampana({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">Nueva campaña</p>
@@ -310,7 +298,7 @@ function ModalRegistrarEnvio({ campana, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-bg w-full max-w-sm rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">Registrar envío</p>

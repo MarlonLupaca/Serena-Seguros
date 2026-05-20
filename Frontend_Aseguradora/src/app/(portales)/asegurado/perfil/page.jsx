@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Toast from './Toast';
+import toast from 'react-hot-toast';
 import ModalContrasena from './ModalContrasena';
 import SeccionDatosPersonales from './SeccionDatosPersonales';
 import SeccionContactoEmergencia from './SeccionContactoEmergencia';
@@ -10,14 +10,10 @@ import SeccionDocumentos from './SeccionDocumentos';
 import SeccionPreferencias from './SeccionPreferencias';
 import SeccionSeguridad from './SeccionSeguridad';
 
-export default function ModuloPerfil() {
-  const [toast, setToast] = useState(null);
-  const [modalContrasena, setModalContrasena] = useState(false);
+const mostrarToast = (msg) => toast.success(msg);
 
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3500);
-  };
+export default function ModuloPerfil() {
+  const [modalContrasena, setModalContrasena] = useState(false);
 
   return (
     <div className="min-h-screen pb-10 flex flex-col">
@@ -25,7 +21,6 @@ export default function ModuloPerfil() {
       <div className="">
         <div className="px-8 py-5">
           <div>
-            {/* Título */}
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div>
@@ -52,19 +47,15 @@ export default function ModuloPerfil() {
         </div>
       </div>
 
-      {/* Modal contraseña */}
       {modalContrasena && (
         <ModalContrasena
           onClose={() => setModalContrasena(false)}
           onGuardar={() => {
             setModalContrasena(false);
-            mostrarToast('Contraseña actualizada correctamente.');
+            toast.success('Contraseña actualizada correctamente.');
           }}
         />
       )}
-
-      {/* Toast */}
-      {toast && <Toast mensaje={toast} onClose={() => setToast(null)} />}
     </div>
   );
 }

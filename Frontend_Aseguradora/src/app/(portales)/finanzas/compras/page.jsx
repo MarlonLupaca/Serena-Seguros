@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -48,8 +49,7 @@ export default function ComprasPage() {
   const [error, setError] = useState('');
   const [busq, setBusq] = useState('');
   const [actualizando, setActualizando] = useState(null);
-  const [toast, setToast] = useState(null);
-  const [modalSolicitud, setModalSolicitud] = useState(false);
+const [modalSolicitud, setModalSolicitud] = useState(false);
   const [modalProveedor, setModalProveedor] = useState(false);
   const [modalOrden, setModalOrden] = useState(null);
 
@@ -75,20 +75,14 @@ export default function ComprasPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const cambiarEstado = async (id, estado) => {
+const cambiarEstado = async (id, estado) => {
     setActualizando(id);
     try {
       await apiPatch(`/compras/solicitudes/${id}/estado`, { estado });
-      mostrarToast(`Solicitud ${estado.toLowerCase()}`);
+      toast.success(`Solicitud ${estado.toLowerCase()}`);
       cargar();
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo actualizar');
+      toast.error(e.mensaje || 'No se pudo actualizar');
     } finally {
       setActualizando(null);
     }
@@ -103,11 +97,6 @@ export default function ComprasPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
@@ -198,7 +187,7 @@ export default function ComprasPage() {
           onClose={() => setModalSolicitud(false)}
           onSuccess={() => {
             setModalSolicitud(false);
-            mostrarToast('Solicitud creada');
+            toast.success('Solicitud creada');
             cargar();
           }}
         />
@@ -208,7 +197,7 @@ export default function ComprasPage() {
           onClose={() => setModalProveedor(false)}
           onSuccess={() => {
             setModalProveedor(false);
-            mostrarToast('Proveedor creado');
+            toast.success('Proveedor creado');
             cargar();
           }}
         />
@@ -220,7 +209,7 @@ export default function ComprasPage() {
           onClose={() => setModalOrden(null)}
           onSuccess={() => {
             setModalOrden(null);
-            mostrarToast('Orden de compra emitida');
+            toast.success('Orden de compra emitida');
             cargar();
           }}
         />
@@ -630,7 +619,7 @@ function ModalEmitirOrden({ solicitud, proveedores, onClose, onSuccess }) {
 
 function ModalShell({ titulo, onClose, children }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col max-h-[92vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">{titulo}</p>

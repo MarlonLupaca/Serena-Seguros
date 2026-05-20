@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import { MdAdd, MdClose, MdDomain, MdEdit, MdSearch, MdBlock } from 'react-icons/md';
@@ -25,9 +26,7 @@ export default function ActivosPage() {
   const [busq, setBusq] = useState('');
   const [filtro, setFiltro] = useState('todos');
   const [modal, setModal] = useState(null);
-  const [toast, setToast] = useState(null);
-
-  useEffect(() => { cargar(); }, []);
+useEffect(() => { cargar(); }, []);
 
   const cargar = async () => {
     setCargando(true);
@@ -42,16 +41,13 @@ export default function ActivosPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
-
-  const baja = async (id) => {
+const baja = async (id) => {
     try {
       await apiDelete(`/activos/${id}`);
-      mostrarToast('Activo dado de baja');
+      toast.success('Activo dado de baja');
       cargar();
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo dar de baja');
+      toast.error(e.mensaje || 'No se pudo dar de baja');
     }
   };
 
@@ -66,8 +62,6 @@ export default function ActivosPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">{toast}</div>}
-
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-base font-bold text-text">Activos internos</h1>
@@ -135,7 +129,7 @@ export default function ActivosPage() {
       )}
 
       {modal && (
-        <ModalActivo modo={modal.modo} dataInicial={modal.data} empleados={empleados} onClose={() => setModal(null)} onSuccess={() => { setModal(null); mostrarToast(modal.modo === 'crear' ? 'Activo creado' : 'Activo actualizado'); cargar(); }} />
+        <ModalActivo modo={modal.modo} dataInicial={modal.data} empleados={empleados} onClose={() => setModal(null)} onSuccess={() => { setModal(null); toast.success(modal.modo === 'crear' ? 'Activo creado' : 'Activo actualizado'); cargar(); }} />
       )}
     </div>
   );
@@ -171,7 +165,7 @@ function ModalActivo({ modo, dataInicial, empleados, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">{modo === 'crear' ? 'Nuevo' : 'Editar'} activo</p>

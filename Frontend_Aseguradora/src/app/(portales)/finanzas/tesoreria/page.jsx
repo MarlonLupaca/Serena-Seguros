@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import { MdAdd, MdAccountBalanceWallet, MdArrowDownward, MdArrowUpward, MdCalendarToday, MdClose, MdEdit, MdSearch } from 'react-icons/md';
@@ -30,10 +31,9 @@ export default function TesoreriaPage() {
   const [filtro, setFiltro] = useState('todos');
   const [busq, setBusq] = useState('');
   const [modal, setModal] = useState(false);
+  const [detalle, setDetalle] = useState(null);
   const [actualizandoId, setActualizandoId] = useState(null);
-  const [toast, setToast] = useState(null);
-
-  useEffect(() => { cargar(); }, []);
+useEffect(() => { cargar(); }, []);
 
   const cargar = async () => {
     setCargando(true);
@@ -48,17 +48,14 @@ export default function TesoreriaPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
-
-  const cambiarEstado = async (id, estado) => {
+const cambiarEstado = async (id, estado) => {
     setActualizandoId(id);
     try {
       await apiPatch(`/tesoreria/${id}/estado`, { estado_aprobacion: estado });
-      mostrarToast('Estado actualizado');
+      toast.success('Estado actualizado');
       cargar();
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo actualizar');
+      toast.error(e.mensaje || 'No se pudo actualizar');
     } finally {
       setActualizandoId(null);
     }
@@ -73,8 +70,6 @@ export default function TesoreriaPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">{toast}</div>}
-
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-base font-bold text-text">Tesorería</h1>
@@ -120,7 +115,7 @@ export default function TesoreriaPage() {
             const color = esIngreso ? 'text-emerald-600' : 'text-rose-500';
             const bg = esIngreso ? 'bg-emerald-100' : 'bg-rose-100';
             return (
-              <div key={m.id_movimiento} className="bg-bg rounded-2xl border border-border overflow-hidden">
+              <div key={m.id_movimiento} onClick={() => setDetalle(m)} className="bg-bg rounded-2xl border border-border overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
                 <div className="p-4 flex items-center gap-3 flex-wrap sm:flex-nowrap">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${bg}`}>
                     <Icon size={20} className={color} />
@@ -135,19 +130,7 @@ export default function TesoreriaPage() {
                     <p className="text-xs text-text-soft mt-0.5">MOV-{String(m.id_movimiento).padStart(6, '0')} · {m.tipo_flujo}</p>
                     <p className="text-xs text-text-soft mt-0.5 flex items-center gap-1"><MdCalendarToday size={11} /> {formatearFecha(m.fecha_programada)}</p>
                   </div>
-                  <div className="flex flex-col items-end gap-2 shrink-0">
-                    <p className={`text-base font-bold ${color}`}>{esIngreso ? '+' : '-'}{formatearMoneda(m.monto)}</p>
-                    {m.estado_aprobacion !== 'EJECUTADO' && (
-                      <div className="flex gap-1.5">
-                        {m.estado_aprobacion === 'PENDIENTE' && (
-                          <button onClick={() => cambiarEstado(m.id_movimiento, 'APROBADO')} disabled={actualizandoId === m.id_movimiento} className="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold transition-colors disabled:opacity-50">Aprobar</button>
-                        )}
-                        {m.estado_aprobacion === 'APROBADO' && (
-                          <button onClick={() => cambiarEstado(m.id_movimiento, 'EJECUTADO')} disabled={actualizandoId === m.id_movimiento} className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-colors disabled:opacity-50">Ejecutar</button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <p className={`text-base font-bold ${color} shrink-0`}>{esIngreso ? '+' : '-'}{formatearMoneda(m.monto)}</p>
                 </div>
               </div>
             );
@@ -155,7 +138,83 @@ export default function TesoreriaPage() {
         </div>
       )}
 
-      {modal && <ModalMovimiento onClose={() => setModal(false)} onSuccess={() => { setModal(false); mostrarToast('Movimiento creado'); cargar(); }} />}
+      {modal && <ModalMovimiento onClose={() => setModal(false)} onSuccess={() => { setModal(false); toast.success('Movimiento creado'); cargar(); }} />}
+
+      {detalle && (
+        <ModalDetalleMovimiento
+          m={detalle}
+          onClose={() => setDetalle(null)}
+          onCambiarEstado={(id, estado) => { setDetalle(null); cambiarEstado(id, estado); }}
+          actualizandoId={actualizandoId}
+        />
+      )}
+    </div>
+  );
+}
+
+function ModalDetalleMovimiento({ m, onClose, onCambiarEstado, actualizandoId }) {
+  const est = ESTADOS[m.estado_aprobacion] || ESTADOS.PENDIENTE;
+  const esIngreso = m.tipo_flujo === 'INGRESO';
+  const Icon = esIngreso ? MdArrowUpward : MdArrowDownward;
+  const color = esIngreso ? 'text-emerald-600' : 'text-rose-500';
+  const bg = esIngreso ? 'bg-emerald-100' : 'bg-rose-100';
+
+  return (
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <p className="text-sm font-bold text-text">Detalle del movimiento</p>
+          <button onClick={onClose} className="text-text-soft hover:text-text"><MdClose size={18} /></button>
+        </div>
+        <div className="p-5 flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${bg}`}>
+              <Icon size={24} className={color} />
+            </div>
+            <div>
+              <p className="text-xs text-text-soft">{m.tipo_flujo}</p>
+              <p className={`text-2xl font-bold ${color}`}>{esIngreso ? '+' : '-'}{formatearMoneda(m.monto)}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Info label="Código" val={`MOV-${String(m.id_movimiento).padStart(6, '0')}`} />
+            <Info label="Estado" val={est.label} badge={est.badge} />
+            <Info label="Fecha programada" val={formatearFecha(m.fecha_programada)} />
+            <Info label="Tipo" val={m.tipo_flujo} />
+          </div>
+
+          <div>
+            <p className="text-xs font-medium text-text-soft mb-1">Concepto</p>
+            <p className="text-sm text-text bg-bg-soft rounded-xl p-3">{m.concepto || '—'}</p>
+          </div>
+
+          {m.estado_aprobacion !== 'EJECUTADO' && (
+            <div className="flex gap-2 pt-2 border-t border-border">
+              {m.estado_aprobacion === 'PENDIENTE' && (
+                <button onClick={() => onCambiarEstado(m.id_movimiento, 'APROBADO')} disabled={actualizandoId === m.id_movimiento} className="flex-1 py-2.5 rounded-xl bg-info hover:bg-info/80 text-white text-xs font-semibold transition-colors disabled:opacity-50">Aprobar</button>
+              )}
+              {m.estado_aprobacion === 'APROBADO' && (
+                <button onClick={() => onCambiarEstado(m.id_movimiento, 'EJECUTADO')} disabled={actualizandoId === m.id_movimiento} className="flex-1 py-2.5 rounded-xl bg-success hover:bg-success/80 text-white text-xs font-semibold transition-colors disabled:opacity-50">Ejecutar</button>
+              )}
+              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-border hover:bg-bg-soft text-xs font-medium text-text-soft transition-colors">Cerrar</button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Info({ label, val, badge }) {
+  return (
+    <div className="bg-bg-soft rounded-xl p-2.5">
+      <p className="text-xs text-text-soft mb-0.5">{label}</p>
+      {badge ? (
+        <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full ${badge}`}>{val}</span>
+      ) : (
+        <p className="text-xs font-semibold text-text">{val}</p>
+      )}
     </div>
   );
 }
@@ -189,7 +248,7 @@ function ModalMovimiento({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">Nuevo movimiento</p>

@@ -1,9 +1,10 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { MdTimeline, MdClose, MdHistory, MdInsertDriveFile, MdDownload, MdDelete } from 'react-icons/md';
 import { apiGet, apiDelete, apiDownloadFile } from '@/lib/api';
 import { formatearFecha } from './data';
+import ModalConfirm from '../../componentsMain/ModalConfirm';
 
 const ESTADO_BADGE = {
   REPORTADO: 'bg-sky-100 text-sky-700',
@@ -76,6 +77,7 @@ export default function SeguimientoSiniestros() {
 function ModalLineaTiempo({ id, onClose }) {
   const [detalle, setDetalle] = useState(null);
   const [error, setError] = useState('');
+  const [confirmacion, setConfirmacion] = useState(null);
 
   const cargar = () =>
     apiGet(`/mis-siniestros/${id}`)
@@ -92,21 +94,25 @@ function ModalLineaTiempo({ id, onClose }) {
     };
   }, [id]);
 
-  const eliminarDocumento = async (idDocumento) => {
-    if (!confirm('Eliminar esta evidencia? Esta accion no se puede deshacer.')) return;
-    try {
-      await apiDelete(`/mis-documentos/${idDocumento}`);
-      await cargar();
-    } catch (e) {
-      setError(e.mensaje || 'No se pudo eliminar el documento');
-    }
+  const eliminarDocumento = (idDocumento) => {
+    setConfirmacion({
+      mensaje: 'Eliminar esta evidencia? Esta accion no se puede deshacer.',
+      accion: async () => {
+        try {
+          await apiDelete(`/mis-documentos/${idDocumento}`);
+          await cargar();
+        } catch (e) {
+          setError(e.mensaje || 'No se pudo eliminar el documento');
+        }
+      },
+    });
   };
 
   const eventos = detalle?.timeline || [];
   const documentos = detalle?.documentos || [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-bg rounded-2xl border border-border shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center p-4 border-b border-border">
           <p className="font-bold text-text text-sm">
@@ -196,6 +202,15 @@ function ModalLineaTiempo({ id, onClose }) {
           )}
         </div>
       </div>
+      <ModalConfirm
+        abierto={!!confirmacion}
+        titulo="Confirmar eliminacion"
+        mensaje={confirmacion?.mensaje}
+        textoConfirmar="Eliminar"
+        variante="danger"
+        onConfirmar={confirmacion?.accion}
+        onCancelar={() => setConfirmacion(null)}
+      />
     </div>
   );
 }

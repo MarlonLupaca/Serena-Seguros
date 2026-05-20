@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import Image from 'next/image';
+import toast from 'react-hot-toast';
 import { MdChevronRight, MdPictureAsPdf, MdAutorenew } from 'react-icons/md';
 import { apiDownloadFile } from '@/lib/api';
 import { ESTADO_STYLES, estiloTipo, formatearFecha, formatearMoneda } from './data';
@@ -6,7 +8,6 @@ import { ESTADO_STYLES, estiloTipo, formatearFecha, formatearMoneda } from './da
 export default function PolizaCard({ p, onVerDetalle, onRenovar }) {
   const [descargando, setDescargando] = useState(false);
   const tipoStyle = estiloTipo(p.producto?.tipo_seguro);
-  const Icon = tipoStyle.icon;
   const est = ESTADO_STYLES[p.estado_poliza] || ESTADO_STYLES.PENDIENTE;
 
   const handleDescargar = async () => {
@@ -14,7 +15,7 @@ export default function PolizaCard({ p, onVerDetalle, onRenovar }) {
     try {
       await apiDownloadFile(`/mis-polizas/${p.id_poliza}/contrato`, `contrato-poliza-${p.id_poliza}.txt`);
     } catch (e) {
-      alert(e.mensaje || 'No se pudo descargar el contrato');
+      toast.error(e.mensaje || 'No se pudo descargar el contrato');
     } finally {
       setDescargando(false);
     }
@@ -25,8 +26,8 @@ export default function PolizaCard({ p, onVerDetalle, onRenovar }) {
       <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
       <div className="p-5 flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex items-start gap-4 flex-1 w-full">
-          <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
-            <Icon size={22} className={tipoStyle.accentText} />
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg} overflow-hidden`}>
+            <Image src={tipoStyle.imagen} width={28} height={28} alt="" className="object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 flex-wrap">

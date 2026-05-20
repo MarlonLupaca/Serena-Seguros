@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import {
@@ -13,6 +13,7 @@ import {
   MdClose,
 } from 'react-icons/md';
 import { apiDelete, apiDownloadFile, apiGet, apiUploadFile } from '@/lib/api';
+import ModalConfirm from '../../componentsMain/ModalConfirm';
 
 const CATEGORIAS = [
   { value: 'identidad', label: 'Identidad (DNI)' },
@@ -45,6 +46,7 @@ export default function SeccionDocumentos({ onGuardar }) {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [modal, setModal] = useState(false);
+  const [confirmacion, setConfirmacion] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -71,15 +73,19 @@ export default function SeccionDocumentos({ onGuardar }) {
     }
   };
 
-  const eliminar = async (id) => {
-    if (!confirm('¿Eliminar este documento?')) return;
-    try {
-      await apiDelete(`/mis-documentos/${id}`);
-      onGuardar('Documento eliminado');
-      cargar();
-    } catch (e) {
-      onGuardar(e.mensaje || 'No se pudo eliminar');
-    }
+  const eliminar = (id) => {
+    setConfirmacion({
+      mensaje: '¿Eliminar este documento?',
+      accion: async () => {
+        try {
+          await apiDelete(`/mis-documentos/${id}`);
+          onGuardar('Documento eliminado');
+          cargar();
+        } catch (e) {
+          onGuardar(e.mensaje || 'No se pudo eliminar');
+        }
+      },
+    });
   };
 
   return (
@@ -168,6 +174,15 @@ export default function SeccionDocumentos({ onGuardar }) {
           }}
         />
       )}
+      <ModalConfirm
+        abierto={!!confirmacion}
+        titulo="Confirmar eliminacion"
+        mensaje={confirmacion?.mensaje}
+        textoConfirmar="Eliminar"
+        variante="danger"
+        onConfirmar={confirmacion?.accion}
+        onCancelar={() => setConfirmacion(null)}
+      />
     </div>
   );
 }
@@ -200,7 +215,7 @@ function ModalSubir({ onClose, onSuccess }) {
   const requiereIdRef = categoria === 'poliza' || categoria === 'siniestro';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <div className="bg-bg w-full max-w-sm rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">Subir documento</p>

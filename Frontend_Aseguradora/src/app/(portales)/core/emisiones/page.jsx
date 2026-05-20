@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -57,9 +58,7 @@ export default function EmisionesPage() {
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [modalNueva, setModalNueva] = useState(false);
   const [actualizandoId, setActualizandoId] = useState(null);
-  const [toast, setToast] = useState(null);
-
-  useEffect(() => {
+useEffect(() => {
     cargar();
   }, []);
 
@@ -75,20 +74,14 @@ export default function EmisionesPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const cambiarEstado = async (id, nuevo) => {
+const cambiarEstado = async (id, nuevo) => {
     setActualizandoId(id);
     try {
       const data = await apiPatch(`/polizas/${id}/estado`, { estado_poliza: nuevo });
       setPolizas((prev) => prev.map((p) => (p.id_poliza === id ? data : p)));
-      mostrarToast('Estado actualizado');
+      toast.success('Estado actualizado');
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo actualizar');
+      toast.error(e.mensaje || 'No se pudo actualizar');
     } finally {
       setActualizandoId(null);
     }
@@ -108,11 +101,6 @@ export default function EmisionesPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -182,7 +170,7 @@ export default function EmisionesPage() {
           onClose={() => setModalNueva(false)}
           onSuccess={() => {
             setModalNueva(false);
-            mostrarToast('Póliza emitida');
+            toast.success('Póliza emitida');
             cargar();
           }}
         />
@@ -301,7 +289,7 @@ function ModalEmitir({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">Emitir nueva póliza</p>

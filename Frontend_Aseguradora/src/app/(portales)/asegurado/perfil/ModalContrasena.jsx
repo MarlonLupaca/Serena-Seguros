@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { MdLock, MdClose, MdVisibility, MdVisibilityOff, MdCheckCircle } from 'react-icons/md';
@@ -39,7 +39,7 @@ export default function ModalContrasena({ onClose, onGuardar }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 px-4">
       <div className="w-full max-w-sm bg-bg rounded-2xl border border-border overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div className="flex items-center gap-2">

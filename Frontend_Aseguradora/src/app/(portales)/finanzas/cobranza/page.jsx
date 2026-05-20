@@ -1,8 +1,11 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
-import { MdAttachMoney, MdCalendarToday, MdCheckCircle, MdHourglassEmpty, MdPriceCheck, MdSearch, MdWarning, MdUploadFile, MdClose } from 'react-icons/md';
+import { MdAttachMoney, MdCalendarToday, MdCheckCircle, MdHourglassEmpty, MdPriceCheck, MdSearch, MdWarning, MdUploadFile, MdClose, MdExpandMore, MdExpandLess } from 'react-icons/md';
+import Image from 'next/image';
 import { apiGet, apiPatch, apiUploadFile } from '@/lib/api';
+import { estiloTipo } from '@/lib/tipoSeguroConfig';
 
 const ESTADOS = {
   PENDIENTE: { label: 'Pendiente', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
@@ -30,8 +33,7 @@ export default function CobranzaPage() {
   const [filtro, setFiltro] = useState('PENDIENTE');
   const [busq, setBusq] = useState('');
   const [actualizandoId, setActualizandoId] = useState(null);
-  const [toast, setToast] = useState(null);
-  const [modalImportar, setModalImportar] = useState(false);
+const [modalImportar, setModalImportar] = useState(false);
 
   useEffect(() => { cargar(); }, []);
 
@@ -48,17 +50,14 @@ export default function CobranzaPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
-
-  const marcar = async (id) => {
+const marcar = async (id) => {
     setActualizandoId(id);
     try {
       await apiPatch(`/cobranza/${id}/pagar`);
-      mostrarToast('Cuota marcada como pagada');
+      toast.success('Cuota marcada como pagada');
       cargar();
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo actualizar');
+      toast.error(e.mensaje || 'No se pudo actualizar');
     } finally {
       setActualizandoId(null);
     }
@@ -73,8 +72,6 @@ export default function CobranzaPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">{toast}</div>}
-
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-base font-bold text-text">Cobranza</h1>
@@ -117,39 +114,7 @@ export default function CobranzaPage() {
       ) : filtradas.length === 0 ? (
         <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">Sin cuotas con este filtro</div>
       ) : (
-        <div className="flex flex-col gap-2">
-          {filtradas.slice(0, 100).map((c) => {
-            const est = ESTADOS[c.estado_pago] || ESTADOS.PENDIENTE;
-            return (
-              <div key={c.id_cuota} className="bg-bg rounded-2xl border border-border p-3 flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <MdAttachMoney size={18} className="text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-bold text-text">CUO-{String(c.id_cuota).padStart(6, '0')}</p>
-                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />{est.label}
-                    </span>
-                  </div>
-                  <p className="text-xs text-text-soft mt-0.5">POL-{String(c.id_poliza).padStart(6, '0')} · {c.poliza_nombre} · cuota {c.numero_cuota}</p>
-                  <p className="text-xs text-text-soft mt-0.5 flex items-center gap-1"><MdCalendarToday size={11} /> Vence {formatearFecha(c.fecha_vencimiento)}</p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <p className="text-sm font-bold text-text">{formatearMoneda(c.monto)}</p>
-                  {c.estado_pago !== 'PAGADO' && (
-                    <button onClick={() => marcar(c.id_cuota)} disabled={actualizandoId === c.id_cuota} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-colors disabled:opacity-50">
-                      <MdPriceCheck size={13} /> Pagar
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-          {filtradas.length > 100 && (
-            <p className="text-xs text-text-soft text-center py-2">Mostrando primeras 100 de {filtradas.length}</p>
-          )}
-        </div>
+        <GruposPoliza cuotas={filtradas} marcar={marcar} actualizandoId={actualizandoId} />
       )}
 
       {modalImportar && (
@@ -157,10 +122,80 @@ export default function CobranzaPage() {
           onClose={() => setModalImportar(false)}
           onSuccess={(r) => {
             setModalImportar(false);
-            mostrarToast(`Conciliadas ${r.conciliadas} · No encontradas ${r.no_encontradas}`);
+            toast.success(`Conciliadas ${r.conciliadas} · No encontradas ${r.no_encontradas}`);
             cargar();
           }}
         />
+      )}
+    </div>
+  );
+}
+
+function GruposPoliza({ cuotas, marcar, actualizandoId }) {
+  const grupos = {};
+  cuotas.forEach((c) => {
+    const key = c.id_poliza || 0;
+    if (!grupos[key]) grupos[key] = { nombre: c.poliza_nombre || 'Sin póliza', tipo: c.poliza_tipo, id: key, items: [] };
+    grupos[key].items.push(c);
+  });
+  const lista = Object.values(grupos).sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+  return (
+    <div className="flex flex-col gap-4">
+      {lista.map((g) => (
+        <GrupoPoliza key={g.id} grupo={g} marcar={marcar} actualizandoId={actualizandoId} />
+      ))}
+    </div>
+  );
+}
+
+function GrupoPoliza({ grupo, marcar, actualizandoId }) {
+  const [abierto, setAbierto] = useState(true);
+  const tipoStyle = estiloTipo(grupo.tipo);
+  const pendientes = grupo.items.filter((c) => c.estado_pago !== 'PAGADO').length;
+  const totalMonto = grupo.items.reduce((acc, c) => acc + Number(c.monto || 0), 0);
+
+  return (
+    <div className="bg-bg rounded-2xl border border-border overflow-hidden">
+      <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
+      <button onClick={() => setAbierto(!abierto)} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-bg-soft transition-colors">
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg} overflow-hidden`}>
+          <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <p className="text-sm font-bold text-text">{grupo.nombre}</p>
+          <p className="text-xs text-text-soft mt-0.5">POL-{String(grupo.id).padStart(6, '0')} · {grupo.items.length} cuota{grupo.items.length > 1 ? 's' : ''} · {pendientes} pendiente{pendientes !== 1 ? 's' : ''}</p>
+        </div>
+        <p className="text-sm font-bold text-text shrink-0">{formatearMoneda(totalMonto)}</p>
+        {abierto ? <MdExpandLess size={18} className="text-text-soft shrink-0" /> : <MdExpandMore size={18} className="text-text-soft shrink-0" />}
+      </button>
+      {abierto && (
+        <div className="border-t border-border divide-y divide-border/50">
+          {grupo.items.map((c) => {
+            const est = ESTADOS[c.estado_pago] || ESTADOS.PENDIENTE;
+            return (
+              <div key={c.id_cuota} className="px-4 py-3 flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-medium text-text">Cuota {c.numero_cuota}</p>
+                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />{est.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-soft mt-0.5 flex items-center gap-1"><MdCalendarToday size={11} /> Vence {formatearFecha(c.fecha_vencimiento)}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <p className="text-sm font-bold text-text">{formatearMoneda(c.monto)}</p>
+                  {c.estado_pago !== 'PAGADO' && (
+                    <button onClick={() => marcar(c.id_cuota)} disabled={actualizandoId === c.id_cuota} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-success hover:bg-success/80 text-white text-xs font-semibold transition-colors disabled:opacity-50">
+                      <MdPriceCheck size={13} /> Pagar
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
@@ -190,7 +225,7 @@ function ModalImportarCobranza({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">Importar carga bancaria</p>

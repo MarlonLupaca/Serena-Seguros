@@ -54,6 +54,8 @@ public class CalculadoraPrimaService {
             case HOGAR -> factorHogar(datos);
             case VIAJE -> factorViaje(datos);
             case EMPRESA -> factorEmpresa(datos);
+            case SOAT -> factorSoat(datos);
+            case MASCOTAS -> factorMascotas(datos);
         };
     }
 
@@ -118,6 +120,21 @@ public class CalculadoraPrimaService {
         Integer empleados = optInt(datos, "numero_empleados");
         if (empleados != null && empleados > 50) factor = factor.multiply(new BigDecimal("1.30"));
         if (empleados != null && empleados > 200) factor = factor.multiply(new BigDecimal("1.50"));
+        return factor;
+    }
+
+    private BigDecimal factorSoat(JsonNode datos) {
+        BigDecimal factor = BigDecimal.ONE;
+        String uso = optText(datos, "uso");
+        if ("PUBLICO".equalsIgnoreCase(uso)) factor = factor.multiply(new BigDecimal("1.30"));
+        if ("CARGA".equalsIgnoreCase(uso)) factor = factor.multiply(new BigDecimal("1.50"));
+        return factor;
+    }
+
+    private BigDecimal factorMascotas(JsonNode datos) {
+        BigDecimal factor = BigDecimal.ONE;
+        Integer edad = optInt(datos, "edad_mascota");
+        if (edad != null && edad > 8) factor = factor.multiply(new BigDecimal("1.40"));
         return factor;
     }
 

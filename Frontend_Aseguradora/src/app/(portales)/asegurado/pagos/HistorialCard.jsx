@@ -1,16 +1,16 @@
+import Image from 'next/image';
 import { MdCalendarToday } from 'react-icons/md';
 import { estiloTipo, formatearFecha, formatearMoneda } from './data';
 
 export default function HistorialCard({ c }) {
   const tipoStyle = estiloTipo(c.poliza_tipo);
-  const PolIcon = tipoStyle.icon;
 
   return (
     <div className="bg-bg rounded-2xl border border-border overflow-hidden">
       <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
       <div className="p-4 flex items-center gap-4 flex-wrap sm:flex-nowrap">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
-          <PolIcon size={20} className={tipoStyle.accentText} />
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg} overflow-hidden`}>
+          <Image src={tipoStyle.imagen} width={24} height={24} alt="" className="object-contain" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">

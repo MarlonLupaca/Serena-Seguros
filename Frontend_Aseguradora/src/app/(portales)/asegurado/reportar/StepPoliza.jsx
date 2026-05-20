@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { MdCheck, MdShield } from 'react-icons/md';
 import { estiloTipo } from './data';
 
@@ -31,7 +32,6 @@ export default function StepPoliza({ polizaId, onChange, polizas, cargando, erro
       <div className="flex flex-col gap-2">
         {polizas.map((p) => {
           const tipoStyle = estiloTipo(p.producto?.tipo_seguro);
-          const Icon = tipoStyle.icon;
           const sel = polizaId === p.id_poliza;
           return (
             <button
@@ -44,7 +44,7 @@ export default function StepPoliza({ polizaId, onChange, polizas, cargando, erro
               }`}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
-                <Icon size={20} className={tipoStyle.accentText} />
+                <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-text">{p.producto?.nombre}</p>

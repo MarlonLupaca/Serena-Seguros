@@ -54,7 +54,8 @@ export function getToken() {
 function persist(data) {
   if (typeof window === 'undefined') return;
 
-  const cookieOptions = { secure: true, sameSite: 'strict' };
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const cookieOptions = { secure: !isLocalhost, sameSite: 'Lax' };
 
   Cookies.set(KEY_TOKEN, data.access_token, { ...cookieOptions, expires: 1 });
   Cookies.set(KEY_REFRESH, data.refresh_token, { ...cookieOptions, expires: 7 });

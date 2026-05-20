@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { MdWarning } from 'react-icons/md';
 import { TIPOS, estiloTipo } from './data';
 
@@ -5,7 +6,6 @@ export default function StepResumen({ data, polizas }) {
   const pol = (polizas || []).find((p) => p.id_poliza === data.poliza);
   const tip = TIPOS.find((t) => t.id === data.tipo);
   const tipoStyle = pol ? estiloTipo(pol.producto?.tipo_seguro) : null;
-  const PolIcon = tipoStyle?.icon;
   const TipIcon = tip?.icon;
 
   const rows = [
@@ -28,9 +28,9 @@ export default function StepResumen({ data, polizas }) {
     <div className="flex flex-col gap-3">
       <div className="bg-bg rounded-2xl border border-border overflow-hidden">
         <div className="flex items-center gap-3 p-4 border-b border-border">
-          {pol && PolIcon && (
+          {pol && tipoStyle?.imagen && (
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
-              <PolIcon size={20} className={tipoStyle.accentText} />
+              <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
             </div>
           )}
           <div className="flex-1">

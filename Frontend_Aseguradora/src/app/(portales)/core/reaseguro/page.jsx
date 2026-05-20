@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import { MdAdd, MdAssuredWorkload, MdClose, MdDelete, MdEdit, MdSearch } from 'react-icons/md';
@@ -18,9 +19,7 @@ export default function ReaseguroPage() {
   const [error, setError] = useState('');
   const [busq, setBusq] = useState('');
   const [modal, setModal] = useState(null);
-  const [toast, setToast] = useState(null);
-
-  useEffect(() => {
+useEffect(() => {
     cargar();
   }, []);
 
@@ -37,19 +36,13 @@ export default function ReaseguroPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const eliminar = async (id) => {
+const eliminar = async (id) => {
     try {
       await apiDelete(`/reaseguros/${id}`);
-      mostrarToast('Reaseguro eliminado');
+      toast.success('Reaseguro eliminado');
       cargar();
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo eliminar');
+      toast.error(e.mensaje || 'No se pudo eliminar');
     }
   };
 
@@ -71,11 +64,6 @@ export default function ReaseguroPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -174,7 +162,7 @@ export default function ReaseguroPage() {
           onClose={() => setModal(null)}
           onSuccess={() => {
             setModal(null);
-            mostrarToast(modal.modo === 'crear' ? 'Reaseguro creado' : 'Reaseguro actualizado');
+            toast.success(modal.modo === 'crear' ? 'Reaseguro creado' : 'Reaseguro actualizado');
             cargar();
           }}
         />
@@ -224,7 +212,7 @@ function ModalReaseguro({ modo, dataInicial, polizas, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">{modo === 'crear' ? 'Nuevo' : 'Editar'} reaseguro</p>

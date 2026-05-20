@@ -279,37 +279,48 @@ function TabPagos({ cuotas }) {
   if (!cuotas || cuotas.length === 0) {
     return <Empty texto="No hay cuotas registradas." />;
   }
+  const grupos = {};
+  cuotas.forEach((c) => {
+    const key = c.id_poliza || 0;
+    if (!grupos[key]) grupos[key] = { nombre: c.poliza_nombre || 'Sin póliza', id: key, items: [] };
+    grupos[key].items.push(c);
+  });
+  const lista = Object.values(grupos).sort((a, b) => a.nombre.localeCompare(b.nombre));
+
   return (
-    <table className="w-full text-left text-sm">
-      <thead>
-        <tr className="text-xs text-text-soft border-b border-border">
-          <th className="pb-2 font-medium">Cuota</th>
-          <th className="pb-2 font-medium">Vencimiento</th>
-          <th className="pb-2 font-medium">Producto</th>
-          <th className="pb-2 font-medium">Monto</th>
-          <th className="pb-2 font-medium text-right">Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        {cuotas.map((c) => (
-          <tr key={c.id_cuota} className="border-b border-border/50 last:border-0">
-            <td className="py-2 text-text">#{c.numero_cuota}</td>
-            <td className="py-2 text-text">{formatearFecha(c.fecha_vencimiento)}</td>
-            <td className="py-2 text-text">{c.poliza_nombre}</td>
-            <td className="py-2 text-text font-medium">{formatearMoneda(c.monto)}</td>
-            <td className="py-2 text-right">
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  ESTADO_CUOTA_BADGE[c.estado_pago] || 'bg-bg-soft text-text-soft'
-                }`}
-              >
-                {c.estado_pago}
-              </span>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="flex flex-col gap-4">
+      {lista.map((g) => (
+        <div key={g.id}>
+          <p className="text-xs font-bold text-text mb-2">
+            {g.nombre} <span className="text-text-soft font-normal">· {g.items.length} cuota{g.items.length > 1 ? 's' : ''}</span>
+          </p>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="text-xs text-text-soft border-b border-border">
+                <th className="pb-2 font-medium">Cuota</th>
+                <th className="pb-2 font-medium">Vencimiento</th>
+                <th className="pb-2 font-medium">Monto</th>
+                <th className="pb-2 font-medium text-right">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {g.items.map((c) => (
+                <tr key={c.id_cuota} className="border-b border-border/50 last:border-0">
+                  <td className="py-2 text-text">#{c.numero_cuota}</td>
+                  <td className="py-2 text-text">{formatearFecha(c.fecha_vencimiento)}</td>
+                  <td className="py-2 text-text font-medium">{formatearMoneda(c.monto)}</td>
+                  <td className="py-2 text-right">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ESTADO_CUOTA_BADGE[c.estado_pago] || 'bg-bg-soft text-text-soft'}`}>
+                      {c.estado_pago}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
   );
 }
 
