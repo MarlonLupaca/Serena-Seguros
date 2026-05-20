@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -22,6 +23,7 @@ import {
   MdBadge,
 } from 'react-icons/md';
 import { apiDelete, apiDownloadFile, apiGet, apiUploadFile } from '@/lib/api';
+import ModalConfirm from '../../componentsMain/ModalConfirm';
 
 const TABLAS = [
   { value: 'general', label: 'General', icon: MdFolder, accentBg: 'bg-bg-soft', accentText: 'text-text-soft' },
@@ -70,9 +72,8 @@ export default function CentroDocumentalPage() {
   const [busq, setBusq] = useState('');
   const [filtro, setFiltro] = useState('todos');
   const [modal, setModal] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  useEffect(() => {
+  const [confirmacion, setConfirmacion] = useState(null);
+useEffect(() => {
     cargar();
   }, []);
 
@@ -92,29 +93,27 @@ export default function CentroDocumentalPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const descargar = async (doc) => {
+const descargar = async (doc) => {
     try {
       await apiDownloadFile(`/mis-documentos/${doc.id_documento}/archivo`, doc.nombre_archivo);
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo descargar');
+      toast.error(e.mensaje || 'No se pudo descargar');
     }
   };
 
   const eliminar = async (id) => {
-    if (!confirm('¿Eliminar este documento del repositorio?')) return;
-    try {
-      await apiDelete(`/mis-documentos/${id}`);
-      mostrarToast('Documento eliminado');
-      cargar();
-    } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo eliminar');
-    }
+    setConfirmacion({
+      mensaje: '¿Eliminar este documento del repositorio?',
+      accion: async () => {
+        try {
+          await apiDelete(`/mis-documentos/${id}`);
+          toast.success('Documento eliminado');
+          cargar();
+        } catch (e) {
+          toast.error(e.mensaje || 'No se pudo eliminar');
+        }
+      },
+    });
   };
 
   const filtrados = documentos.filter((d) => {
@@ -130,11 +129,6 @@ export default function CentroDocumentalPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
@@ -313,12 +307,22 @@ export default function CentroDocumentalPage() {
         </div>
       )}
 
+      <ModalConfirm
+        abierto={!!confirmacion}
+        titulo="Confirmar eliminacion"
+        mensaje={confirmacion?.mensaje}
+        textoConfirmar="Eliminar"
+        variante="danger"
+        onConfirmar={confirmacion?.accion}
+        onCancelar={() => setConfirmacion(null)}
+      />
+
       {modal && (
         <ModalSubir
           onClose={() => setModal(false)}
           onSuccess={() => {
             setModal(false);
-            mostrarToast('Documento subido');
+            toast.success('Documento subido');
             cargar();
           }}
         />
@@ -366,7 +370,7 @@ function ModalSubir({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-bg w-full max-w-sm rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">Subir documento</p>

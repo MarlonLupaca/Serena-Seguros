@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { MdCheck, MdArrowForward } from 'react-icons/md';
 import ModalCotizar from './ModalCotizar';
 import { estiloTipo, formatearMoneda } from './data';
@@ -8,7 +9,6 @@ import { estiloTipo, formatearMoneda } from './data';
 export default function SeguroCard({ producto }) {
   const [abierto, setAbierto] = useState(false);
   const tipoStyle = estiloTipo(producto.tipo_seguro);
-  const Icon = tipoStyle.icon;
 
   const beneficios = (producto.limites_cobertura || '')
     .split(/[,;\n]/)
@@ -21,8 +21,8 @@ export default function SeguroCard({ producto }) {
       <div className="p-6 flex flex-col flex-1 gap-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
-            <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${tipoStyle.accentBg}`}>
-              <Icon size={22} className={tipoStyle.accentText} />
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${tipoStyle.accentBg} overflow-hidden`}>
+              <Image src={tipoStyle.imagen} width={28} height={28} alt="" className="object-contain" />
             </div>
             <div>
               <h3 className="text-base font-bold text-text leading-tight">{producto.nombre}</h3>

@@ -3,16 +3,16 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 
 import { MdChevronLeft, MdChevronRight, MdLogout, MdMenu, MdClose, MdPerson } from 'react-icons/md';
 
 export default function Sidebar({ menus, user }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [active, setActive] = useState(menus[0]?.items[0]?.label || '');
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const { logout } = useAuth();
 
   const handleLogout = () => {
@@ -90,15 +90,12 @@ export default function Sidebar({ menus, user }) {
                 )}
                 <div className="mt-1 flex flex-col">
                   {items.map(({ label, icon: Icon, href }) => {
-                    const isActive = active === label;
+                    const isActive = pathname === href || (href !== menus[0]?.items[0]?.href && pathname.startsWith(href + '/'));
                     return (
                       <Link
                         key={label}
                         href={href}
-                        onClick={() => {
-                          setActive(label);
-                          setIsOpen(false);
-                        }}
+                        onClick={() => setIsOpen(false)}
                         title={collapsed ? label : undefined}
                         className={`w-full flex items-center gap-3 px-8 py-2 text-sm font-medium transition-colors relative
                           ${isActive ? 'bg-primary/10 text-primary' : 'text-text-soft hover:bg-bg-soft hover:text-text'}

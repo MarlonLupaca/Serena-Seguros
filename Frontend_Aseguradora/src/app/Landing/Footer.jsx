@@ -43,17 +43,45 @@ export default function Footer() {
         </div>
 
         {[
-          { h: 'Seguros', items: ['Vehicular', 'Vida', 'Salud', 'SOAT', 'Viajes', 'Hogar', 'Mascotas'] },
-          { h: 'Ayuda', items: ['Siniestros', 'Promociones', 'Red de clínicas', 'Pago en línea', 'Facturación'] },
-          { h: 'Empresa', items: ['Sobre nosotros', 'Sostenibilidad', 'Trabaja con nosotros', 'Prensa'] },
+          {
+            h: 'Seguros',
+            items: [
+              { label: 'Vehicular', href: '/seguros/vehicular' },
+              { label: 'Vida', href: '/seguros/vida' },
+              { label: 'Salud', href: '/seguros/salud' },
+              { label: 'SOAT', href: '/seguros/soat' },
+              { label: 'Viajes', href: '/seguros/viajes' },
+              { label: 'Hogar', href: '/seguros/hogar' },
+              { label: 'Mascotas', href: '/seguros/mascotas' },
+            ],
+          },
+          {
+            h: 'Ayuda',
+            items: [
+              { label: 'Siniestros', href: '/siniestros' },
+              { label: 'Promociones', href: '/#promos' },
+              { label: 'Red de clínicas', href: '#' },
+              { label: 'Pago en línea', href: '/login' },
+              { label: 'Facturación', href: '/login' },
+            ],
+          },
+          {
+            h: 'Empresa',
+            items: [
+              { label: 'Sobre nosotros', href: '#' },
+              { label: 'Seguros corporativos', href: '/empresas' },
+              { label: 'Trabaja con nosotros', href: '#' },
+              { label: 'Prensa', href: '#' },
+            ],
+          },
         ].map((col) => (
           <div key={col.h}>
             <h4 className="font-bold text-white text-sm mb-4">{col.h}</h4>
             <ul className="space-y-2.5 text-sm">
               {col.items.map((it) => (
-                <li key={it}>
-                  <Link href="#" className="hover:text-primary transition-colors duration-200">
-                    {it}
+                <li key={it.label}>
+                  <Link href={it.href} className="hover:text-primary transition-colors duration-200">
+                    {it.label}
                   </Link>
                 </li>
               ))}

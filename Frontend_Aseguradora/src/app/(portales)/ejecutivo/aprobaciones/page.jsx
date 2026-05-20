@@ -36,6 +36,7 @@ export default function AprobacionesPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(false);
+  const [detalle, setDetalle] = useState(null);
   const [form, setForm] = useState({ modulo_origen: 'SINIESTROS', monto_impacto: '', comentarios_previos: '' });
   const [guardando, setGuardando] = useState(false);
 
@@ -139,7 +140,7 @@ export default function AprobacionesPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {aprobaciones.map((a) => (
-            <div key={a.id_aprobacion} className="bg-bg rounded-xl border border-border p-4 flex flex-col md:flex-row md:items-center gap-3">
+            <div key={a.id_aprobacion} onClick={() => setDetalle(a)} className="bg-bg rounded-xl border border-border p-4 flex flex-col md:flex-row md:items-center gap-3 cursor-pointer hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <MdCategory size={18} className="text-primary" />
@@ -159,30 +160,21 @@ export default function AprobacionesPage() {
               <div className="text-right shrink-0">
                 <p className="text-base font-bold text-text">{formatearMoneda(a.monto_impacto)}</p>
               </div>
-
-              {a.estado_gerencial === 'PENDIENTE' && (
-                <div className="flex gap-2 shrink-0">
-                  <button
-                    onClick={() => cambiarEstado(a.id_aprobacion, 'APROBADO')}
-                    className="bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-700 flex items-center gap-1"
-                  >
-                    <MdCheckCircle size={14} /> Aprobar
-                  </button>
-                  <button
-                    onClick={() => cambiarEstado(a.id_aprobacion, 'RECHAZADO')}
-                    className="bg-rose-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-rose-700 flex items-center gap-1"
-                  >
-                    <MdCancel size={14} /> Rechazar
-                  </button>
-                </div>
-              )}
             </div>
           ))}
         </div>
       )}
 
+      {detalle && (
+        <ModalDetalleAprobacion
+          a={detalle}
+          onClose={() => setDetalle(null)}
+          onCambiarEstado={(id, estado) => { setDetalle(null); cambiarEstado(id, estado); }}
+        />
+      )}
+
       {modal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-100 p-4">
           <form onSubmit={crear} className="bg-bg rounded-2xl border border-border p-6 w-full max-w-md flex flex-col gap-3">
             <p className="text-base font-bold text-text">Nueva aprobacion critica</p>
 
@@ -224,6 +216,57 @@ export default function AprobacionesPage() {
           </form>
         </div>
       )}
+    </div>
+  );
+}
+
+function ModalDetalleAprobacion({ a, onClose, onCambiarEstado }) {
+  return (
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <p className="text-sm font-bold text-text">Detalle de aprobación</p>
+          <button onClick={onClose} className="text-text-soft hover:text-text"><MdCancel size={18} /></button>
+        </div>
+        <div className="p-5 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <span className={`text-xs font-bold px-2.5 py-1 rounded border ${COLORES_ESTADO[a.estado_gerencial]}`}>{a.estado_gerencial}</span>
+            <p className="text-xs text-text-soft">{formatearFecha(a.fecha_solicitud)}</p>
+          </div>
+
+          <div className="text-center py-3">
+            <p className="text-xs text-text-soft">Monto de impacto</p>
+            <p className="text-3xl font-bold text-text mt-1">{formatearMoneda(a.monto_impacto)}</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-bg-soft rounded-xl p-2.5">
+              <p className="text-xs text-text-soft mb-0.5">Módulo</p>
+              <p className="text-xs font-semibold text-text">{a.modulo_origen}</p>
+            </div>
+            <div className="bg-bg-soft rounded-xl p-2.5">
+              <p className="text-xs text-text-soft mb-0.5">Código</p>
+              <p className="text-xs font-semibold text-text">APR-{String(a.id_aprobacion).padStart(6, '0')}</p>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-medium text-text-soft mb-1">Comentarios</p>
+            <p className="text-sm text-text bg-bg-soft rounded-xl p-3 leading-relaxed">{a.comentarios_previos || 'Sin comentarios'}</p>
+          </div>
+
+          {a.estado_gerencial === 'PENDIENTE' && (
+            <div className="flex gap-2 pt-2 border-t border-border">
+              <button onClick={() => onCambiarEstado(a.id_aprobacion, 'APROBADO')} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-success hover:bg-success/80 text-white text-xs font-semibold transition-colors">
+                <MdCheckCircle size={14} /> Aprobar
+              </button>
+              <button onClick={() => onCambiarEstado(a.id_aprobacion, 'RECHAZADO')} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-danger hover:bg-danger/80 text-white text-xs font-semibold transition-colors">
+                <MdCancel size={14} /> Rechazar
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

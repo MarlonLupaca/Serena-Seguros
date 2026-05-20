@@ -65,7 +65,7 @@ CREATE TABLE empleado (
 CREATE TABLE producto_seguro (
     id_producto INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    tipo_seguro ENUM('VEHICULAR', 'SALUD', 'VIDA', 'HOGAR', 'VIAJE', 'EMPRESA') NOT NULL,
+    tipo_seguro ENUM('VEHICULAR', 'SALUD', 'VIDA', 'HOGAR', 'VIAJE', 'EMPRESA', 'SOAT', 'MASCOTAS') NOT NULL,
     prima_base DECIMAL(10,2) NOT NULL,
     limites_cobertura TEXT NULL,
     restricciones_edad INT DEFAULT 18 NOT NULL,
@@ -142,7 +142,7 @@ CREATE TABLE lead_cotizacion (
     id_empleado_agente INT NOT NULL,
     id_cliente INT NULL,
     id_producto INT NULL,
-    producto_interes ENUM('VEHICULAR', 'SALUD', 'VIDA', 'HOGAR', 'VIAJE', 'EMPRESA') NOT NULL,
+    producto_interes ENUM('VEHICULAR', 'SALUD', 'VIDA', 'HOGAR', 'VIAJE', 'EMPRESA', 'SOAT', 'MASCOTAS') NOT NULL,
     estado_kanban ENUM('NUEVO', 'CONTACTADO', 'EN_PROPUESTA', 'NEGOCIACION', 'GANADO', 'PERDIDO') DEFAULT 'NUEVO' NOT NULL,
     tipo_origen ENUM('NUEVA', 'RENOVACION') DEFAULT 'NUEVA' NOT NULL,
     id_poliza_origen INT NULL,
@@ -157,7 +157,7 @@ CREATE TABLE lead_cotizacion (
 CREATE TABLE evaluacion_riesgo (
     id_evaluacion INT AUTO_INCREMENT PRIMARY KEY,
     id_cotizacion INT NOT NULL UNIQUE,
-    tipo_seguro ENUM('VEHICULAR', 'SALUD', 'VIDA', 'HOGAR', 'VIAJE', 'EMPRESA') NOT NULL,
+    tipo_seguro ENUM('VEHICULAR', 'SALUD', 'VIDA', 'HOGAR', 'VIAJE', 'EMPRESA', 'SOAT', 'MASCOTAS') NOT NULL,
     datos_riesgo JSON NOT NULL,
     factor_riesgo DECIMAL(5,2) DEFAULT 1.00 NOT NULL,
     estado_suscripcion ENUM('PENDIENTE', 'ACEPTADA', 'RECHAZADA') DEFAULT 'PENDIENTE' NOT NULL,

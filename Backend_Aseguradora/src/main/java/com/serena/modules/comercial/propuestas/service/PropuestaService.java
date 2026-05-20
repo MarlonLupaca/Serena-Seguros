@@ -154,6 +154,22 @@ public class PropuestaService {
                     Map.of("nombre", "Lucro cesante", "descripcion", "Perdida de utilidades por siniestro",
                             "limite", 100000)
             );
+            case SOAT -> List.of(
+                    Map.of("nombre", "Gastos medicos", "descripcion", "Atencion medica por accidente de transito",
+                            "limite", 5000),
+                    Map.of("nombre", "Invalidez permanente", "descripcion", "Indemnizacion por invalidez",
+                            "limite", 17500),
+                    Map.of("nombre", "Muerte accidental", "descripcion", "Indemnizacion por fallecimiento",
+                            "limite", 17500)
+            );
+            case MASCOTAS -> List.of(
+                    Map.of("nombre", "Consultas veterinarias", "descripcion", "Consultas ilimitadas en red afiliada",
+                            "limite", 3000),
+                    Map.of("nombre", "Cirugia y emergencias", "descripcion", "Cobertura quirurgica",
+                            "limite", 8000),
+                    Map.of("nombre", "Vacunacion", "descripcion", "Plan de vacunacion anual",
+                            "limite", 500)
+            );
         };
         try {
             return MAPPER.writeValueAsString(coberturas);
@@ -175,6 +191,8 @@ public class PropuestaService {
             case VIAJE -> "Viajes a zonas con alerta sanitaria oficial; deportes de alto riesgo no declarados; "
                     + "preexistencias no informadas.";
             case EMPRESA -> "Daños por desgaste; fraude interno; eventos politicos o de guerra no contratados.";
+            case SOAT -> "Accidentes fuera del territorio nacional; conduccion sin licencia vigente.";
+            case MASCOTAS -> "Preexistencias no declaradas; mascotas sin vacunas al dia; razas excluidas por normativa.";
         };
     }
 }

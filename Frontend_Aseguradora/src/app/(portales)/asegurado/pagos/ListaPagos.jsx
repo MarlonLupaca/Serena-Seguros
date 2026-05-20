@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { MdSearch, MdFilterList, MdDescription, MdWarningAmber } from 'react-icons/md';
+import Image from 'next/image';
+import { MdSearch, MdFilterList, MdDescription, MdWarningAmber, MdExpandMore, MdExpandLess } from 'react-icons/md';
 import PagosKPIs from './PagosKPIs';
 import CuotaCard from './CuotaCard';
 import HistorialCard from './HistorialCard';
 import { clasificarEstado } from './data';
+import { estiloTipo } from '@/lib/tipoSeguroConfig';
 
 export default function ListaPagos({ cuotas, onSelect, onPagar }) {
   const [busqueda, setBusqueda] = useState('');
@@ -102,11 +104,7 @@ export default function ListaPagos({ cuotas, onSelect, onPagar }) {
               <p className="text-xs text-text-soft mt-1">Estás al día con tus pólizas.</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
-              {filtradas.map((c) => (
-                <CuotaCard key={c.id_cuota} c={c} onSelect={onSelect} onPagar={onPagar} />
-              ))}
-            </div>
+            <GruposCuotas cuotas={filtradas} onSelect={onSelect} onPagar={onPagar} />
           )}
         </>
       )}
@@ -118,7 +116,62 @@ export default function ListaPagos({ cuotas, onSelect, onPagar }) {
               <p className="text-sm text-text-soft">Sin cuotas pagadas todavía.</p>
             </div>
           ) : (
-            cuotasPagadas.map((c) => <HistorialCard key={c.id_cuota} c={c} />)
+            <GruposCuotas cuotas={cuotasPagadas} onSelect={onSelect} onPagar={onPagar} historial />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function agruparPorPoliza(cuotas) {
+  const grupos = {};
+  cuotas.forEach((c) => {
+    const key = c.id_poliza || 0;
+    if (!grupos[key]) grupos[key] = { nombre: c.poliza_nombre || 'Sin póliza', tipo: c.poliza_tipo, id: key, items: [] };
+    grupos[key].items.push(c);
+  });
+  return Object.values(grupos).sort((a, b) => a.nombre.localeCompare(b.nombre));
+}
+
+function GruposCuotas({ cuotas, onSelect, onPagar, historial }) {
+  const grupos = agruparPorPoliza(cuotas);
+  return (
+    <div className="flex flex-col gap-4">
+      {grupos.map((g) => (
+        <GrupoPoliza key={g.id} grupo={g} onSelect={onSelect} onPagar={onPagar} historial={historial} />
+      ))}
+    </div>
+  );
+}
+
+function GrupoPoliza({ grupo, onSelect, onPagar, historial }) {
+  const [abierto, setAbierto] = useState(true);
+  const tipoStyle = estiloTipo(grupo.tipo);
+  const totalMonto = grupo.items.reduce((acc, c) => acc + Number(c.monto || 0), 0);
+
+  return (
+    <div className="bg-bg rounded-2xl border border-border overflow-hidden">
+      <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
+      <button onClick={() => setAbierto(!abierto)} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-bg-soft transition-colors">
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg} overflow-hidden`}>
+          <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <p className="text-sm font-bold text-text">{grupo.nombre}</p>
+          <p className="text-xs text-text-soft mt-0.5">{grupo.items.length} cuota{grupo.items.length > 1 ? 's' : ''}</p>
+        </div>
+        <p className="text-sm font-bold text-text shrink-0">S/ {totalMonto.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</p>
+        {abierto ? <MdExpandLess size={18} className="text-text-soft shrink-0" /> : <MdExpandMore size={18} className="text-text-soft shrink-0" />}
+      </button>
+      {abierto && (
+        <div className="border-t border-border px-3 pb-3 pt-2 flex flex-col gap-2">
+          {grupo.items.map((c) =>
+            historial ? (
+              <HistorialCard key={c.id_cuota} c={c} />
+            ) : (
+              <CuotaCard key={c.id_cuota} c={c} onSelect={onSelect} onPagar={onPagar} />
+            )
           )}
         </div>
       )}

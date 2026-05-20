@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { MdKeyboardArrowDown, MdCheck } from 'react-icons/md';
 
 export default function InsuranceTabs({ activeTab, setActiveTab, dropdownOpen, setDropdownOpen, allTabs }) {
@@ -7,7 +8,6 @@ export default function InsuranceTabs({ activeTab, setActiveTab, dropdownOpen, s
       <div className="hidden lg:flex gap-2 overflow-x-hidden pb-1">
         {allTabs.map((s) => {
           const active = activeTab === s.id;
-          const Icon = s.icon;
           return (
             <button
               key={s.id}
@@ -20,7 +20,7 @@ export default function InsuranceTabs({ activeTab, setActiveTab, dropdownOpen, s
                   : 'bg-transparent border-border text-text-soft hover:text-text'
               }`}
             >
-              {Icon && <Icon size={14} />}
+              {s.imagen && <Image src={s.imagen} width={14} height={14} alt="" className="object-contain" />}
               {s.tab}
             </button>
           );
@@ -31,7 +31,6 @@ export default function InsuranceTabs({ activeTab, setActiveTab, dropdownOpen, s
       <div className="lg:hidden flex gap-2">
         {allTabs.slice(0, 3).map((s) => {
           const active = activeTab === s.id;
-          const Icon = s.icon;
           return (
             <button
               key={s.id}
@@ -44,7 +43,7 @@ export default function InsuranceTabs({ activeTab, setActiveTab, dropdownOpen, s
                   : 'bg-transparent border-border text-text-soft hover:text-text'
               }`}
             >
-              {Icon && <Icon size={14} />}
+              {s.imagen && <Image src={s.imagen} width={14} height={14} alt="" className="object-contain" />}
               {s.tab}
             </button>
           );
@@ -68,7 +67,6 @@ export default function InsuranceTabs({ activeTab, setActiveTab, dropdownOpen, s
             <div className="absolute top-full mt-2 left-[-110%] bg-bg border border-border rounded-2xl overflow-hidden z-50 shadow-lg min-w-40">
               {allTabs.slice(3).map((s) => {
                 const active = activeTab === s.id;
-                const Icon = s.icon;
                 return (
                   <button
                     key={s.id}
@@ -80,7 +78,7 @@ export default function InsuranceTabs({ activeTab, setActiveTab, dropdownOpen, s
                       active ? `${s.accentText ?? 'text-primary'} bg-primary/5` : 'text-text-soft hover:bg-bg-soft'
                     }`}
                   >
-                    {Icon && <Icon size={16} />}
+                    {s.imagen && <Image src={s.imagen} width={16} height={16} alt="" className="object-contain" />}
                     {s.tab}
                     {active && <MdCheck size={14} className="ml-auto" />}
                   </button>

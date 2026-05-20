@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { MdAdd, MdEditNote, MdFlag, MdTrendingUp, MdDeleteOutline } from 'react-icons/md';
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/lib/api';
+import ModalConfirm from '../../componentsMain/ModalConfirm';
 
 const ESTADOS = ['EN_PROGRESO', 'EN_RIESGO', 'RETRASADO', 'CUMPLIDO'];
 
@@ -32,6 +33,7 @@ export default function ObjetivosPage() {
   const [modal, setModal] = useState(false);
   const [edicion, setEdicion] = useState(null);
   const [form, setForm] = useState({ id_empleado_responsable: '', descripcion: '', meta_cuantitativa: '', avance_actual: '', estado: 'EN_PROGRESO' });
+  const [confirmacion, setConfirmacion] = useState(null);
 
   async function cargar() {
     setCargando(true);
@@ -86,13 +88,17 @@ export default function ObjetivosPage() {
   }
 
   async function eliminar(id) {
-    if (!confirm('Eliminar este objetivo?')) return;
-    try {
-      await apiDelete(`/objetivos/${id}`);
-      cargar();
-    } catch (err) {
-      setError(err.mensaje || 'Error al eliminar');
-    }
+    setConfirmacion({
+      mensaje: '¿Eliminar este objetivo?',
+      accion: async () => {
+        try {
+          await apiDelete(`/objetivos/${id}`);
+          cargar();
+        } catch (err) {
+          setError(err.mensaje || 'Error al eliminar');
+        }
+      },
+    });
   }
 
   function abrirNuevo() {
@@ -193,6 +199,16 @@ export default function ObjetivosPage() {
           ))}
         </div>
       )}
+
+      <ModalConfirm
+        abierto={!!confirmacion}
+        titulo="Confirmar eliminacion"
+        mensaje={confirmacion?.mensaje}
+        textoConfirmar="Eliminar"
+        variante="danger"
+        onConfirmar={confirmacion?.accion}
+        onCancelar={() => setConfirmacion(null)}
+      />
 
       {modal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">

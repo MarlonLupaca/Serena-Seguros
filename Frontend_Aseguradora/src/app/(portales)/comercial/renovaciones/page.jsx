@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -15,6 +16,7 @@ import {
   MdClose,
 } from 'react-icons/md';
 import { apiGet, apiPatch } from '@/lib/api';
+import ModalConfirm from '../../componentsMain/ModalConfirm';
 
 const RANGOS = [
   { dias: 7, label: '7 días' },
@@ -67,8 +69,8 @@ export default function RenovacionesPage() {
   const [busqEnd, setBusqEnd] = useState('');
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
-  const [toast, setToast] = useState(null);
-  const [actualizando, setActualizando] = useState(null);
+const [actualizando, setActualizando] = useState(null);
+  const [confirmacion, setConfirmacion] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -91,34 +93,32 @@ export default function RenovacionesPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const marcarNoRenovada = async (idPoliza) => {
-    if (!confirm('¿Marcar la poliza como cancelada/no renovada?')) return;
-    setActualizando('poliza-' + idPoliza);
-    try {
-      await apiPatch(`/polizas/${idPoliza}/estado`, { estado_poliza: 'CANCELADA' });
-      mostrarToast('Poliza marcada como cancelada');
-      cargar();
-    } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo actualizar');
-    } finally {
-      setActualizando(null);
-    }
+const marcarNoRenovada = async (idPoliza) => {
+    setConfirmacion({
+      mensaje: '¿Marcar la poliza como cancelada/no renovada?',
+      accion: async () => {
+        setActualizando('poliza-' + idPoliza);
+        try {
+          await apiPatch(`/polizas/${idPoliza}/estado`, { estado_poliza: 'CANCELADA' });
+          toast.success('Poliza marcada como cancelada');
+          cargar();
+        } catch (e) {
+          toast.error(e.mensaje || 'No se pudo actualizar');
+        } finally {
+          setActualizando(null);
+        }
+      },
+    });
   };
 
   const cambiarEstadoEndoso = async (idEndoso, nuevo) => {
     setActualizando('endoso-' + idEndoso);
     try {
       await apiPatch(`/endosos/${idEndoso}/estado`, { estado_aprobacion: nuevo });
-      mostrarToast(`Endoso ${nuevo.toLowerCase()}`);
+      toast.success(`Endoso ${nuevo.toLowerCase()}`);
       cargar();
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo actualizar');
+      toast.error(e.mensaje || 'No se pudo actualizar');
     } finally {
       setActualizando(null);
     }
@@ -148,11 +148,6 @@ export default function RenovacionesPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div>
         <h1 className="text-base font-bold text-text">Renovaciones y endosos</h1>
@@ -246,10 +241,10 @@ export default function RenovacionesPage() {
                   key={p.id_poliza}
                   poliza={p}
                   actualizando={actualizando === 'poliza-' + p.id_poliza}
-                  onEnviarPropuesta={() => mostrarToast('Propuesta enviada al cliente')}
+                  onEnviarPropuesta={() => toast.success('Propuesta enviada al cliente')}
                   onMarcarNoRenovada={() => marcarNoRenovada(p.id_poliza)}
-                  onRenovar={() => mostrarToast('Renovacion iniciada. Confirma con el cliente.')}
-                  onRecalcular={() => mostrarToast('Nueva prima estimada solicitada al area tecnica.')}
+                  onRenovar={() => toast.success('Renovacion iniciada. Confirma con el cliente.')}
+                  onRecalcular={() => toast.success('Nueva prima estimada solicitada al area tecnica.')}
                 />
               ))}
             </div>
@@ -292,6 +287,16 @@ export default function RenovacionesPage() {
           )}
         </div>
       )}
+
+      <ModalConfirm
+        abierto={!!confirmacion}
+        titulo="Confirmar eliminacion"
+        mensaje={confirmacion?.mensaje}
+        textoConfirmar="Eliminar"
+        variante="danger"
+        onConfirmar={confirmacion?.accion}
+        onCancelar={() => setConfirmacion(null)}
+      />
     </div>
   );
 }

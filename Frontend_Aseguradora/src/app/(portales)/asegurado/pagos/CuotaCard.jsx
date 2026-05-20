@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import {
   MdWarningAmber,
   MdAccessTime,
@@ -16,7 +17,6 @@ import {
 
 export default function CuotaCard({ c, onSelect, onPagar }) {
   const tipoStyle = estiloTipo(c.poliza_tipo);
-  const PolIcon = tipoStyle.icon;
   const clase = clasificarEstado(c);
   const est = ESTADO_CONFIG[clase];
   const dr = diasHasta(c.fecha_vencimiento);
@@ -29,8 +29,8 @@ export default function CuotaCard({ c, onSelect, onPagar }) {
       <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
       <div className="p-5">
         <div className="flex items-start gap-4 flex-wrap sm:flex-nowrap">
-          <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
-            <PolIcon size={22} className={tipoStyle.accentText} />
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg} overflow-hidden`}>
+            <Image src={tipoStyle.imagen} width={28} height={28} alt="" className="object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">

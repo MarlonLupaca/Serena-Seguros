@@ -190,6 +190,12 @@ public class FlujoAdquisicionSeeder implements CommandLineRunner {
                     "destino", "Mexico", "duracion_dias", 10, "edades_viajeros", List.of(35, 8));
             case EMPRESA -> Map.of(
                     "rubro", "Servicios", "numero_empleados", 25, "valor_activos", 150000);
+            case SOAT -> Map.of(
+                    "placa", "XYZ-789", "tipo_vehiculo", "AUTO",
+                    "uso", "PARTICULAR", "anio_fabricacion", 2021);
+            case MASCOTAS -> Map.of(
+                    "especie", "PERRO", "raza", "Labrador", "edad_mascota", 3,
+                    "peso", 28, "vacunas_al_dia", true, "nombre_mascota", "Rocky");
         };
         return toJson(datos);
     }
@@ -215,6 +221,12 @@ public class FlujoAdquisicionSeeder implements CommandLineRunner {
             case EMPRESA -> List.of(
                     Map.of("nombre", "Multirriesgo industrial", "descripcion", "Daños al patrimonio", "limite", 500000),
                     Map.of("nombre", "Responsabilidad civil", "descripcion", "Daños a terceros", "limite", 200000));
+            case SOAT -> List.of(
+                    Map.of("nombre", "Gastos medicos", "descripcion", "Atencion medica por accidente de transito", "limite", 5000),
+                    Map.of("nombre", "Invalidez permanente", "descripcion", "Indemnizacion por invalidez", "limite", 17500));
+            case MASCOTAS -> List.of(
+                    Map.of("nombre", "Consultas veterinarias", "descripcion", "Consultas ilimitadas en red afiliada", "limite", 3000),
+                    Map.of("nombre", "Cirugia y emergencias", "descripcion", "Cobertura quirurgica y hospitalizacion", "limite", 8000));
         };
         return toJson(coberturas);
     }

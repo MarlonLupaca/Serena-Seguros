@@ -46,7 +46,7 @@ public class ProductoSeguro {
     private Estado estado = Estado.ACTIVO;
 
     public enum TipoSeguro {
-        VEHICULAR, SALUD, VIDA, HOGAR, VIAJE, EMPRESA
+        VEHICULAR, SALUD, VIDA, HOGAR, VIAJE, EMPRESA, SOAT, MASCOTAS
     }
 
     public enum Estado {

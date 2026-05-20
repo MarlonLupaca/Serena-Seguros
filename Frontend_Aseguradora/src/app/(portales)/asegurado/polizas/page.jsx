@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { MdShield } from 'react-icons/md';
 import { apiGet, apiPost } from '@/lib/api';
+import toast from 'react-hot-toast';
 import PolizaKPIs from './PolizaKPIs';
 import PolizaFilters from './PolizaFilters';
 import PolizaCard from './PolizaCard';
@@ -58,7 +59,7 @@ export default function Polizas() {
         },
       });
     } catch (e) {
-      setError(e.mensaje || 'No se pudo iniciar la renovacion');
+      toast.error(e.mensaje || 'No se pudo iniciar la renovacion');
     } finally {
       setRenovando(false);
     }

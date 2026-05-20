@@ -29,12 +29,12 @@ export default function VerSeguros() {
       return {
         id: t,
         tab: e.label,
-        icon: e.icon,
+        imagen: e.imagen,
         accentBg: e.accentBg,
         accentText: e.accentText,
       };
     });
-    return [{ id: 'todos', tab: 'Todos', icon: null, accentBg: null, accentText: null }, ...tabs];
+    return [{ id: 'todos', tab: 'Todos', imagen: null, accentBg: null, accentText: null }, ...tabs];
   }, [productos]);
 
   const filtered = activeTab === 'todos' ? productos : productos.filter((p) => p.tipo_seguro === activeTab);

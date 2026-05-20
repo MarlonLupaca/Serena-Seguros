@@ -41,6 +41,15 @@ public class AuthController {
                 .ok(authService.login(request));
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@RequestBody java.util.Map<String, String> body) {
+        String refreshToken = body.get("refresh_token");
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(authService.refresh(refreshToken));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<MeResponse> me(
             @AuthenticationPrincipal Usuario usuario

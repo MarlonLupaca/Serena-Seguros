@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import {
   MdArrowBack,
   MdCalendarToday,
@@ -18,7 +19,6 @@ import {
 
 export default function DetalleCuota({ cuota, onBack, onPagar }) {
   const tipoStyle = estiloTipo(cuota.poliza_tipo);
-  const PolIcon = tipoStyle.icon;
   const clase = clasificarEstado(cuota);
   const est = ESTADO_CONFIG[clase];
   const dr = diasHasta(cuota.fecha_vencimiento);
@@ -37,8 +37,8 @@ export default function DetalleCuota({ cuota, onBack, onPagar }) {
         <div className="p-5 border-b border-border">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
-                <PolIcon size={20} className={tipoStyle.accentText} />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg} overflow-hidden`}>
+                <Image src={tipoStyle.imagen} width={24} height={24} alt="" className="object-contain" />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">

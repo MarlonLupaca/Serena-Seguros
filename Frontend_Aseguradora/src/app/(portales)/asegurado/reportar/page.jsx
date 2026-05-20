@@ -48,7 +48,11 @@ export default function ReportarSiniestro() {
 
   const validateStep3 = () => {
     const errs = {};
-    if (!form.fecha) errs.fecha = 'Selecciona la fecha del evento.';
+    if (!form.fecha) {
+      errs.fecha = 'Selecciona la fecha del evento.';
+    } else if (form.fecha > new Date().toISOString().slice(0, 10)) {
+      errs.fecha = 'La fecha no puede ser futura.';
+    }
     if (!form.hora) errs.hora = 'Ingresa la hora aproximada.';
     if (!form.lugar.trim()) errs.lugar = 'El lugar del incidente es requerido.';
     if (form.desc.trim().length < 30) errs.desc = 'Describe el evento con al menos 30 caracteres.';
@@ -61,13 +65,12 @@ export default function ReportarSiniestro() {
     setEnviando(true);
     setErrorEnvio('');
     try {
-      // CORRECCIÓN EXACTA: Nombres de variables en camelCase tal cual lo pide el DTO de Spring Boot
       const payload = {
-        idPoliza: poliza,
-        tipoIncidente: tipo,
+        id_poliza: poliza,
+        tipo_incidente: tipo,
         descripcion: `${form.desc}\nLugar: ${form.lugar}\nHora: ${form.hora}`,
-        fechaOcurrencia: form.fecha,
-        montoReclamado: 0.01, // Se envía este valor por debajo para cumplir la validación @DecimalMin
+        fecha_ocurrencia: form.fecha,
+        monto_reclamado: 0.01,
       };
 
       const data = await apiPost('/mis-siniestros', payload);
@@ -90,7 +93,12 @@ export default function ReportarSiniestro() {
       setDone(true);
       setReloadKey((k) => k + 1);
     } catch (e) {
-      setErrorEnvio(e.mensaje || 'No se pudo enviar el reporte revisa los datos.');
+      if (e.errores) {
+        const detalles = Object.values(e.errores).join('. ');
+        setErrorEnvio(detalles || e.mensaje || 'Datos invalidos');
+      } else {
+        setErrorEnvio(e.mensaje || 'No se pudo enviar el reporte, revisa los datos.');
+      }
     } finally {
       setEnviando(false);
     }

@@ -25,22 +25,6 @@ export default function SeccionSeguridad({ onAbrirContrasena }) {
             onClick: onAbrirContrasena,
             color: 'text-primary',
           },
-          {
-            icon: MdShield,
-            label: 'Autenticación en dos pasos',
-            sub: 'Añade una capa extra de seguridad',
-            accion: 'Activar',
-            onClick: () => {},
-            color: 'text-emerald-600',
-          },
-          {
-            icon: MdInfo,
-            label: 'Sesiones activas',
-            sub: '1 sesión activa en este dispositivo',
-            accion: 'Ver',
-            onClick: () => {},
-            color: 'text-sky-600',
-          },
         ].map(({ icon: Icon, label, sub, accion, onClick, color }) => (
           <div key={label} className="flex items-center gap-4 p-3.5 rounded-xl hover:bg-bg-soft transition-colors">
             <div className="w-9 h-9 rounded-lg bg-bg-soft flex items-center justify-center shrink-0">

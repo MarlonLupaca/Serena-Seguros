@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -42,9 +43,7 @@ export default function RiesgosPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [modal, setModal] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  useEffect(() => {
+useEffect(() => {
     cargar();
   }, []);
 
@@ -61,19 +60,8 @@ export default function RiesgosPage() {
       setCargando(false);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  return (
+return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
@@ -139,7 +127,7 @@ export default function RiesgosPage() {
           onClose={() => setModal(false)}
           onSuccess={() => {
             setModal(false);
-            mostrarToast('Riesgo registrado');
+            toast.success('Riesgo registrado');
             cargar();
           }}
         />
@@ -241,7 +229,7 @@ function ModalNuevoRiesgo({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <div className="bg-bg w-full max-w-md rounded-2xl border border-border shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">Registrar riesgo corporativo</p>

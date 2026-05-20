@@ -14,8 +14,8 @@ import {
 
 export const navItems = [
   { label: 'Seguros para ti', href: '#seguros' },
-  { label: 'Empresas', href: '#empresas' },
-  { label: 'Siniestros', href: '#siniestros' },
+  { label: 'Empresas', href: '/empresas' },
+  { label: 'Siniestros', href: '/siniestros' },
   { label: 'Promociones', href: '#promos' },
   { label: 'Atención al cliente', href: '#contacto' },
 ];
@@ -36,43 +36,52 @@ export const services = [
     desc: 'Red de +800 talleres y grúa 24/7 en todo el país.',
     url: '/icons/vehiculo.png',
     tag: 'Más vendido',
+    slug: 'vehicular',
   },
   {
     title: 'SOAT Digital',
     desc: 'Compra en 3 minutos y recíbelo al instante en tu correo.',
     url: '/icons/soat.png',
     tag: 'Desde S/47',
+    slug: 'soat',
   },
   {
     title: 'Seguro de Vida',
     desc: 'Protege a los que amas y recibe hasta el 100% de lo pagado.',
     url: '/icons/vida.png',
+    slug: 'vida',
   },
   {
     title: 'Seguro de Salud',
     desc: 'Atención en las mejores clínicas con copagos bajos.',
     url: '/icons/salud.png',
+    slug: 'salud',
   },
   {
     title: 'Viajes',
     desc: 'Cobertura internacional con asistencia médica ilimitada.',
     url: '/icons/viaje.png',
+    slug: 'viajes',
   },
   {
     title: 'Hogar',
     desc: 'Tu casa protegida ante robo, incendio y desastres naturales.',
     url: '/icons/hogar.png',
+    slug: 'hogar',
   },
   {
     title: 'Mascotas',
     desc: 'Consultas, vacunas y emergencias para tu engreído.',
     url: '/icons/mascota.png',
     tag: 'Nuevo',
+    slug: 'mascotas',
   },
   {
     title: 'Empresas',
     desc: 'Seguros corporativos hechos a la medida de tu negocio.',
     url: '/icons/empresa.png',
+    slug: 'empresas',
+    href: '/empresas',
   },
 ];
 

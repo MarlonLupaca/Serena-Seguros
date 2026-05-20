@@ -152,6 +152,39 @@ public class AuthService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public AuthResponse refresh(String refreshToken) {
+        io.jsonwebtoken.Claims claims;
+        try {
+            claims = jwtTokenProvider.validarToken(refreshToken);
+        } catch (Exception e) {
+            throw new CredencialesInvalidasException();
+        }
+
+        String type = claims.get("type", String.class);
+        if (!"refresh".equals(type)) {
+            throw new CredencialesInvalidasException();
+        }
+
+        Integer userId = Integer.valueOf(claims.getSubject());
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(CredencialesInvalidasException::new);
+
+        if (usuario.getEstado() != Usuario.Estado.ACTIVO) {
+            throw new CredencialesInvalidasException();
+        }
+
+        Persona persona = personaRepository.findByUsuario(usuario)
+                .orElseThrow(CredencialesInvalidasException::new);
+
+        String newAccessToken = jwtTokenProvider
+                .generarAccessToken(usuario.getIdUsuario(), usuario.getUsername());
+        String newRefreshToken = jwtTokenProvider
+                .generarRefreshToken(usuario.getIdUsuario());
+
+        return usuarioMapper.toAuthResponse(usuario, persona, newAccessToken, newRefreshToken);
+    }
+
     private void crearPerfilSegunPortal(Persona persona, Usuario.PortalAcceso portal) {
         if (portal == Usuario.PortalAcceso.ASEGURADO) {
             Cliente cliente = Cliente.builder()

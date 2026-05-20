@@ -1,4 +1,5 @@
-'use client';
+﻿'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -35,8 +36,7 @@ export default function ClientesPage() {
   const [busqueda, setBusqueda] = useState('');
   const [filtro, setFiltro] = useState('todos');
   const [actualizandoId, setActualizandoId] = useState(null);
-  const [toast, setToast] = useState(null);
-  const [detalleId, setDetalleId] = useState(null);
+const [detalleId, setDetalleId] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -60,20 +60,14 @@ export default function ClientesPage() {
     try {
       const data = await apiPatch(`/clientes/${id}/estado-crm`, { estado_crm: nuevo });
       setClientes((prev) => prev.map((c) => (c.id_cliente === id ? data : c)));
-      mostrarToast('Estado actualizado');
+      toast.success('Estado actualizado');
     } catch (e) {
-      mostrarToast(e.mensaje || 'No se pudo actualizar');
+      toast.error(e.mensaje || 'No se pudo actualizar');
     } finally {
       setActualizandoId(null);
     }
   };
-
-  const mostrarToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const filtrados = clientes.filter((c) => {
+const filtrados = clientes.filter((c) => {
     const texto = busqueda.toLowerCase();
     const matchBusq =
       texto === '' ||
@@ -91,11 +85,6 @@ export default function ClientesPage() {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-text text-bg text-xs font-medium px-4 py-2.5 rounded-xl z-50 shadow-lg">
-          {toast}
-        </div>
-      )}
 
       <div>
         <h1 className="text-base font-bold text-text">Cartera de clientes</h1>

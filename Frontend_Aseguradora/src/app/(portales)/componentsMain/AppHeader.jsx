@@ -128,7 +128,7 @@ const AppHeader = ({ title, subtitle, searchPlaceholder = 'Buscar...', indicator
           </button>
 
           {abierto && (
-            <div className="absolute right-0 top-full mt-2 w-96 bg-bg border border-border rounded-2xl shadow-xl overflow-hidden z-50">
+            <div className="absolute right-0 top-full mt-2 w-96 bg-bg border border-border rounded-2xl shadow-xl overflow-hidden z-100">
               <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                 <p className="text-sm font-bold text-text">Notificaciones</p>
                 {conteo > 0 && (

@@ -12,6 +12,7 @@ import {
   MdAdd,
   MdLock,
 } from 'react-icons/md';
+import Image from 'next/image';
 import { apiGet, apiPost, apiUploadFile } from '@/lib/api';
 import FormularioRiesgo from '@/components/riesgo/FormularioRiesgo';
 import { valoresIniciales, validarCampos } from '@/lib/riesgo/camposPorTipo';
@@ -29,7 +30,6 @@ const PASOS = [
 
 export default function ModalCotizar({ producto, onClose, prefill }) {
   const tipoStyle = estiloTipo(producto.tipo_seguro);
-  const Icon = tipoStyle.icon;
 
   const [paso, setPaso] = useState(1);
   const [cargando, setCargando] = useState(false);
@@ -274,7 +274,7 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
 
           <div className="flex items-center gap-3 bg-bg-soft rounded-xl p-3 mb-4">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tipoStyle.accentBg}`}>
-              <Icon size={20} className={tipoStyle.accentText} />
+              <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
             </div>
             <div>
               <p className="text-sm font-bold text-text">{producto.nombre}</p>
