@@ -43,7 +43,7 @@ export function SectionSeguros() {
                 <p className="font-bold text-base text-text">{s.title}</p>
                 <p className="mt-2 text-sm text-text-soft leading-relaxed grow">{s.desc}</p>
                 <Link
-                  href="#"
+                  href={s.href || `/seguros/${s.slug}`}
                   className="mt-5 flex  gap-1 text-primary font-bold text-sm hover:gap-2.5 transition-all duration-200 items-center "
                 >
                   <span className="pb-1">Cotizar</span> <IoIosArrowForward size={15} />

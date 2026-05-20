@@ -63,7 +63,7 @@ public class LeadCotizacion {
     private LocalDateTime fechaIngreso;
 
     public enum ProductoInteres {
-        VEHICULAR, SALUD, VIDA, HOGAR, VIAJE, EMPRESA
+        VEHICULAR, SALUD, VIDA, HOGAR, VIAJE, EMPRESA, SOAT, MASCOTAS
     }
 
     public enum EstadoKanban {

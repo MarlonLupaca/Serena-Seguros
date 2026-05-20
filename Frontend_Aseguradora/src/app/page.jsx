@@ -6,6 +6,7 @@ import Hero from './Landing/Hero';
 import Footer from './Landing/Footer';
 import { SectionStats } from './Landing/sections/SectionStats';
 import { SectionSeguros } from './Landing/sections/SectionSeguros';
+import { SectionEmpresas } from './Landing/sections/SectionEmpresas';
 import { SectionBeneficios } from './Landing/sections/SectionBeneficios';
 import { SectionPromos } from './Landing/sections/SectionPromos';
 import { SectionSiniestros } from './Landing/sections/SectionSiniestros';
@@ -22,6 +23,7 @@ export default function Home() {
         <Hero />
         <SectionStats />
         <SectionSeguros />
+        <SectionEmpresas />
         <SectionBeneficios />
         <SectionPromos />
         <SectionSiniestros />

@@ -19,7 +19,7 @@ export function SectionSiniestros() {
 
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
-              href="#"
+              href="/siniestros"
               className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-bold text-[15px] px-8 py-4 rounded-2xl shadow-lg shadow-black/5 transition-all hover:-translate-y-0.5"
             >
               Reportar siniestro <MdArrowForward size={18} />

@@ -79,6 +79,51 @@ const CAMPOS = {
     { name: 'numero_empleados', label: 'Numero de empleados', type: 'number', required: true },
     { name: 'valor_activos', label: 'Valor de activos (S/)', type: 'number', required: true },
   ],
+  SOAT: [
+    { name: 'placa', label: 'Placa del vehiculo', type: 'text', required: true, placeholder: 'ABC-123' },
+    {
+      name: 'tipo_vehiculo',
+      label: 'Tipo de vehiculo',
+      type: 'select',
+      options: [
+        { value: 'AUTO', label: 'Automovil' },
+        { value: 'CAMIONETA', label: 'Camioneta / SUV' },
+        { value: 'MOTO', label: 'Motocicleta' },
+        { value: 'TAXI', label: 'Taxi' },
+        { value: 'CARGA', label: 'Carga pesada' },
+      ],
+      required: true,
+    },
+    {
+      name: 'uso',
+      label: 'Uso del vehiculo',
+      type: 'select',
+      options: [
+        { value: 'PARTICULAR', label: 'Particular' },
+        { value: 'PUBLICO', label: 'Servicio publico' },
+        { value: 'CARGA', label: 'Transporte de carga' },
+      ],
+      required: true,
+    },
+    { name: 'anio_fabricacion', label: 'Ano de fabricacion', type: 'number', required: true, placeholder: '2022' },
+  ],
+  MASCOTAS: [
+    {
+      name: 'especie',
+      label: 'Especie',
+      type: 'select',
+      options: [
+        { value: 'PERRO', label: 'Perro' },
+        { value: 'GATO', label: 'Gato' },
+      ],
+      required: true,
+    },
+    { name: 'raza', label: 'Raza', type: 'text', required: true, placeholder: 'Labrador, Persa, etc.' },
+    { name: 'edad_mascota', label: 'Edad (anos)', type: 'number', required: true },
+    { name: 'peso', label: 'Peso (kg)', type: 'number', placeholder: '10' },
+    { name: 'vacunas_al_dia', label: 'Vacunas al dia', type: 'boolean' },
+    { name: 'nombre_mascota', label: 'Nombre de la mascota', type: 'text', required: true, placeholder: 'Max' },
+  ],
 };
 
 export function getCampos(tipoSeguro) {
