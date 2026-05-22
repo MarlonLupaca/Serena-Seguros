@@ -58,7 +58,7 @@ export default function EmisionesPage() {
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [modalNueva, setModalNueva] = useState(false);
   const [actualizandoId, setActualizandoId] = useState(null);
-useEffect(() => {
+  useEffect(() => {
     cargar();
   }, []);
 
@@ -74,7 +74,7 @@ useEffect(() => {
       setCargando(false);
     }
   };
-const cambiarEstado = async (id, nuevo) => {
+  const cambiarEstado = async (id, nuevo) => {
     setActualizandoId(id);
     try {
       const data = await apiPatch(`/polizas/${id}/estado`, { estado_poliza: nuevo });
@@ -90,7 +90,8 @@ const cambiarEstado = async (id, nuevo) => {
   const filtradas = polizas.filter((p) => {
     const matchEstado = filtroEstado === 'todos' || p.estado_poliza === filtroEstado;
     const t = busq.toLowerCase();
-    const matchBusq = t === '' || String(p.id_poliza).includes(t) || (p.producto?.nombre || '').toLowerCase().includes(t);
+    const matchBusq =
+      t === '' || String(p.id_poliza).includes(t) || (p.producto?.nombre || '').toLowerCase().includes(t);
     return matchEstado && matchBusq;
   });
 
@@ -101,7 +102,6 @@ const cambiarEstado = async (id, nuevo) => {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-base font-bold text-text">Emisión de pólizas</h1>
@@ -144,7 +144,9 @@ const cambiarEstado = async (id, nuevo) => {
       </div>
 
       {cargando ? (
-        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">Cargando...</div>
+        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
+          Cargando...
+        </div>
       ) : error ? (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-600 text-center">{error}</div>
       ) : filtradas.length === 0 ? (
@@ -186,7 +188,7 @@ function PolizaRow({ p, onCambiarEstado, actualizando }) {
   const [menu, setMenu] = useState(false);
 
   return (
-    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden">
+    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow">
       <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
       <div className="p-4 flex items-start gap-4 flex-wrap sm:flex-nowrap">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
@@ -299,7 +301,9 @@ function ModalEmitir({ onClose, onSuccess }) {
         </div>
         <form onSubmit={enviar} className="p-5 flex flex-col gap-3 overflow-y-auto">
           {error && (
-            <div className="p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">{error}</div>
+            <div className="p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">
+              {error}
+            </div>
           )}
           <div>
             <label className="text-xs font-medium text-text-soft block mb-1.5">Cliente</label>

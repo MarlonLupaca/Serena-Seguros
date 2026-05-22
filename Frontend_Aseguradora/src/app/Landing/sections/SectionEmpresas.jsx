@@ -1,24 +1,25 @@
+import Image from 'next/image';
 import Link from 'next/link';
-import { MdArrowForward, MdBusiness, MdSecurity, MdPeople, MdHandshake } from 'react-icons/md';
+import { MdArrowForward } from 'react-icons/md';
 
 const servicios = [
   {
-    icon: MdSecurity,
+    url: '/icons/escudov2.png',
     titulo: 'SCTR',
     desc: 'Seguro complementario de trabajo de riesgo, obligatorio para actividades de alto riesgo.',
   },
   {
-    icon: MdPeople,
+    url: '/icons/EPSv2.png',
     titulo: 'EPS Corporativa',
     desc: 'Planes de salud para tus colaboradores con las mejores clinicas del pais.',
   },
   {
-    icon: MdHandshake,
+    url: '/icons/responsabilidadv2.png',
     titulo: 'Responsabilidad Civil',
     desc: 'Proteccion ante reclamos de terceros por danos causados por tu empresa.',
   },
   {
-    icon: MdBusiness,
+    url: '/icons/empresariesgov2.png',
     titulo: 'Multiriesgo Negocio',
     desc: 'Cobertura integral para locales comerciales, oficinas e inventario.',
   },
@@ -29,9 +30,7 @@ export function SectionEmpresas() {
     <section id="empresas" className="py-24 md:py-32 px-6 bg-bg-soft">
       <div className="max-w-7xl mx-auto">
         <div className="max-w-2xl mb-14">
-          <span className="text-[11px] font-extrabold tracking-[0.12em] uppercase text-primary">
-            Para empresas
-          </span>
+          <span className="text-[11px] font-extrabold tracking-[0.12em] uppercase text-primary">Para empresas</span>
           <p className="mt-2 text-3xl md:text-[42px] font-extrabold tracking-tight text-text leading-tight">
             Seguros corporativos a la medida de tu negocio
           </p>
@@ -48,9 +47,7 @@ export function SectionEmpresas() {
                 key={s.titulo}
                 className="group flex flex-col bg-white rounded-2xl border border-border p-7 hover:-translate-y-1.5 hover:shadow-[0_20px_48px_rgba(11,60,93,0.10)] hover:border-primary/25 transition-all duration-300"
               >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Icon size={24} className="text-primary" />
-                </div>
+                <Image src={s.url} height={50} width={50} alt={s.titulo} className="h-12 w-fit border mb-2" />
                 <p className="font-bold text-base text-text">{s.titulo}</p>
                 <p className="mt-2 text-sm text-text-soft leading-relaxed grow">{s.desc}</p>
               </div>

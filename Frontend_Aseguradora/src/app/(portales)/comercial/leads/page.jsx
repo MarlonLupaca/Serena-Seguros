@@ -62,7 +62,7 @@ export default function LeadsPage() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [actualizandoId, setActualizandoId] = useState(null);
-useEffect(() => {
+  useEffect(() => {
     cargar();
   }, []);
 
@@ -95,7 +95,7 @@ useEffect(() => {
       setActualizandoId(null);
     }
   };
-const filtrados = leads.filter((l) => {
+  const filtrados = leads.filter((l) => {
     const matchBusq =
       busqueda === '' ||
       String(l.id_cotizacion).includes(busqueda.toLowerCase()) ||
@@ -111,7 +111,6 @@ const filtrados = leads.filter((l) => {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-base font-bold text-text">Leads</h1>
@@ -195,7 +194,7 @@ function LeadCard({ lead, onCambiarEstado, actualizando }) {
   const [menu, setMenu] = useState(false);
 
   return (
-    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden">
+    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow">
       <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
       <div className="p-5">
         <div className="flex items-start gap-4 flex-wrap sm:flex-nowrap">
@@ -225,7 +224,7 @@ function LeadCard({ lead, onCambiarEstado, actualizando }) {
               </span>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2 shrink-0 relative">
+          <div className="flex flex-col items-end gap-2 shrink-0 relative ">
             <p className="text-sm font-bold text-text">{formatearMoneda(lead.prima_estimada)}</p>
             <button
               onClick={() => setMenu((v) => !v)}

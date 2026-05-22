@@ -17,7 +17,7 @@ export const SEGUROS = {
     descripcion:
       'Red de +800 talleres autorizados, grua 24/7 en todo el pais, auto sustituto y atencion inmediata ante cualquier siniestro.',
     icon: MdDirectionsCar,
-    imagen: '/icons/vehiculo.png',
+    imagen: '/img/car1.svg',
     coberturas: [
       'Danos propios por choque o volcadura',
       'Robo total y parcial',
@@ -27,9 +27,15 @@ export const SEGUROS = {
       'Cobertura de lunas y llantas',
     ],
     faqs: [
-      { q: 'Que cubre el seguro vehicular?', a: 'Cubre danos propios, robo, responsabilidad civil, grua y asistencia en carretera.' },
+      {
+        q: 'Que cubre el seguro vehicular?',
+        a: 'Cubre danos propios, robo, responsabilidad civil, grua y asistencia en carretera.',
+      },
       { q: 'Puedo elegir mi taller?', a: 'Si, contamos con una red de +800 talleres autorizados en todo el pais.' },
-      { q: 'Que pasa si tengo un accidente fuera de la ciudad?', a: 'Nuestra cobertura es a nivel nacional con asistencia 24/7.' },
+      {
+        q: 'Que pasa si tengo un accidente fuera de la ciudad?',
+        a: 'Nuestra cobertura es a nivel nacional con asistencia 24/7.',
+      },
     ],
   },
   soat: {
@@ -39,7 +45,7 @@ export const SEGUROS = {
     descripcion:
       'Compra tu SOAT desde cualquier dispositivo y recibelo al instante en tu correo. Valido en todo el territorio nacional.',
     icon: MdShield,
-    imagen: '/icons/soat.png',
+    imagen: '/img/car2.svg',
     coberturas: [
       'Gastos medicos por accidente de transito',
       'Invalidez permanente',
@@ -57,10 +63,9 @@ export const SEGUROS = {
     tipo: 'VIDA',
     titulo: 'Seguro de Vida',
     subtitulo: 'Protege a los que mas amas',
-    descripcion:
-      'Asegura el futuro de tu familia con planes flexibles que se adaptan a tu presupuesto y necesidades.',
+    descripcion: 'Asegura el futuro de tu familia con planes flexibles que se adaptan a tu presupuesto y necesidades.',
     icon: MdFavorite,
-    imagen: '/icons/vida.png',
+    imagen: '/img/FamiliaSeguro.svg',
     coberturas: [
       'Fallecimiento por cualquier causa',
       'Invalidez total y permanente',
@@ -72,17 +77,19 @@ export const SEGUROS = {
     faqs: [
       { q: 'Desde que edad puedo contratar?', a: 'Puedes contratar desde los 18 hasta los 65 anos.' },
       { q: 'Puedo recuperar mi dinero?', a: 'En planes con ahorro, puedes rescatar hasta el 100% de lo aportado.' },
-      { q: 'Cuantos beneficiarios puedo designar?', a: 'No hay limite, puedes designar los que desees y asignar porcentajes.' },
+      {
+        q: 'Cuantos beneficiarios puedo designar?',
+        a: 'No hay limite, puedes designar los que desees y asignar porcentajes.',
+      },
     ],
   },
   salud: {
     tipo: 'SALUD',
     titulo: 'Seguro de Salud',
     subtitulo: 'Atencion medica de calidad cuando la necesites',
-    descripcion:
-      'Accede a las mejores clinicas del pais con copagos bajos, sin periodos de carencia en emergencias.',
+    descripcion: 'Accede a las mejores clinicas del pais con copagos bajos, sin periodos de carencia en emergencias.',
     icon: MdLocalHospital,
-    imagen: '/icons/salud.png',
+    imagen: '/img/VidaSeguro.svg',
     coberturas: [
       'Consultas medicas y especialistas',
       'Hospitalizacion y cirugia',
@@ -104,7 +111,7 @@ export const SEGUROS = {
     descripcion:
       'Cobertura medica internacional, asistencia en caso de perdida de equipaje, cancelacion de vuelos y mas.',
     icon: MdFlight,
-    imagen: '/icons/viaje.png',
+    imagen: '/img/travel.svg',
     coberturas: [
       'Asistencia medica internacional ilimitada',
       'Repatriacion sanitaria',
@@ -115,7 +122,10 @@ export const SEGUROS = {
     ],
     faqs: [
       { q: 'Cubre COVID-19?', a: 'Si, incluye cobertura medica por COVID-19 en el destino.' },
-      { q: 'Puedo comprar el seguro si ya estoy viajando?', a: 'Se recomienda comprarlo antes del viaje, pero consulta con nuestros asesores.' },
+      {
+        q: 'Puedo comprar el seguro si ya estoy viajando?',
+        a: 'Se recomienda comprarlo antes del viaje, pero consulta con nuestros asesores.',
+      },
       { q: 'Cubre deportes extremos?', a: 'El plan Aventura incluye deportes como trekking, surf y ski.' },
     ],
   },
@@ -123,10 +133,9 @@ export const SEGUROS = {
     tipo: 'HOGAR',
     titulo: 'Seguro de Hogar',
     subtitulo: 'Tu casa protegida ante cualquier imprevisto',
-    descripcion:
-      'Proteccion integral para tu vivienda y tus bienes ante robos, incendios, desastres naturales y mas.',
+    descripcion: 'Proteccion integral para tu vivienda y tus bienes ante robos, incendios, desastres naturales y mas.',
     icon: MdHome,
-    imagen: '/icons/hogar.png',
+    imagen: '/img/Casa.svg',
     coberturas: [
       'Incendio y explosion',
       'Robo y asalto',
@@ -148,7 +157,7 @@ export const SEGUROS = {
     descripcion:
       'Consultas veterinarias, vacunas, emergencias y cirugia para tu engreido. Planes desde cachorros hasta seniors.',
     icon: MdPets,
-    imagen: '/icons/mascota.png',
+    imagen: '/img/Pet.svg',
     coberturas: [
       'Consultas veterinarias ilimitadas',
       'Vacunacion y desparasitacion',
@@ -180,9 +189,15 @@ export const SEGUROS = {
       'Vida ley para empleados',
     ],
     faqs: [
-      { q: 'Desde cuantos empleados puedo contratar?', a: 'Desde 1 empleado. Tenemos planes para micro, pequena, mediana y gran empresa.' },
+      {
+        q: 'Desde cuantos empleados puedo contratar?',
+        a: 'Desde 1 empleado. Tenemos planes para micro, pequena, mediana y gran empresa.',
+      },
       { q: 'El SCTR es obligatorio?', a: 'Si, para empresas con actividades de alto riesgo es obligatorio por ley.' },
-      { q: 'Puedo personalizar las coberturas?', a: 'Si, diseñamos paquetes a medida segun las necesidades de tu empresa.' },
+      {
+        q: 'Puedo personalizar las coberturas?',
+        a: 'Si, diseñamos paquetes a medida segun las necesidades de tu empresa.',
+      },
     ],
   },
 };

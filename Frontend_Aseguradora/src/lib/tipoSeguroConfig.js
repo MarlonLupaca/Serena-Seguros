@@ -3,7 +3,7 @@ export const TIPO_SEGURO = {
     imagen: '/icons/vehiculo.png',
     label: 'Auto',
     tagline: 'Maneja sin preocupaciones',
-    accentBg: 'bg-primary/10',
+    accentBg: 'bg-primary/40',
     accentText: 'text-primary',
     bar: 'bg-primary/40',
   },

@@ -39,9 +39,7 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
     ...valoresIniciales(producto.tipo_seguro),
     ...(prefill?.datosRiesgo || {}),
   }));
-  const [sumaAsegurada, setSumaAsegurada] = useState(
-    prefill?.sumaAsegurada ? String(prefill.sumaAsegurada) : ''
-  );
+  const [sumaAsegurada, setSumaAsegurada] = useState(prefill?.sumaAsegurada ? String(prefill.sumaAsegurada) : '');
 
   const [cotizacion, setCotizacion] = useState(prefill?.cotizacion || null);
   const [evaluacion, setEvaluacion] = useState(null);
@@ -133,8 +131,7 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
       ...prev,
       { id_beneficiario: null, nombres: '', apellidos: '', parentesco: '', documento_identidad: '', porcentaje: 0 },
     ]);
-  const eliminarBeneficiario = (idx) =>
-    setBeneficiarios((prev) => prev.filter((_, i) => i !== idx));
+  const eliminarBeneficiario = (idx) => setBeneficiarios((prev) => prev.filter((_, i) => i !== idx));
   const cambiarBeneficiario = (idx, campo, valor) =>
     setBeneficiarios((prev) => prev.map((b, i) => (i === idx ? { ...b, [campo]: valor } : b)));
 
@@ -273,9 +270,8 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
           )}
 
           <div className="flex items-center gap-3 bg-bg-soft rounded-xl p-3 mb-4">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tipoStyle.accentBg}`}>
-              <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
-            </div>
+            <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain w-10 rounded-xl" />
+
             <div>
               <p className="text-sm font-bold text-text">{producto.nombre}</p>
               <p className="text-xs text-text-soft">{producto.tipo_seguro}</p>
@@ -284,15 +280,9 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
 
           {paso === 1 && (
             <div className="flex flex-col gap-4">
-              <FormularioRiesgo
-                tipoSeguro={producto.tipo_seguro}
-                valores={datosRiesgo}
-                onChange={setDatosRiesgo}
-              />
+              <FormularioRiesgo tipoSeguro={producto.tipo_seguro} valores={datosRiesgo} onChange={setDatosRiesgo} />
               <div>
-                <label className="text-xs font-medium text-text-soft block mb-1.5">
-                  Suma asegurada deseada (S/) *
-                </label>
+                <label className="text-xs font-medium text-text-soft block mb-1.5">Suma asegurada deseada (S/) *</label>
                 <input
                   type="number"
                   min="0"
@@ -316,12 +306,8 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
             <div className="flex flex-col gap-4">
               <div className="bg-bg-soft rounded-xl p-4 border border-border">
                 <p className="text-xs text-text-soft mb-1">Factor de riesgo aplicado</p>
-                <p className="text-2xl font-bold text-text">
-                  x {evaluacion?.factor_riesgo}
-                </p>
-                <p className="text-xs text-text-soft mt-1">
-                  Calculado a partir de los datos del riesgo declarados.
-                </p>
+                <p className="text-2xl font-bold text-text">x {evaluacion?.factor_riesgo}</p>
+                <p className="text-xs text-text-soft mt-1">Calculado a partir de los datos del riesgo declarados.</p>
               </div>
               <p className="text-sm text-text-soft">
                 Selecciona la frecuencia de pago para generar la propuesta formal:
@@ -475,11 +461,7 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
                 >
                   <MdAdd size={16} /> Agregar beneficiario
                 </button>
-                <p
-                  className={`text-sm font-bold ${
-                    sumaPorcentaje === 100 ? 'text-emerald-600' : 'text-rose-500'
-                  }`}
-                >
+                <p className={`text-sm font-bold ${sumaPorcentaje === 100 ? 'text-emerald-600' : 'text-rose-500'}`}>
                   Suma: {sumaPorcentaje}%
                 </p>
               </div>
@@ -509,9 +491,7 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
                     accept="image/*,.pdf,.doc,.docx"
                     className="hidden"
                     onChange={(e) => {
-                      const nuevos = Array.from(e.target.files || []).filter(
-                        (f) => f.size < 10 * 1024 * 1024
-                      );
+                      const nuevos = Array.from(e.target.files || []).filter((f) => f.size < 10 * 1024 * 1024);
                       setDocumentos((prev) => [...prev, ...nuevos]);
                       e.target.value = '';
                     }}
@@ -598,7 +578,13 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
                 disabled={cargando || !cuotaPrincipal}
                 className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-sm font-semibold transition-colors"
               >
-                {cargando ? 'Procesando pago...' : (<><MdLock size={14} /> Pagar y activar poliza</>)}
+                {cargando ? (
+                  'Procesando pago...'
+                ) : (
+                  <>
+                    <MdLock size={14} /> Pagar y activar poliza
+                  </>
+                )}
               </button>
               <button
                 onClick={() => setPaso(7)}
@@ -614,9 +600,7 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
               <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-2">
                 <MdCheckCircle size={32} className="text-emerald-600" />
               </div>
-              <p className="text-xl font-bold text-text">
-                {pagoConfirmado ? '¡Poliza activa!' : 'Poliza emitida'}
-              </p>
+              <p className="text-xl font-bold text-text">{pagoConfirmado ? '¡Poliza activa!' : 'Poliza emitida'}</p>
               <p className="text-sm text-text-soft leading-relaxed">
                 {pagoConfirmado
                   ? 'Tu poliza esta vigente. Revisa tus pagos y beneficiarios en Mis polizas.'

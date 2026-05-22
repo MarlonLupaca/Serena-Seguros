@@ -15,12 +15,12 @@ export default function InsuranceTabs({ activeTab, setActiveTab, dropdownOpen, s
               className={`text-[12px] flex items-center gap-1.5 px-3.5 py-2 rounded-full font-semibold transition-all whitespace-nowrap border ${
                 active
                   ? s.accentBg
-                    ? `${s.accentBg} ${s.accentText} border-transparent`
-                    : 'bg-primary/10 text-primary border-transparent'
-                  : 'bg-transparent border-border text-text-soft hover:text-text'
+                    ? `${s.accentBg} ${s.accentText} ${s.accentBorder ?? 'border-current'}`
+                    : 'bg-primary/10 text-primary border-primary' // <-- Cambiado border-transparent por border-primary
+                  : 'bg-white border-border text-text-soft hover:text-text'
               }`}
             >
-              {s.imagen && <Image src={s.imagen} width={14} height={14} alt="" className="object-contain" />}
+              {s.imagen && <Image src={s.imagen} width={14} height={14} alt="" className="object-contain rounded-xl" />}
               {s.tab}
             </button>
           );
@@ -38,12 +38,18 @@ export default function InsuranceTabs({ activeTab, setActiveTab, dropdownOpen, s
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap border ${
                 active
                   ? s.accentBg
-                    ? `${s.accentBg} ${s.accentText} border-transparent`
-                    : 'bg-primary/10 text-primary border-transparent'
-                  : 'bg-transparent border-border text-text-soft hover:text-text'
+                    ? `${s.accentBg} ${s.accentText} ${s.accentBorder ?? 'border-current'}`
+                    : 'bg-primary/10 text-primary border-primary' // <-- Cambiado border-transparent por border-primary
+                  : 'bg-white border-border text-text-soft hover:text-text'
               }`}
             >
-              {s.imagen && <Image src={s.imagen} width={14} height={14} alt="" className="object-contain" />}
+              {s.imagen && (
+                <div
+                  className={`relative w-4 h-4 rounded-full overflow-hidden p-0.5 border ${active ? 'border-current' : 'border-border/40'}`}
+                >
+                  <Image src={s.imagen} width={14} height={14} alt="" className="object-contain rounded-full" />
+                </div>
+              )}
               {s.tab}
             </button>
           );
@@ -55,8 +61,8 @@ export default function InsuranceTabs({ activeTab, setActiveTab, dropdownOpen, s
             onClick={() => setDropdownOpen((v) => !v)}
             className={`flex items-center gap-1 px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap border ${
               allTabs.slice(3).some((s) => s.id === activeTab)
-                ? 'bg-primary/10 text-primary border-transparent'
-                : 'bg-transparent border-border text-text-soft hover:text-text'
+                ? 'bg-primary/10 text-primary border-primary' // <-- Cambiado border-transparent por border-primary
+                : 'bg-white border-border text-text-soft hover:text-text'
             }`}
           >
             {allTabs.slice(3).some((s) => s.id === activeTab) ? allTabs.find((s) => s.id === activeTab)?.tab : 'Más'}
@@ -78,7 +84,13 @@ export default function InsuranceTabs({ activeTab, setActiveTab, dropdownOpen, s
                       active ? `${s.accentText ?? 'text-primary'} bg-primary/5` : 'text-text-soft hover:bg-bg-soft'
                     }`}
                   >
-                    {s.imagen && <Image src={s.imagen} width={16} height={16} alt="" className="object-contain" />}
+                    {s.imagen && (
+                      <div
+                        className={`relative w-4 h-4 rounded-full overflow-hidden p-0.5 border ${active ? 'border-current' : 'border-border/40'}`}
+                      >
+                        <Image src={s.imagen} width={16} height={16} alt="" className="object-contain rounded-full" />
+                      </div>
+                    )}
                     {s.tab}
                     {active && <MdCheck size={14} className="ml-auto" />}
                   </button>

@@ -8,14 +8,7 @@ import {
   MdNotificationsActive,
   MdCreditCard,
 } from 'react-icons/md';
-import {
-  ESTADO_CONFIG,
-  estiloTipo,
-  formatearFecha,
-  formatearMoneda,
-  diasHasta,
-  clasificarEstado,
-} from './data';
+import { ESTADO_CONFIG, estiloTipo, formatearFecha, formatearMoneda, diasHasta, clasificarEstado } from './data';
 
 export default function DetalleCuota({ cuota, onBack, onPagar }) {
   const tipoStyle = estiloTipo(cuota.poliza_tipo);
@@ -37,9 +30,8 @@ export default function DetalleCuota({ cuota, onBack, onPagar }) {
         <div className="p-5 border-b border-border">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg} overflow-hidden`}>
-                <Image src={tipoStyle.imagen} width={24} height={24} alt="" className="object-contain" />
-              </div>
+              <Image src={tipoStyle.imagen} width={24} height={24} alt="" className="object-contain w-10" />
+
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm font-bold text-text">{cuota.poliza_nombre}</p>

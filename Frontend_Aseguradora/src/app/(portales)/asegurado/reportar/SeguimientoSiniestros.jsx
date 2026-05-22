@@ -31,7 +31,7 @@ export default function SeguimientoSiniestros() {
   if (siniestros.length === 0) return null;
 
   return (
-    <div className="mt-8 pt-8 border-t border-border">
+    <div className="mt-8 pt-8 border-t border-border mb-5">
       <h3 className="text-lg font-bold text-text mb-4">Seguimiento de mis casos</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {siniestros.map((sin) => (
@@ -115,9 +115,7 @@ function ModalLineaTiempo({ id, onClose }) {
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-bg rounded-2xl border border-border shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center p-4 border-b border-border">
-          <p className="font-bold text-text text-sm">
-            Línea de tiempo · Caso #{String(id).padStart(6, '0')}
-          </p>
+          <p className="font-bold text-text text-sm">Línea de tiempo · Caso #{String(id).padStart(6, '0')}</p>
           <button onClick={onClose} className="text-text-soft hover:text-text">
             <MdClose size={20} />
           </button>
@@ -133,12 +131,9 @@ function ModalLineaTiempo({ id, onClose }) {
               {eventos.length === 0 ? (
                 <div className="text-center py-6">
                   <MdHistory size={28} className="mx-auto text-text-soft opacity-40 mb-2" />
-                  <p className="text-xs text-text-soft">
-                    Aun no hay movimientos registrados para este caso.
-                  </p>
+                  <p className="text-xs text-text-soft">Aun no hay movimientos registrados para este caso.</p>
                   <p className="text-[11px] text-text-soft mt-1">
-                    Estado actual:{' '}
-                    <span className="font-semibold">{detalle.estado_resolucion}</span>
+                    Estado actual: <span className="font-semibold">{detalle.estado_resolucion}</span>
                   </p>
                 </div>
               ) : (
@@ -176,10 +171,7 @@ function ModalLineaTiempo({ id, onClose }) {
                         <p className="text-xs text-text flex-1 truncate">{doc.nombre_archivo}</p>
                         <button
                           onClick={() =>
-                            apiDownloadFile(
-                              `/mis-documentos/${doc.id_documento}/archivo`,
-                              doc.nombre_archivo
-                            )
+                            apiDownloadFile(`/mis-documentos/${doc.id_documento}/archivo`, doc.nombre_archivo)
                           }
                           className="p-1 rounded hover:bg-bg text-text-soft"
                           title="Descargar"

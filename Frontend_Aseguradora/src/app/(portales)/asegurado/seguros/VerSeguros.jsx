@@ -6,7 +6,6 @@ import { apiGet } from '@/lib/api';
 import { estiloTipo } from './data';
 import SeguroCard from './SeguroCard';
 import InsuranceTabs from './InsuranceTabs';
-import InsuranceCTA from './InsuranceCTA';
 
 export default function VerSeguros() {
   const [productos, setProductos] = useState([]);
@@ -83,8 +82,6 @@ export default function VerSeguros() {
             </div>
           </>
         )}
-
-        <InsuranceCTA />
       </div>
     </div>
   );

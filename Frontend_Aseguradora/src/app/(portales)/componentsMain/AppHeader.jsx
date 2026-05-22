@@ -96,21 +96,10 @@ const AppHeader = ({ title, subtitle, searchPlaceholder = 'Buscar...', indicator
   }
 
   return (
-    <header className="flex h-20 w-full items-center justify-between px-8 sticky top-0 bg-gradient-pastel backdrop-blur z-40 pl-18 lg:pl-14">
+    <header className="flex h-20 w-full items-center justify-between px-8 sticky top-0 bg-gradient-pastel backdrop-blur z-40 pl-18 lg:pl-8">
       <div>
         <p className="text-xl text-primary-hover font-bold">{title}</p>
         {subtitle && <p className="text-[0.7rem] text-black/50">{subtitle}</p>}
-      </div>
-
-      <div className="hidden md:flex relative w-1/3">
-        <span className="absolute inset-y-0 left-3 flex items-center text-text-soft">
-          <IoSearchOutline size={18} />
-        </span>
-        <input
-          type="text"
-          placeholder={searchPlaceholder}
-          className="w-full rounded-xl bg-bg-soft py-2.5 pl-10 pr-4 text-sm outline-none ring-primary/20 transition-all focus:ring-2 placeholder:text-text-soft"
-        />
       </div>
 
       <div className="flex items-center gap-3">

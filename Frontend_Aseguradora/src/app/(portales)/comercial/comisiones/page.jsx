@@ -204,7 +204,8 @@ function GruposComision({ comisiones }) {
   const grupos = {};
   comisiones.forEach((c) => {
     const key = c.id_poliza || 0;
-    if (!grupos[key]) grupos[key] = { nombre: c.poliza_nombre || 'Sin póliza', tipo: c.poliza_tipo, id: key, items: [] };
+    if (!grupos[key])
+      grupos[key] = { nombre: c.poliza_nombre || 'Sin póliza', tipo: c.poliza_tipo, id: key, items: [] };
     grupos[key].items.push(c);
   });
   const lista = Object.values(grupos).sort((a, b) => a.nombre.localeCompare(b.nombre));
@@ -227,16 +228,25 @@ function GrupoComision({ grupo }) {
   return (
     <div className="bg-bg rounded-2xl border border-border overflow-hidden">
       <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
-      <button onClick={() => setAbierto(!abierto)} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-bg-soft transition-colors">
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg} overflow-hidden`}>
-          <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
-        </div>
+      <button
+        onClick={() => setAbierto(!abierto)}
+        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-bg-soft transition-colors"
+      >
+        <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain w-10" />
+
         <div className="flex-1 min-w-0 text-left">
           <p className="text-sm font-bold text-text">{grupo.nombre}</p>
-          <p className="text-xs text-text-soft mt-0.5">POL-{String(grupo.id).padStart(6, '0')} · {grupo.items.length} comisión{grupo.items.length > 1 ? 'es' : ''} · {pendientes} pendiente{pendientes !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-text-soft mt-0.5">
+            POL-{String(grupo.id).padStart(6, '0')} · {grupo.items.length} comisión{grupo.items.length > 1 ? 'es' : ''}{' '}
+            · {pendientes} pendiente{pendientes !== 1 ? 's' : ''}
+          </p>
         </div>
         <p className="text-sm font-bold text-text shrink-0">{formatearMoneda(totalMonto)}</p>
-        {abierto ? <MdExpandLess size={18} className="text-text-soft shrink-0" /> : <MdExpandMore size={18} className="text-text-soft shrink-0" />}
+        {abierto ? (
+          <MdExpandLess size={18} className="text-text-soft shrink-0" />
+        ) : (
+          <MdExpandMore size={18} className="text-text-soft shrink-0" />
+        )}
       </button>
       {abierto && (
         <div className="border-t border-border divide-y divide-border/50">
@@ -247,8 +257,11 @@ function GrupoComision({ grupo }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-text">COM-{String(c.id_comision).padStart(6, '0')}</p>
-                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />{est.label}
+                    <span
+                      className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+                      {est.label}
                     </span>
                   </div>
                   <p className="text-xs text-text-soft mt-0.5">Comisión: {c.porcentaje}% sobre la prima</p>
