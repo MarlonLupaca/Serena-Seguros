@@ -6,8 +6,15 @@ import com.serena.modules.comercial.cotizaciones.dto.CambioEstadoCotizacionReque
 import com.serena.modules.comercial.cotizaciones.dto.CotizacionResponse;
 import com.serena.modules.comercial.cotizaciones.entity.LeadCotizacion;
 import com.serena.modules.comercial.cotizaciones.service.CotizacionService;
+import com.serena.modules.comercial.propuestas.dto.GenerarPropuestaRequest;
+import com.serena.modules.comercial.propuestas.dto.PropuestaResponse;
+import com.serena.modules.comercial.propuestas.service.PropuestaService;
+import com.serena.modules.comercial.suscripcion.dto.EvaluacionRiesgoRequest;
+import com.serena.modules.comercial.suscripcion.dto.EvaluacionRiesgoResponse;
+import com.serena.modules.comercial.suscripcion.service.EvaluacionRiesgoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,6 +29,8 @@ import java.util.List;
 public class CotizacionesController {
 
     private final CotizacionService cotizacionService;
+    private final EvaluacionRiesgoService evaluacionService;
+    private final PropuestaService propuestaService;
 
     @GetMapping
     public ResponseEntity<List<CotizacionResponse>> listar(
@@ -51,5 +60,33 @@ public class CotizacionesController {
             @Valid @RequestBody AsignarAgenteRequest request
     ) {
         return ResponseEntity.ok(cotizacionService.asignarAgente(id, request));
+    }
+
+    @PostMapping("/{id}/evaluacion")
+    public ResponseEntity<EvaluacionRiesgoResponse> evaluar(
+            @PathVariable Integer id,
+            @Valid @RequestBody EvaluacionRiesgoRequest request
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(evaluacionService.registrar(id, request));
+    }
+
+    @GetMapping("/{id}/evaluacion")
+    public ResponseEntity<EvaluacionRiesgoResponse> obtenerEvaluacion(@PathVariable Integer id) {
+        return ResponseEntity.ok(evaluacionService.obtenerPorCotizacion(id));
+    }
+
+    @PostMapping("/{id}/propuesta")
+    public ResponseEntity<PropuestaResponse> generarPropuesta(
+            @PathVariable Integer id,
+            @Valid @RequestBody GenerarPropuestaRequest request
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(propuestaService.generar(id, request));
+    }
+
+    @GetMapping("/{id}/propuesta")
+    public ResponseEntity<PropuestaResponse> obtenerPropuesta(@PathVariable Integer id) {
+        return ResponseEntity.ok(propuestaService.obtenerVigente(id));
     }
 }

@@ -2,6 +2,7 @@ package com.serena.modules.tecnico.indemnizaciones.service;
 
 import com.serena.modules.core.polizas.entity.PolizaBeneficiario;
 import com.serena.modules.core.polizas.repository.PolizaBeneficiarioRepository;
+import com.serena.modules.seguridad.auth.entity.Usuario;
 import com.serena.modules.soporte.auditoria.service.AuditoriaService;
 import com.serena.modules.soporte.notificaciones.entity.Notificacion;
 import com.serena.modules.soporte.notificaciones.service.NotificacionService;
@@ -68,6 +69,12 @@ public class IndemnizacionService {
                 "Indemnizacion aprobada",
                 "Tu siniestro #" + idSiniestro + " fue liquidado por S/ " + request.montoAprobado(),
                 "/asegurado/reportar");
+
+        notificacionService.crearParaPortal(Usuario.PortalAcceso.OPERATIVO,
+                Notificacion.Tipo.COBRANZA,
+                "Indemnizacion aprobada - procesar pago",
+                "Siniestro #" + idSiniestro + " - S/ " + request.montoAprobado(),
+                "/operativo/cobranza");
 
         return IndemnizacionResponse.from(guardada);
     }

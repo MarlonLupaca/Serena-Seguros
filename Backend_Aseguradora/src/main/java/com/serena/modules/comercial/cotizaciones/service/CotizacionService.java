@@ -7,6 +7,7 @@ import com.serena.modules.comercial.cotizaciones.dto.ContratacionResponse;
 import com.serena.modules.comercial.cotizaciones.dto.ContratarCotizacionRequest;
 import com.serena.modules.comercial.cotizaciones.dto.CotizacionResponse;
 import com.serena.modules.comercial.cotizaciones.dto.CrearCotizacionRequest;
+import com.serena.modules.comercial.cotizaciones.dto.MiCotizacionResponse;
 import com.serena.modules.comercial.cotizaciones.dto.GuardarCotizacionRequest;
 import com.serena.modules.comercial.cotizaciones.dto.SimulacionRequest;
 import com.serena.modules.comercial.cotizaciones.dto.SimulacionResponse;
@@ -55,6 +56,7 @@ public class CotizacionService {
     private final CalculadoraPrimaService calculadora;
     private final AuditoriaService auditoriaService;
     private final NotificacionService notificacionService;
+    private final com.serena.modules.comercial.suscripcion.repository.EvaluacionRiesgoRepository evaluacionRiesgoRepository;
 
     @Transactional
     public CotizacionResponse crear(Usuario usuario, CrearCotizacionRequest request) {
@@ -76,7 +78,15 @@ public class CotizacionService {
                 .tipoOrigen(LeadCotizacion.TipoOrigen.NUEVA)
                 .primaEstimada(prima)
                 .build();
-        return CotizacionResponse.from(cotizacionRepository.save(lead));
+        LeadCotizacion guardado = cotizacionRepository.save(lead);
+
+        notificacionService.crearParaPortal(Usuario.PortalAcceso.COMERCIAL,
+                Notificacion.Tipo.GENERAL,
+                "Nueva cotizacion recibida",
+                "Lead #" + guardado.getIdCotizacion() + " - " + guardado.getProductoInteres().name(),
+                "/comercial/leads");
+
+        return CotizacionResponse.from(guardado);
     }
 
     @Transactional(readOnly = true)
@@ -229,6 +239,21 @@ public class CotizacionService {
                 "Pendiente de activacion: paga la primera cuota para activar la cobertura",
                 "/asegurado/polizas");
 
+        notificacionService.crearParaPortal(Usuario.PortalAcceso.OPERATIVO,
+                Notificacion.Tipo.COBRANZA,
+                "Nueva poliza pendiente de cobro",
+                "Poliza #" + poliza.getIdPoliza() + " prima S/ " + poliza.getPrimaTotal(),
+                "/operativo/cobranza");
+
+        if (lead.getEmpleadoAgente() != null && lead.getEmpleadoAgente().getPersona() != null
+                && lead.getEmpleadoAgente().getPersona().getUsuario() != null) {
+            notificacionService.crear(lead.getEmpleadoAgente().getPersona().getUsuario(),
+                    Notificacion.Tipo.GENERAL,
+                    "Lead ganado - poliza emitida",
+                    "Cotizacion #" + lead.getIdCotizacion() + " -> poliza #" + poliza.getIdPoliza(),
+                    "/comercial/leads");
+        }
+
         return new ContratacionResponse(
                 lead.getIdCotizacion(),
                 poliza.getIdPoliza(),
@@ -303,7 +328,17 @@ public class CotizacionService {
     public CotizacionResponse cambiarEstado(Integer id, CambioEstadoCotizacionRequest request) {
         LeadCotizacion lead = buscar(id);
         lead.setEstadoKanban(request.estadoKanban());
-        return CotizacionResponse.from(cotizacionRepository.save(lead));
+        LeadCotizacion guardado = cotizacionRepository.save(lead);
+
+        if (guardado.getCliente() != null && guardado.getCliente().getPersona() != null
+                && guardado.getCliente().getPersona().getUsuario() != null) {
+            notificacionService.crear(guardado.getCliente().getPersona().getUsuario(),
+                    Notificacion.Tipo.GENERAL,
+                    "Tu solicitud cambio de estado",
+                    "Cotizacion #" + id + " ahora esta en " + request.estadoKanban().name(),
+                    "/asegurado/seguros");
+        }
+        return CotizacionResponse.from(guardado);
     }
 
     @Transactional
@@ -342,6 +377,16 @@ public class CotizacionService {
         return personaRepository.findByUsuario(usuario)
                 .flatMap(empleadoRepository::findByPersona)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Empleado del usuario", usuario.getIdUsuario()));
+    }
+
+    @Transactional(readOnly = true)
+    public List<MiCotizacionResponse> misCotizaciones(Usuario usuario) {
+        Cliente cliente = clienteDelUsuario(usuario);
+        return cotizacionRepository.findByClienteOrderByFechaIngresoDesc(cliente)
+                .stream().map(lead -> {
+                    var eval = evaluacionRiesgoRepository.findByCotizacion(lead).orElse(null);
+                    return MiCotizacionResponse.from(lead, eval);
+                }).toList();
     }
 
     private Cliente clienteDelUsuario(Usuario usuario) {

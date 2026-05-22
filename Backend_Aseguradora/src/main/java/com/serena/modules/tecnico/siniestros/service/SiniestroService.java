@@ -104,6 +104,14 @@ public class SiniestroService {
         Siniestro guardado = siniestroRepository.save(siniestro);
         auditoria.registrar("siniestro_reportado", "siniestros",
                 "SIN-" + guardado.getIdSiniestro() + " reportado por " + usuario.getUsername());
+
+        notificaciones.crearParaPortal(Usuario.PortalAcceso.TECNICO,
+                Notificacion.Tipo.SINIESTRO,
+                "Nuevo siniestro reportado",
+                "SIN-" + guardado.getIdSiniestro() + " poliza #" + poliza.getIdPoliza()
+                        + " - " + request.getTipoIncidente(),
+                "/core/siniestros");
+
         return SiniestroResponse.from(guardado);
     }
 
@@ -154,7 +162,25 @@ public class SiniestroService {
         }
         auditoria.registrar("siniestro_asignar", "siniestros",
                 "SIN-" + id + " analista " + request.idEmpleadoAnalista());
-        return SiniestroAdminResponse.from(siniestroRepository.save(siniestro));
+        Siniestro guardado = siniestroRepository.save(siniestro);
+
+        if (analista.getPersona() != null && analista.getPersona().getUsuario() != null) {
+            notificaciones.crear(analista.getPersona().getUsuario(),
+                    Notificacion.Tipo.SINIESTRO,
+                    "Siniestro asignado para revision",
+                    "SIN-" + id + " requiere tu atencion",
+                    "/core/siniestros");
+        }
+        Persona personaCliente = guardado.getPoliza().getCliente().getPersona();
+        if (personaCliente != null && personaCliente.getUsuario() != null) {
+            notificaciones.crear(personaCliente.getUsuario(),
+                    Notificacion.Tipo.SINIESTRO,
+                    "Tu siniestro tiene analista asignado",
+                    "SIN-" + id + " esta en revision",
+                    "/asegurado/reportar");
+        }
+
+        return SiniestroAdminResponse.from(guardado);
     }
 
     @Transactional
@@ -180,6 +206,16 @@ public class SiniestroService {
                         + (request.montoEstimadoPerito() != null ? " monto " + request.montoEstimadoPerito() : ""));
 
         return SiniestroAdminResponse.from(siniestroRepository.save(siniestro));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SiniestroAdminResponse> siniestrosDeAgente(Usuario usuario) {
+        Empleado agente = personaRepository.findByUsuario(usuario)
+                .flatMap(empleadoRepository::findByPersona)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Empleado del usuario", usuario.getIdUsuario()));
+        return siniestroRepository.findByAgenteComercial(agente)
+                .stream().map(SiniestroAdminResponse::from).toList();
     }
 
     private List<EventoTimeline> construirTimeline(Siniestro siniestro) {

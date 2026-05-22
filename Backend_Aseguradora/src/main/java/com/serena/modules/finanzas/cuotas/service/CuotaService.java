@@ -63,6 +63,14 @@ public class CuotaService {
         }
         auditoriaService.registrar("PAGAR_CUOTA", "FINANZAS",
                 "Cuota " + cuota.getNumeroCuota() + " de poliza " + cuota.getPoliza().getIdPoliza());
+
+        notificacionService.crearParaPortal(Usuario.PortalAcceso.OPERATIVO,
+                Notificacion.Tipo.COBRANZA,
+                "Pago recibido del asegurado",
+                "Cuota " + cuota.getNumeroCuota() + " poliza #" + cuota.getPoliza().getIdPoliza()
+                        + " S/ " + cuota.getMonto(),
+                "/operativo/cobranza");
+
         return CuotaResponse.from(actualizada);
     }
 

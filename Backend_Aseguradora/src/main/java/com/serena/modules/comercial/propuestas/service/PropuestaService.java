@@ -11,6 +11,8 @@ import com.serena.modules.comercial.suscripcion.entity.EvaluacionRiesgo;
 import com.serena.modules.comercial.suscripcion.service.CalculadoraPrimaService;
 import com.serena.modules.comercial.suscripcion.service.EvaluacionRiesgoService;
 import com.serena.modules.core.productos.entity.ProductoSeguro;
+import com.serena.modules.soporte.notificaciones.entity.Notificacion;
+import com.serena.modules.soporte.notificaciones.service.NotificacionService;
 import com.serena.shared.exception.RecursoNoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ public class PropuestaService {
     private final LeadCotizacionRepository cotizacionRepository;
     private final EvaluacionRiesgoService evaluacionService;
     private final CalculadoraPrimaService calculadora;
+    private final NotificacionService notificacionService;
 
     @Transactional
     public PropuestaResponse generar(Integer idCotizacion, GenerarPropuestaRequest request) {
@@ -40,6 +43,11 @@ public class PropuestaService {
         EvaluacionRiesgo evaluacion = evaluacionService.buscarPorCotizacion(lead)
                 .orElseThrow(() -> new IllegalStateException(
                         "Debe registrarse la evaluacion de riesgo antes de generar una propuesta"));
+        if (evaluacion.getEstadoSuscripcion() != EvaluacionRiesgo.EstadoSuscripcion.ACEPTADA) {
+            throw new IllegalStateException(
+                    "La evaluacion de riesgo debe estar ACEPTADA por el area tecnica. Estado actual: "
+                            + evaluacion.getEstadoSuscripcion());
+        }
         ProductoSeguro producto = lead.getProducto();
         if (producto == null) {
             throw new IllegalStateException("La cotizacion no tiene un producto asociado");
@@ -75,7 +83,18 @@ public class PropuestaService {
         lead.setPrimaEstimada(calc.primaCalculada());
         cotizacionRepository.save(lead);
 
-        return PropuestaResponse.from(repository.save(propuesta));
+        PropuestaPoliza guardada = repository.save(propuesta);
+
+        if (lead.getCliente() != null && lead.getCliente().getPersona() != null
+                && lead.getCliente().getPersona().getUsuario() != null) {
+            notificacionService.crear(lead.getCliente().getPersona().getUsuario(),
+                    Notificacion.Tipo.GENERAL,
+                    "Tu propuesta esta lista",
+                    "Revisa la propuesta para cotizacion #" + idCotizacion + " valida hasta " + guardada.getValidaHasta(),
+                    "/asegurado/seguros");
+        }
+
+        return PropuestaResponse.from(guardada);
     }
 
     @Transactional(readOnly = true)

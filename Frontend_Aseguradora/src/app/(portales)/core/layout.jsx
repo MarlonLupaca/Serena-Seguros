@@ -30,6 +30,12 @@ const segurosMenu = [
     ],
   },
   {
+    section: 'Suscripcion',
+    items: [
+      { label: 'Evaluaciones', icon: MdEditDocument, href: '/core/evaluaciones' },
+    ],
+  },
+  {
     section: 'Pólizas',
     items: [{ label: 'Emisiones', icon: MdAssignmentTurnedIn, href: '/core/emisiones' }],
   },

@@ -5,6 +5,7 @@ import com.serena.modules.comercial.cotizaciones.dto.ContratacionResponse;
 import com.serena.modules.comercial.cotizaciones.dto.ContratarCotizacionRequest;
 import com.serena.modules.comercial.cotizaciones.dto.CotizacionResponse;
 import com.serena.modules.comercial.cotizaciones.dto.CrearCotizacionRequest;
+import com.serena.modules.comercial.cotizaciones.dto.MiCotizacionResponse;
 import com.serena.modules.comercial.cotizaciones.dto.GuardarCotizacionRequest;
 import com.serena.modules.comercial.cotizaciones.service.CotizacionService;
 import com.serena.modules.comercial.propuestas.dto.GenerarPropuestaRequest;
@@ -31,6 +32,18 @@ public class MisCotizacionesController {
     private final CotizacionService cotizacionService;
     private final EvaluacionRiesgoService evaluacionService;
     private final PropuestaService propuestaService;
+
+    @GetMapping
+    public ResponseEntity<java.util.List<MiCotizacionResponse>> misCotizaciones(
+            @AuthenticationPrincipal Usuario usuario
+    ) {
+        return ResponseEntity.ok(cotizacionService.misCotizaciones(usuario));
+    }
+
+    @GetMapping("/{id}/evaluacion")
+    public ResponseEntity<EvaluacionRiesgoResponse> obtenerEvaluacion(@PathVariable Integer id) {
+        return ResponseEntity.ok(evaluacionService.obtenerPorCotizacion(id));
+    }
 
     @PostMapping
     public ResponseEntity<CotizacionResponse> crear(

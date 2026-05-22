@@ -16,8 +16,17 @@ import {
   MdFlight,
   MdBusiness,
   MdShield,
+  MdClose,
+  MdArrowForward,
+  MdCheckCircle,
+  MdCancel,
+  MdPending,
+  MdDescription,
+  MdAssessment,
 } from 'react-icons/md';
-import { apiGet, apiPatch } from '@/lib/api';
+import { apiGet, apiPatch, apiPost } from '@/lib/api';
+import FormularioRiesgo from '@/components/riesgo/FormularioRiesgo';
+import { valoresIniciales, validarCampos } from '@/lib/riesgo/camposPorTipo';
 
 const ESTADOS = {
   NUEVO: { label: 'Nuevo', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-500' },
@@ -62,6 +71,7 @@ export default function LeadsPage() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [actualizandoId, setActualizandoId] = useState(null);
+  const [leadSeleccionado, setLeadSeleccionado] = useState(null);
   useEffect(() => {
     cargar();
   }, []);
@@ -179,15 +189,27 @@ export default function LeadsPage() {
               lead={lead}
               actualizando={actualizandoId === lead.id_cotizacion}
               onCambiarEstado={(estado) => cambiarEstado(lead.id_cotizacion, estado)}
+              onVerDetalle={() => setLeadSeleccionado(lead)}
             />
           ))}
         </div>
+      )}
+
+      {leadSeleccionado && (
+        <LeadDetailPanel
+          lead={leadSeleccionado}
+          onClose={() => setLeadSeleccionado(null)}
+          onActualizar={(updated) => {
+            setLeads((prev) => prev.map((l) => (l.id_cotizacion === updated.id_cotizacion ? { ...l, ...updated } : l)));
+            setLeadSeleccionado((prev) => (prev ? { ...prev, ...updated } : null));
+          }}
+        />
       )}
     </div>
   );
 }
 
-function LeadCard({ lead, onCambiarEstado, actualizando }) {
+function LeadCard({ lead, onCambiarEstado, actualizando, onVerDetalle }) {
   const tipoStyle = estiloTipo(lead.producto_interes);
   const Icon = tipoStyle.icon;
   const est = ESTADOS[lead.estado_kanban];
@@ -226,13 +248,21 @@ function LeadCard({ lead, onCambiarEstado, actualizando }) {
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0 relative ">
             <p className="text-sm font-bold text-text">{formatearMoneda(lead.prima_estimada)}</p>
-            <button
-              onClick={() => setMenu((v) => !v)}
-              disabled={actualizando}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
-            >
-              <MdMoreVert size={13} /> {actualizando ? 'Actualizando...' : 'Mover a'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={onVerDetalle}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-medium transition-colors"
+              >
+                <MdAssessment size={13} /> Gestionar
+              </button>
+              <button
+                onClick={() => setMenu((v) => !v)}
+                disabled={actualizando}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
+              >
+                <MdMoreVert size={13} /> {actualizando ? 'Actualizando...' : 'Mover a'}
+              </button>
+            </div>
             {menu && (
               <div className="absolute right-0 top-full mt-1 w-48 bg-bg border border-border rounded-xl shadow-lg z-10 overflow-hidden">
                 {Object.entries(ESTADOS)
@@ -253,6 +283,350 @@ function LeadCard({ lead, onCambiarEstado, actualizando }) {
               </div>
             )}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const ESTADO_EVAL = {
+  PENDIENTE: { label: 'Pendiente', badge: 'bg-amber-100 text-amber-700', icon: MdPending },
+  ACEPTADA: { label: 'Aceptada', badge: 'bg-emerald-100 text-emerald-700', icon: MdCheckCircle },
+  RECHAZADA: { label: 'Rechazada', badge: 'bg-rose-100 text-rose-600', icon: MdCancel },
+};
+
+function LeadDetailPanel({ lead, onClose, onActualizar }) {
+  const [evaluacion, setEvaluacion] = useState(null);
+  const [propuesta, setPropuesta] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
+  const [vista, setVista] = useState('resumen');
+
+  const [datosRiesgo, setDatosRiesgo] = useState(() => valoresIniciales(lead.producto_interes));
+  const [sumaAsegurada, setSumaAsegurada] = useState('');
+  const [enviandoEval, setEnviandoEval] = useState(false);
+  const [generandoProp, setGenerandoProp] = useState(false);
+
+  useEffect(() => {
+    cargarDatos();
+  }, [lead.id_cotizacion]);
+
+  const cargarDatos = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const [evalResp, propResp] = await Promise.allSettled([
+        apiGet(`/cotizaciones/${lead.id_cotizacion}/evaluacion`),
+        apiGet(`/cotizaciones/${lead.id_cotizacion}/propuesta`),
+      ]);
+      if (evalResp.status === 'fulfilled') setEvaluacion(evalResp.value);
+      if (propResp.status === 'fulfilled') setPropuesta(propResp.value);
+    } catch (e) {
+      setError('No se pudo cargar la informacion del lead');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const enviarEvaluacion = async () => {
+    const faltantes = validarCampos(lead.producto_interes, datosRiesgo);
+    if (faltantes.length) {
+      setError('Completa los campos obligatorios: ' + faltantes.join(', '));
+      return;
+    }
+    if (!sumaAsegurada || Number(sumaAsegurada) <= 0) {
+      setError('Indica una suma asegurada valida');
+      return;
+    }
+    setEnviandoEval(true);
+    setError('');
+    try {
+      const resp = await apiPost(`/cotizaciones/${lead.id_cotizacion}/evaluacion`, {
+        datos_riesgo: datosRiesgo,
+        suma_asegurada: Number(sumaAsegurada),
+      });
+      setEvaluacion(resp);
+      setVista('resumen');
+      toast.success('Evaluacion de riesgo registrada');
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo registrar la evaluacion');
+    } finally {
+      setEnviandoEval(false);
+    }
+  };
+
+  const generarPropuesta = async (frecuencia = 'MENSUAL') => {
+    setGenerandoProp(true);
+    setError('');
+    try {
+      const resp = await apiPost(`/cotizaciones/${lead.id_cotizacion}/propuesta`, {
+        suma_asegurada: evaluacion?.suma_asegurada || Number(sumaAsegurada),
+        deducible: 250,
+        frecuencia_pago: frecuencia,
+        vigencia_meses: 12,
+      });
+      setPropuesta(resp);
+      setVista('propuesta');
+      toast.success('Propuesta generada');
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo generar la propuesta');
+    } finally {
+      setGenerandoProp(false);
+    }
+  };
+
+  const tipoStyle = estiloTipo(lead.producto_interes);
+  const Icon = tipoStyle.icon;
+  const estadoEval = evaluacion?.estado_suscripcion;
+  const evalInfo = ESTADO_EVAL[estadoEval];
+
+  return (
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-3xl bg-bg rounded-2xl border border-border overflow-hidden flex flex-col max-h-[92vh]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${tipoStyle.accentBg}`}>
+              <Icon size={18} className={tipoStyle.accentText} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-text">COT-{String(lead.id_cotizacion).padStart(6, '0')}</p>
+              <p className="text-xs text-text-soft">{lead.producto_interes}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-border hover:bg-bg-soft transition-colors text-text-soft"
+          >
+            <MdClose size={15} />
+          </button>
+        </div>
+
+        <div className="flex border-b border-border shrink-0">
+          {['resumen', 'evaluar', 'propuesta'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setVista(tab)}
+              className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${
+                vista === tab ? 'text-primary border-b-2 border-primary' : 'text-text-soft hover:text-text'
+              }`}
+            >
+              {tab === 'resumen' ? 'Resumen' : tab === 'evaluar' ? 'Evaluar riesgo' : 'Propuesta'}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-5 overflow-y-auto">
+          {error && (
+            <div className="mb-4 p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">
+              {error}
+            </div>
+          )}
+
+          {cargando ? (
+            <div className="py-12 text-center text-sm text-text-soft">Cargando...</div>
+          ) : vista === 'resumen' ? (
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-bg-soft rounded-xl p-3 border border-border">
+                  <p className="text-xs text-text-soft mb-1">Estado del lead</p>
+                  <p className="text-sm font-bold text-text">{ESTADOS[lead.estado_kanban]?.label}</p>
+                </div>
+                <div className="bg-bg-soft rounded-xl p-3 border border-border">
+                  <p className="text-xs text-text-soft mb-1">Prima estimada</p>
+                  <p className="text-sm font-bold text-text">{formatearMoneda(lead.prima_estimada)}</p>
+                </div>
+              </div>
+
+              <div className="bg-bg-soft rounded-xl p-4 border border-border">
+                <p className="text-xs font-semibold text-text mb-2">Evaluacion de riesgo</p>
+                {evaluacion ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      {evalInfo && (
+                        <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${evalInfo.badge}`}>
+                          <evalInfo.icon size={13} /> {evalInfo.label}
+                        </span>
+                      )}
+                      <span className="text-xs text-text-soft">Factor: x{evaluacion.factor_riesgo}</span>
+                    </div>
+                    {estadoEval === 'RECHAZADA' && evaluacion.motivo_rechazo && (
+                      <div className="bg-rose-50 border border-rose-200 rounded-lg p-2 text-xs text-rose-700">
+                        <span className="font-semibold">Motivo: </span>{evaluacion.motivo_rechazo}
+                      </div>
+                    )}
+                    {estadoEval === 'PENDIENTE' && (
+                      <p className="text-xs text-amber-600">Esperando aprobacion del area tecnica.</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-text-soft">Sin evaluacion registrada</p>
+                    <button
+                      onClick={() => setVista('evaluar')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-text-inverse text-xs font-medium transition-colors"
+                    >
+                      <MdAssessment size={13} /> Evaluar
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-bg-soft rounded-xl p-4 border border-border">
+                <p className="text-xs font-semibold text-text mb-2">Propuesta</p>
+                {propuesta ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div>
+                        <p className="text-text-soft">Prima</p>
+                        <p className="font-bold text-text">{formatearMoneda(propuesta.prima_calculada)}</p>
+                      </div>
+                      <div>
+                        <p className="text-text-soft">Suma asegurada</p>
+                        <p className="font-bold text-text">{formatearMoneda(propuesta.suma_asegurada)}</p>
+                      </div>
+                      <div>
+                        <p className="text-text-soft">Valida hasta</p>
+                        <p className="font-bold text-text">{formatearFecha(propuesta.valida_hasta)}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setVista('propuesta')}
+                      className="flex items-center gap-1 text-xs text-primary font-medium hover:underline mt-1"
+                    >
+                      <MdDescription size={13} /> Ver detalle completo
+                    </button>
+                  </div>
+                ) : estadoEval === 'ACEPTADA' ? (
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-text-soft">Evaluacion aprobada. Puede generar propuesta.</p>
+                    <button
+                      onClick={() => setVista('propuesta')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-text-inverse text-xs font-medium transition-colors"
+                    >
+                      <MdDescription size={13} /> Generar
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-text-soft">
+                    {estadoEval === 'PENDIENTE'
+                      ? 'La evaluacion debe ser aprobada antes de generar propuesta.'
+                      : 'Primero debe registrarse una evaluacion de riesgo.'}
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : vista === 'evaluar' ? (
+            <div className="flex flex-col gap-4">
+              {evaluacion && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
+                  Ya existe una evaluacion ({ESTADO_EVAL[estadoEval]?.label}). Al enviar una nueva se reemplazara la anterior.
+                </div>
+              )}
+              <FormularioRiesgo tipoSeguro={lead.producto_interes} valores={datosRiesgo} onChange={setDatosRiesgo} />
+              <div>
+                <label className="text-xs font-medium text-text-soft block mb-1.5">Suma asegurada deseada (S/) *</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={sumaAsegurada}
+                  onChange={(e) => setSumaAsegurada(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm border border-border bg-bg text-text focus:border-primary outline-none"
+                  placeholder="Ej: 50000"
+                />
+              </div>
+              <button
+                onClick={enviarEvaluacion}
+                disabled={enviandoEval}
+                className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-text-inverse text-sm font-semibold transition-colors"
+              >
+                {enviandoEval ? 'Registrando...' : 'Registrar evaluacion de riesgo'} <MdArrowForward size={16} />
+              </button>
+            </div>
+          ) : vista === 'propuesta' ? (
+            <div className="flex flex-col gap-4">
+              {propuesta ? (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-bg-soft rounded-xl p-3 border border-border">
+                      <p className="text-xs text-text-soft">Prima calculada</p>
+                      <p className="text-sm font-bold text-text">{formatearMoneda(propuesta.prima_calculada)}</p>
+                    </div>
+                    <div className="bg-bg-soft rounded-xl p-3 border border-border">
+                      <p className="text-xs text-text-soft">Suma asegurada</p>
+                      <p className="text-sm font-bold text-text">{formatearMoneda(propuesta.suma_asegurada)}</p>
+                    </div>
+                    <div className="bg-bg-soft rounded-xl p-3 border border-border">
+                      <p className="text-xs text-text-soft">Deducible</p>
+                      <p className="text-sm font-bold text-text">{formatearMoneda(propuesta.deducible)}</p>
+                    </div>
+                    <div className="bg-bg-soft rounded-xl p-3 border border-border">
+                      <p className="text-xs text-text-soft">Frecuencia</p>
+                      <p className="text-sm font-bold text-text">{propuesta.frecuencia_pago}</p>
+                    </div>
+                    <div className="bg-bg-soft rounded-xl p-3 border border-border">
+                      <p className="text-xs text-text-soft">Vigencia</p>
+                      <p className="text-sm font-bold text-text">{propuesta.vigencia_meses} meses</p>
+                    </div>
+                    <div className="bg-bg-soft rounded-xl p-3 border border-border">
+                      <p className="text-xs text-text-soft">Valida hasta</p>
+                      <p className="text-sm font-bold text-text">{formatearFecha(propuesta.valida_hasta)}</p>
+                    </div>
+                  </div>
+                  {propuesta.coberturas?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-text mb-2">Coberturas</p>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="text-left border-b border-border">
+                              <th className="py-2 font-semibold text-text">Cobertura</th>
+                              <th className="py-2 font-semibold text-text">Descripcion</th>
+                              <th className="py-2 font-semibold text-text text-right">Limite</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {propuesta.coberturas.map((c, i) => (
+                              <tr key={i} className="border-b border-border/50">
+                                <td className="py-2 font-medium text-text">{c.nombre}</td>
+                                <td className="py-2 text-text-soft">{c.descripcion}</td>
+                                <td className="py-2 text-text text-right">
+                                  {c.limite ? formatearMoneda(c.limite) : 'Incluido'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : estadoEval === 'ACEPTADA' ? (
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-text-soft">
+                    La evaluacion fue aprobada. Selecciona la frecuencia de pago para generar la propuesta:
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {['MENSUAL', 'TRIMESTRAL', 'ANUAL', 'UNICO'].map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => generarPropuesta(f)}
+                        disabled={generandoProp}
+                        className="px-3 py-3 rounded-xl border border-border hover:border-primary hover:bg-primary/5 text-sm font-semibold text-text transition-colors disabled:opacity-50"
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="py-8 text-center text-sm text-text-soft">
+                  {estadoEval === 'PENDIENTE'
+                    ? 'La evaluacion esta pendiente de aprobacion tecnica. No se puede generar propuesta aun.'
+                    : 'Se requiere una evaluacion de riesgo aprobada para generar la propuesta.'}
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
