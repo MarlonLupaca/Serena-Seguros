@@ -75,7 +75,7 @@ export default function SiniestrosCorePage() {
   const [modalProveedores, setModalProveedores] = useState(null);
   const [modalPerito, setModalPerito] = useState(null);
   const [modalIndemnizar, setModalIndemnizar] = useState(null);
-useEffect(() => {
+  useEffect(() => {
     cargar();
   }, []);
 
@@ -91,7 +91,7 @@ useEffect(() => {
       setCargando(false);
     }
   };
-const cambiarEstado = async (id, estado) => {
+  const cambiarEstado = async (id, estado) => {
     setActualizandoId(id);
     try {
       const data = await apiPatch(`/siniestros/${id}/estado`, { estado_resolucion: estado });
@@ -122,7 +122,6 @@ const cambiarEstado = async (id, estado) => {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-
       <div>
         <h1 className="text-base font-bold text-text">Bandeja de siniestros</h1>
         <p className="text-xs text-text-soft mt-0.5">{siniestros.length} casos en el sistema</p>
@@ -157,7 +156,9 @@ const cambiarEstado = async (id, estado) => {
       </div>
 
       {cargando ? (
-        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">Cargando...</div>
+        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
+          Cargando...
+        </div>
       ) : error ? (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-600 text-center">{error}</div>
       ) : filtrados.length === 0 ? (
@@ -207,9 +208,7 @@ const cambiarEstado = async (id, estado) => {
           siniestro={modalPerito}
           onClose={() => setModalPerito(null)}
           onSuccess={(actualizada) => {
-            setSiniestros((prev) =>
-              prev.map((s) => (s.id_siniestro === actualizada.id_siniestro ? actualizada : s))
-            );
+            setSiniestros((prev) => prev.map((s) => (s.id_siniestro === actualizada.id_siniestro ? actualizada : s)));
             setModalPerito(null);
             toast.success('Informe del perito guardado');
           }}
@@ -238,7 +237,7 @@ function SiniestroRow({ s, onCambiarEstado, onAsignar, onProveedores, onPerito, 
   const [menu, setMenu] = useState(false);
 
   return (
-    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden">
+    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow">
       <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
       <div className="p-4 flex items-start gap-4 flex-wrap sm:flex-nowrap">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
@@ -377,7 +376,9 @@ function ModalAsignar({ siniestro, onClose, onSuccess }) {
         </div>
         <form onSubmit={enviar} className="p-5 flex flex-col gap-3">
           {error && (
-            <div className="p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">{error}</div>
+            <div className="p-3 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">
+              {error}
+            </div>
           )}
           <p className="text-xs text-text-soft">
             Caso: <span className="font-semibold text-text">SIN-{String(siniestro.id_siniestro).padStart(6, '0')}</span>
@@ -497,7 +498,9 @@ function ModalProveedores({ siniestro, onClose, onToast }) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
             <p className="text-sm font-bold text-text">Proveedores asignados</p>
-            <p className="text-[11px] text-text-soft">SIN-{String(siniestro.id_siniestro).padStart(6, '0')} - {siniestro.tipo_incidente}</p>
+            <p className="text-[11px] text-text-soft">
+              SIN-{String(siniestro.id_siniestro).padStart(6, '0')} - {siniestro.tipo_incidente}
+            </p>
           </div>
           <button onClick={onClose} className="text-text-soft hover:text-text">
             <MdClose size={18} />
@@ -506,7 +509,9 @@ function ModalProveedores({ siniestro, onClose, onToast }) {
 
         <div className="p-5 flex flex-col gap-4">
           {error && (
-            <div className="p-2.5 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">{error}</div>
+            <div className="p-2.5 text-xs bg-red-50 text-red-500 rounded-xl border border-red-100 font-medium">
+              {error}
+            </div>
           )}
 
           <div>
@@ -524,10 +529,15 @@ function ModalProveedores({ siniestro, onClose, onToast }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-text truncate">{a.nombre}</p>
-                      <p className="text-[11px] text-text-soft">{a.rubro} - {a.ciudad}</p>
+                      <p className="text-[11px] text-text-soft">
+                        {a.rubro} - {a.ciudad}
+                      </p>
                     </div>
                     <p className="text-sm font-bold text-text">{formatearMoneda(a.costo_servicio)}</p>
-                    <button onClick={() => quitar(a.id_proveedor)} className="text-rose-600 hover:bg-rose-50 rounded-lg p-1.5">
+                    <button
+                      onClick={() => quitar(a.id_proveedor)}
+                      className="text-rose-600 hover:bg-rose-50 rounded-lg p-1.5"
+                    >
                       <MdDeleteOutline size={16} />
                     </button>
                   </div>
@@ -674,9 +684,7 @@ function ModalPerito({ siniestro, onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="text-xs font-medium text-text-soft block mb-1.5">
-              Observaciones del perito
-            </label>
+            <label className="text-xs font-medium text-text-soft block mb-1.5">Observaciones del perito</label>
             <textarea
               value={observaciones}
               onChange={(e) => setObservaciones(e.target.value)}
@@ -689,9 +697,7 @@ function ModalPerito({ siniestro, onClose, onSuccess }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-text-soft block mb-1.5">
-                Monto estimado (S/)
-              </label>
+              <label className="text-xs font-medium text-text-soft block mb-1.5">Monto estimado (S/)</label>
               <input
                 type="number"
                 min="0"
@@ -703,9 +709,7 @@ function ModalPerito({ siniestro, onClose, onSuccess }) {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-text-soft block mb-1.5">
-                Informe técnico (referencia)
-              </label>
+              <label className="text-xs font-medium text-text-soft block mb-1.5">Informe técnico (referencia)</label>
               <input
                 type="text"
                 value={informe}
@@ -745,8 +749,8 @@ function ModalPerito({ siniestro, onClose, onSuccess }) {
           )}
 
           <p className="text-[11px] text-text-soft">
-            Al guardar, el caso pasa automaticamente al estado <strong>INSPECCION</strong> si estaba en
-            REPORTADO o EN_REVISION.
+            Al guardar, el caso pasa automaticamente al estado <strong>INSPECCION</strong> si estaba en REPORTADO o
+            EN_REVISION.
           </p>
 
           <div className="flex gap-2 mt-2">
@@ -779,8 +783,8 @@ function ModalIndemnizar({ siniestro, onClose, onSuccess }) {
     siniestro.monto_estimado_perito != null
       ? String(siniestro.monto_estimado_perito)
       : siniestro.monto_reclamado != null
-      ? String(siniestro.monto_reclamado)
-      : ''
+        ? String(siniestro.monto_reclamado)
+        : ''
   );
   const [montoPagado, setMontoPagado] = useState('');
   const [medioPago, setMedioPago] = useState('TRANSFERENCIA');
@@ -847,9 +851,7 @@ function ModalIndemnizar({ siniestro, onClose, onSuccess }) {
 
           {historial.length > 0 && (
             <div className="bg-bg-soft border border-border rounded-xl p-3">
-              <p className="text-xs font-semibold text-text-soft mb-2">
-                Indemnizaciones previas ({historial.length})
-              </p>
+              <p className="text-xs font-semibold text-text-soft mb-2">Indemnizaciones previas ({historial.length})</p>
               <div className="flex flex-col gap-1.5">
                 {historial.map((i) => (
                   <div key={i.id_indemnizacion} className="flex justify-between text-xs">
@@ -905,9 +907,7 @@ function ModalIndemnizar({ siniestro, onClose, onSuccess }) {
 
           {beneficiarios.length > 0 && (
             <div>
-              <label className="text-xs font-medium text-text-soft block mb-1.5">
-                Pagar a beneficiario (opcional)
-              </label>
+              <label className="text-xs font-medium text-text-soft block mb-1.5">Pagar a beneficiario (opcional)</label>
               <select
                 value={idPolizaBeneficiario}
                 onChange={(e) => setIdPolizaBeneficiario(e.target.value)}

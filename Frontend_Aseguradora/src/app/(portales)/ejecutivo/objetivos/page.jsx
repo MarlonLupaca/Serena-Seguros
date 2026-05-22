@@ -32,16 +32,19 @@ export default function ObjetivosPage() {
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(false);
   const [edicion, setEdicion] = useState(null);
-  const [form, setForm] = useState({ id_empleado_responsable: '', descripcion: '', meta_cuantitativa: '', avance_actual: '', estado: 'EN_PROGRESO' });
+  const [form, setForm] = useState({
+    id_empleado_responsable: '',
+    descripcion: '',
+    meta_cuantitativa: '',
+    avance_actual: '',
+    estado: 'EN_PROGRESO',
+  });
   const [confirmacion, setConfirmacion] = useState(null);
 
   async function cargar() {
     setCargando(true);
     try {
-      const [objs, emps] = await Promise.all([
-        apiGet('/objetivos'),
-        apiGet('/empleados').catch(() => []),
-      ]);
+      const [objs, emps] = await Promise.all([apiGet('/objetivos'), apiGet('/empleados').catch(() => [])]);
       setObjetivos(objs || []);
       setEmpleados(emps || []);
       setError(null);
@@ -135,7 +138,9 @@ export default function ObjetivosPage() {
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <p className="text-xl font-bold text-text">Objetivos corporativos</p>
-          <p className="text-xs text-text-soft">Sigue el avance de las metas estrategicas asignadas a cada responsable.</p>
+          <p className="text-xs text-text-soft">
+            Sigue el avance de las metas estrategicas asignadas a cada responsable.
+          </p>
         </div>
         <button
           onClick={abrirNuevo}
@@ -150,7 +155,9 @@ export default function ObjetivosPage() {
       {cargando ? (
         <div className="bg-bg rounded-xl border border-border p-12 text-center text-sm text-text-soft">Cargando...</div>
       ) : objetivos.length === 0 ? (
-        <div className="bg-bg rounded-xl border border-border p-10 text-center text-sm text-text-soft">Aun no hay objetivos cargados.</div>
+        <div className="bg-bg rounded-xl border border-border p-10 text-center text-sm text-text-soft">
+          Aun no hay objetivos cargados.
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {objetivos.map((o) => (
@@ -163,14 +170,18 @@ export default function ObjetivosPage() {
                   <p className="text-sm font-bold text-text">{o.descripcion}</p>
                   <p className="text-[11px] text-text-soft">Responsable: {o.empleado_responsable}</p>
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${COLORES_ESTADO[o.estado]}`}>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${COLORES_ESTADO[o.estado]}`}
+                >
                   {o.estado.replace('_', ' ')}
                 </span>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-text-soft">Avance: {formatearMonto(o.avance_actual)} / {formatearMonto(o.meta_cuantitativa)}</span>
+                  <span className="text-text-soft">
+                    Avance: {formatearMonto(o.avance_actual)} / {formatearMonto(o.meta_cuantitativa)}
+                  </span>
                   <span className="text-text font-semibold">{Number(o.porcentaje_avance || 0)}%</span>
                 </div>
                 <div className="h-2 bg-bg-soft rounded-full overflow-hidden">
@@ -211,10 +222,17 @@ export default function ObjetivosPage() {
       />
 
       {modal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <form onSubmit={edicion ? actualizarAvance : crear} className="bg-bg rounded-2xl border border-border p-6 w-full max-w-md flex flex-col gap-3">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-100 p-4">
+          <form
+            onSubmit={edicion ? actualizarAvance : crear}
+            className="bg-bg rounded-2xl border border-border p-6 w-full max-w-md flex flex-col gap-3"
+          >
             <div className="flex items-center gap-2">
-              {edicion ? <MdEditNote size={20} className="text-primary" /> : <MdFlag size={20} className="text-primary" />}
+              {edicion ? (
+                <MdEditNote size={20} className="text-primary" />
+              ) : (
+                <MdFlag size={20} className="text-primary" />
+              )}
               <p className="text-base font-bold text-text">{edicion ? 'Registrar avance' : 'Nuevo objetivo'}</p>
             </div>
 
@@ -271,14 +289,25 @@ export default function ObjetivosPage() {
               onChange={(e) => setForm({ ...form, estado: e.target.value })}
               className="border border-border rounded-lg px-3 py-2 text-sm"
             >
-              {ESTADOS.map((est) => <option key={est} value={est}>{est.replace('_', ' ')}</option>)}
+              {ESTADOS.map((est) => (
+                <option key={est} value={est}>
+                  {est.replace('_', ' ')}
+                </option>
+              ))}
             </select>
 
             <div className="flex justify-end gap-2 mt-2">
-              <button type="button" onClick={cerrarModal} className="text-xs px-3 py-2 rounded-lg border border-border hover:bg-bg-soft">
+              <button
+                type="button"
+                onClick={cerrarModal}
+                className="text-xs px-3 py-2 rounded-lg border border-border hover:bg-bg-soft"
+              >
                 Cancelar
               </button>
-              <button type="submit" className="bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-primary-dark">
+              <button
+                type="submit"
+                className="bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-primary-dark"
+              >
                 Guardar
               </button>
             </div>

@@ -29,9 +29,7 @@ export default function StepResumen({ data, polizas }) {
       <div className="bg-bg rounded-2xl border border-border overflow-hidden">
         <div className="flex items-center gap-3 p-4 border-b border-border">
           {pol && tipoStyle?.imagen && (
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
-              <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
-            </div>
+            <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain w-10" />
           )}
           <div className="flex-1">
             <p className="text-sm font-bold text-text">{pol?.producto?.nombre}</p>

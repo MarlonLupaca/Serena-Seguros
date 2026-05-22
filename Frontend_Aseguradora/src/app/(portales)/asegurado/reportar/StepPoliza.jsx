@@ -43,9 +43,8 @@ export default function StepPoliza({ polizaId, onChange, polizas, cargando, erro
                   : 'border-border hover:border-primary/40 hover:bg-bg-soft'
               }`}
             >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
-                <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
-              </div>
+              <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain w-10" />
+
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-text">{p.producto?.nombre}</p>
                 <p className="text-xs text-text-soft mt-0.5">

@@ -36,7 +36,7 @@ export default function ClientesPage() {
   const [busqueda, setBusqueda] = useState('');
   const [filtro, setFiltro] = useState('todos');
   const [actualizandoId, setActualizandoId] = useState(null);
-const [detalleId, setDetalleId] = useState(null);
+  const [detalleId, setDetalleId] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -67,7 +67,7 @@ const [detalleId, setDetalleId] = useState(null);
       setActualizandoId(null);
     }
   };
-const filtrados = clientes.filter((c) => {
+  const filtrados = clientes.filter((c) => {
     const texto = busqueda.toLowerCase();
     const matchBusq =
       texto === '' ||
@@ -85,7 +85,6 @@ const filtrados = clientes.filter((c) => {
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-
       <div>
         <h1 className="text-base font-bold text-text">Cartera de clientes</h1>
         <p className="text-xs text-text-soft mt-0.5">{counts.total} clientes registrados</p>
@@ -165,7 +164,7 @@ function ClienteCard({ cliente, onCambiarEstado, actualizando, onVerDetalle }) {
   const iniciales = ((cliente.nombres || '')[0] || '') + ((cliente.apellidos || '')[0] || '');
 
   return (
-    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden">
+    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow ">
       <div className="h-1 w-full bg-primary/30" />
       <div className="p-5 flex items-start gap-4 flex-wrap sm:flex-nowrap">
         <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-sm font-bold text-primary uppercase shrink-0">

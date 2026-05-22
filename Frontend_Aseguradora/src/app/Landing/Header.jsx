@@ -86,7 +86,7 @@ export default function Header() {
           {/* Login (Solo Icono) */}
           <Link
             href="/login"
-            className="p-1.5 sm:p-2 text-text-soft hover:text-primary hover:bg-bg-soft rounded-full transition-colors"
+            className="p-1.5 sm:p-2 hidden lg:block text-text-soft hover:text-primary hover:bg-bg-soft rounded-full transition-colors"
             title="Iniciar sesión"
           >
             <MdPerson size={26} />

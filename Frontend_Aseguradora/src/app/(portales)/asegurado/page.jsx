@@ -165,9 +165,7 @@ export default function Home() {
       <div className="flex justify-between items-center">
         <div>
           <p className="text-xs text-text-soft">Bienvenido de vuelta</p>
-          <p className="text-xl font-bold text-text">
-            {user ? `${user.nombres} ${user.apellidos}` : 'Asegurado'}
-          </p>
+          <p className="text-xl font-bold text-text">{user ? `${user.nombres} ${user.apellidos}` : 'Asegurado'}</p>
         </div>
         <button
           onClick={() => router.push('/asegurado/reportar')}
@@ -242,9 +240,8 @@ export default function Home() {
                         <div className={`h-1 w-full ${t.bar}`} />
                         <div className="p-4 flex flex-col gap-3 flex-1">
                           <div className="flex justify-between items-start">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} overflow-hidden`}>
-                              <Image src={t.imagen} width={24} height={24} alt="" className="object-contain" />
-                            </div>
+                            <Image src={t.imagen} width={24} height={24} alt="" className="object-contain w-10" />
+
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Activa
                             </span>

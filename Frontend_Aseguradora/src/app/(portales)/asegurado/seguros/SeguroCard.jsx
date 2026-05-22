@@ -21,9 +21,8 @@ export default function SeguroCard({ producto }) {
       <div className="p-6 flex flex-col flex-1 gap-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
-            <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${tipoStyle.accentBg} overflow-hidden`}>
-              <Image src={tipoStyle.imagen} width={28} height={28} alt="" className="object-contain" />
-            </div>
+            <Image src={tipoStyle.imagen} width={28} height={28} alt="" className="object-contain w-12" />
+
             <div>
               <h3 className="text-base font-bold text-text leading-tight">{producto.nombre}</h3>
               <p className={`text-xs font-medium ${tipoStyle.accentText}`}>{tipoStyle.tagline}</p>
@@ -47,9 +46,7 @@ export default function SeguroCard({ producto }) {
             Edad mínima: {producto.restricciones_edad}
           </span>
           {producto.tasas != null && Number(producto.tasas) > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-bg-soft border border-border">
-              Tasa: {producto.tasas}%
-            </span>
+            <span className="px-2 py-0.5 rounded-full bg-bg-soft border border-border">Tasa: {producto.tasas}%</span>
           )}
         </div>
 
