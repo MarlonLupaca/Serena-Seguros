@@ -4,6 +4,7 @@ import com.serena.modules.finanzas.cuotas.dto.CuotaResponse;
 import com.serena.modules.finanzas.cuotas.entity.Cuota;
 import com.serena.modules.finanzas.cuotas.repository.CuotaRepository;
 import com.serena.modules.seguridad.auth.entity.Persona;
+import com.serena.modules.seguridad.auth.entity.Usuario;
 import com.serena.modules.seguridad.auth.repository.PersonaRepository;
 import com.serena.modules.soporte.auditoria.service.AuditoriaService;
 import com.serena.modules.soporte.notificaciones.entity.Notificacion;
@@ -86,6 +87,13 @@ public class CobranzaController {
                     "Se registro el pago de la cuota #" + c.getNumeroCuota() + " por S/ " + c.getMonto(),
                     "/asegurado/pagos");
         }
+
+        notificaciones.crearParaPortal(Usuario.PortalAcceso.COMERCIAL,
+                Notificacion.Tipo.COBRANZA,
+                "Pago confirmado por finanzas",
+                "Cuota #" + c.getNumeroCuota() + " poliza #" + c.getPoliza().getIdPoliza(),
+                "/comercial/leads");
+
         return ResponseEntity.ok(CuotaResponse.from(cuotaRepository.save(c)));
     }
 

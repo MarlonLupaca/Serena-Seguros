@@ -31,6 +31,7 @@ const employeeMenu = [
     items: [
       { label: 'Leads', icon: MdAssignmentInd, href: '/comercial/leads' },
       { label: 'Clientes', icon: MdPeople, href: '/comercial/clientes' },
+      { label: 'Siniestros', icon: MdWarning, href: '/comercial/siniestros' },
       { label: 'Campañas', icon: MdCampaign, href: '/comercial/campanas' },
       { label: 'Renovaciones', icon: MdPieChart, href: '/comercial/renovaciones' },
     ],

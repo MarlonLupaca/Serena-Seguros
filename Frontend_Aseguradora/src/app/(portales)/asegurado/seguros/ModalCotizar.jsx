@@ -104,6 +104,23 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
     }
   };
 
+  const verificarEstadoEvaluacion = async () => {
+    if (!cotizacion) return;
+    setCargando(true);
+    setError('');
+    try {
+      const resp = await apiGet(`/mis-cotizaciones/${cotizacion.id_cotizacion}/evaluacion`);
+      setEvaluacion(resp);
+      if (resp.estado_suscripcion === 'RECHAZADA') {
+        setError(resp.motivo_rechazo ? `Evaluacion rechazada: ${resp.motivo_rechazo}` : 'La evaluacion fue rechazada.');
+      }
+    } catch (e) {
+      setError(e.mensaje || 'No se pudo verificar el estado');
+    } finally {
+      setCargando(false);
+    }
+  };
+
   // ----- Step 2: solicitar propuesta formal -----
   const generarPropuesta = async (frecuencia = 'MENSUAL') => {
     if (!cotizacion) return;
@@ -309,21 +326,59 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
                 <p className="text-2xl font-bold text-text">x {evaluacion?.factor_riesgo}</p>
                 <p className="text-xs text-text-soft mt-1">Calculado a partir de los datos del riesgo declarados.</p>
               </div>
-              <p className="text-sm text-text-soft">
-                Selecciona la frecuencia de pago para generar la propuesta formal:
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {['MENSUAL', 'TRIMESTRAL', 'ANUAL', 'UNICO'].map((f) => (
+
+              {evaluacion?.estado_suscripcion === 'ACEPTADA' ? (
+                <>
+                  <p className="text-sm text-text-soft">
+                    Selecciona la frecuencia de pago para generar la propuesta formal:
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {['MENSUAL', 'TRIMESTRAL', 'ANUAL', 'UNICO'].map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => generarPropuesta(f)}
+                        disabled={cargando}
+                        className="px-3 py-3 rounded-xl border border-border hover:border-primary hover:bg-primary/5 text-sm font-semibold text-text transition-colors disabled:opacity-50"
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : evaluacion?.estado_suscripcion === 'RECHAZADA' ? (
+                <div className="flex flex-col gap-3 items-center py-4">
+                  <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
+                    <MdClose size={24} className="text-rose-500" />
+                  </div>
+                  <p className="text-sm font-semibold text-text">Evaluacion rechazada</p>
+                  {evaluacion.motivo_rechazo && (
+                    <p className="text-xs text-text-soft text-center max-w-sm">{evaluacion.motivo_rechazo}</p>
+                  )}
                   <button
-                    key={f}
-                    onClick={() => generarPropuesta(f)}
-                    disabled={cargando}
-                    className="px-3 py-3 rounded-xl border border-border hover:border-primary hover:bg-primary/5 text-sm font-semibold text-text transition-colors disabled:opacity-50"
+                    onClick={() => { setEvaluacion(null); setPaso(1); }}
+                    className="mt-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-sm font-semibold transition-colors"
                   >
-                    {f}
+                    Modificar datos y reintentar
                   </button>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 items-center py-4">
+                  <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center animate-pulse">
+                    <MdLock size={24} className="text-amber-600" />
+                  </div>
+                  <p className="text-sm font-semibold text-text">Esperando aprobacion tecnica</p>
+                  <p className="text-xs text-text-soft text-center max-w-sm">
+                    Tu evaluacion de riesgo esta siendo revisada por el area tecnica. Una vez aprobada podras generar la propuesta formal.
+                  </p>
+                  <button
+                    onClick={verificarEstadoEvaluacion}
+                    disabled={cargando}
+                    className="mt-2 px-4 py-2.5 rounded-xl border border-border hover:bg-bg-soft text-sm font-semibold text-text transition-colors disabled:opacity-50"
+                  >
+                    {cargando ? 'Verificando...' : 'Verificar estado'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

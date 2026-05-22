@@ -4,7 +4,7 @@ import Sidebar from '../componentsMain/Sidebar';
 import AppHeader from '../componentsMain/AppHeader';
 import { useGuard } from '@/lib/useGuard';
 
-import { MdShield, MdDescription, MdWarning, MdPayment, MdFolder, MdPerson, MdHome, MdPostAdd } from 'react-icons/md';
+import { MdShield, MdDescription, MdWarning, MdPayment, MdFolder, MdPerson, MdHome, MdPostAdd, MdRequestQuote } from 'react-icons/md';
 
 // 1. Configuramos el menú específico para el Cliente
 const clientMenu = [
@@ -13,6 +13,7 @@ const clientMenu = [
     items: [
       { label: 'Inicio', icon: MdHome, href: '/asegurado' },
       { label: 'Cotizar y contratar', icon: MdShield, href: '/asegurado/seguros' },
+      { label: 'Mis solicitudes', icon: MdRequestQuote, href: '/asegurado/solicitudes' },
       { label: 'Mis pólizas', icon: MdDescription, href: '/asegurado/polizas' },
     ],
   },
