@@ -87,6 +87,7 @@ public class PolizaService {
                 .poliza(poliza)
                 .tipoCambio(request.tipoCambio())
                 .descripcionCambio(request.descripcionCambio())
+                .archivoUrl(request.archivoUrl())
                 .estadoAprobacion(EndosoPoliza.EstadoAprobacion.PENDIENTE)
                 .build();
         return EndosoResponse.from(endosoRepository.save(endoso));

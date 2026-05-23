@@ -35,11 +35,14 @@ public class EndosoPoliza {
     @Builder.Default
     private EstadoAprobacion estadoAprobacion = EstadoAprobacion.PENDIENTE;
 
+    @Column(name = "archivo_url", length = 255)
+    private String archivoUrl;
+
     @Column(name = "fecha_solicitud", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime fechaSolicitud;
 
     public enum EstadoAprobacion {
-        PENDIENTE, APROBADO, RECHAZADO
+        PENDIENTE, EN_REVISION_TECNICA, EN_REVISION_FINANZAS, OBSERVADO, APROBADO, RECHAZADO
     }
 }

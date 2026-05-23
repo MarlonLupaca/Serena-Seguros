@@ -40,7 +40,7 @@ export default function ModuloPagos() {
   const estadoSel = seleccionada ? clasificarEstado(seleccionada) : null;
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="flex flex-col">
       <div className="px-8 py-5">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -48,9 +48,7 @@ export default function ModuloPagos() {
               {seleccionada ? `Cuota ${seleccionada.numero_cuota}` : 'Mis pagos'}
             </p>
             <p className="text-sm text-text-soft mt-0.5">
-              {seleccionada
-                ? `${seleccionada.poliza_nombre}`
-                : 'Gestiona las cuotas y pagos de tus pólizas activas.'}
+              {seleccionada ? `${seleccionada.poliza_nombre}` : 'Gestiona las cuotas y pagos de tus pólizas activas.'}
             </p>
           </div>
           {seleccionada && estadoSel && (
@@ -64,7 +62,7 @@ export default function ModuloPagos() {
         </div>
       </div>
 
-      <div className="flex-1 w-full px-8 pb-8 overflow-y-auto">
+      <div className="w-full px-8 pb-8">
         {cargando ? (
           <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
             Cargando cuotas...
@@ -74,23 +72,13 @@ export default function ModuloPagos() {
             {error}
           </div>
         ) : seleccionada ? (
-          <DetalleCuota
-            cuota={seleccionada}
-            onBack={() => setSeleccionada(null)}
-            onPagar={(c) => setCuotaPagar(c)}
-          />
+          <DetalleCuota cuota={seleccionada} onBack={() => setSeleccionada(null)} onPagar={(c) => setCuotaPagar(c)} />
         ) : (
           <ListaPagos cuotas={cuotas} onSelect={setSeleccionada} onPagar={(c) => setCuotaPagar(c)} />
         )}
       </div>
 
-      {cuotaPagar && (
-        <ModalPago
-          cuota={cuotaPagar}
-          onClose={() => setCuotaPagar(null)}
-          onSuccess={onPagoExitoso}
-        />
-      )}
+      {cuotaPagar && <ModalPago cuota={cuotaPagar} onClose={() => setCuotaPagar(null)} onSuccess={onPagoExitoso} />}
     </div>
   );
 }

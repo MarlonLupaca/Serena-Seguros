@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
@@ -14,9 +14,11 @@ import {
   MdEditNote,
   MdCheck,
   MdClose,
+  MdDownload,
 } from 'react-icons/md';
-import { apiGet, apiPatch } from '@/lib/api';
+import { apiGet, apiPatch, apiDownloadFile } from '@/lib/api';
 import ModalConfirm from '../../componentsMain/ModalConfirm';
+import ModalDetalleEndoso from '../../componentsMain/ModalDetalleEndoso';
 
 const RANGOS = [
   { dias: 7, label: '7 días' },
@@ -35,8 +37,11 @@ const ESTADO_POLIZA_BADGE = {
 
 const ESTADO_ENDOSO_BADGE = {
   PENDIENTE: 'bg-amber-100 text-amber-700',
+  EN_REVISION_TECNICA: 'bg-indigo-100 text-indigo-700',
+  EN_REVISION_FINANZAS: 'bg-purple-100 text-purple-700',
   APROBADO: 'bg-emerald-100 text-emerald-700',
   RECHAZADO: 'bg-rose-100 text-rose-600',
+  OBSERVADO: 'bg-orange-100 text-orange-700',
 };
 
 function formatearMoneda(v) {
@@ -144,7 +149,7 @@ const marcarNoRenovada = async (idPoliza) => {
     );
   });
 
-  const endosoPendientes = endosos.filter((e) => e.estado_aprobacion === 'PENDIENTE').length;
+  const endosoPendientes = endosos.length;
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
@@ -419,6 +424,24 @@ function RenovacionCard({ poliza, actualizando, onEnviarPropuesta, onMarcarNoRen
 }
 
 function EndosoCard({ endoso, actualizando, onCambiarEstado }) {
+  const [descargando, setDescargando] = useState(false);
+  const [modalAbierto, setModalAbierto] = useState(false);
+
+  const handleDescargar = async () => {
+    if (!endoso.archivo_url) return;
+    setDescargando(true);
+    try {
+      const urlDescarga = endoso.archivo_url.startsWith('/') 
+        ? endoso.archivo_url 
+        : `/mis-documentos/${endoso.archivo_url}/archivo`;
+      await apiDownloadFile(urlDescarga, `documento-endoso-${endoso.id_endoso}.pdf`);
+    } catch (e) {
+      toast.error('No se pudo descargar el documento');
+    } finally {
+      setDescargando(false);
+    }
+  };
+
   return (
     <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden">
       <div className="h-1 w-full bg-primary/30" />
@@ -434,26 +457,43 @@ function EndosoCard({ endoso, actualizando, onCambiarEstado }) {
                 ESTADO_ENDOSO_BADGE[endoso.estado_aprobacion] || 'bg-bg-soft text-text-soft'
               }`}
             >
-              {endoso.estado_aprobacion}
+              {endoso.estado_aprobacion?.replace(/_/g, ' ')}
             </span>
           </div>
           <p className="text-xs text-text-soft mt-0.5">
             END-{String(endoso.id_endoso).padStart(6, '0')} · POL-{String(endoso.id_poliza).padStart(6, '0')}
           </p>
           <p className="text-xs text-text-soft mt-1 line-clamp-2">{endoso.descripcion_cambio}</p>
+          
+          {endoso.archivo_url && (
+            <button
+              onClick={handleDescargar}
+              disabled={descargando}
+              className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline disabled:opacity-50"
+            >
+              <MdDownload size={14} /> {descargando ? 'Descargando...' : 'Ver documento adjunto'}
+            </button>
+          )}
+
           <p className="text-[11px] text-text-soft mt-2 flex items-center gap-1">
             <MdCalendarToday size={11} /> Solicitado: {formatearFecha(endoso.fecha_solicitud)}
           </p>
+          <button
+            onClick={() => setModalAbierto(true)}
+            className="mt-3 text-xs font-semibold text-primary hover:underline"
+          >
+            Ver todo el detalle
+          </button>
         </div>
-        {endoso.estado_aprobacion === 'PENDIENTE' && (
-          <div className="flex flex-col items-end gap-2 shrink-0">
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          {endoso.estado_aprobacion === 'PENDIENTE' && (
             <div className="flex gap-2">
               <button
-                onClick={() => onCambiarEstado('APROBADO')}
+                onClick={() => onCambiarEstado('EN_REVISION_TECNICA')}
                 disabled={actualizando}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
               >
-                <MdCheck size={13} /> Aprobar
+                <MdSend size={13} /> Derivar a Operaciones
               </button>
               <button
                 onClick={() => onCambiarEstado('RECHAZADO')}
@@ -463,9 +503,49 @@ function EndosoCard({ endoso, actualizando, onCambiarEstado }) {
                 <MdClose size={13} /> Rechazar
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      <ModalDetalleEndoso
+        abierto={modalAbierto}
+        onClose={() => setModalAbierto(false)}
+        endoso={endoso}
+        onDescargar={handleDescargar}
+        acciones={
+          endoso.estado_aprobacion === 'PENDIENTE' ? (
+            <>
+              <button
+                onClick={() => {
+                  onCambiarEstado('RECHAZADO');
+                  setModalAbierto(false);
+                }}
+                disabled={actualizando}
+                className="px-4 py-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                Rechazar Solicitud
+              </button>
+              <button
+                onClick={() => {
+                  onCambiarEstado('EN_REVISION_TECNICA');
+                  setModalAbierto(false);
+                }}
+                disabled={actualizando}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                <MdSend size={16} /> Derivar a Operaciones
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setModalAbierto(false)}
+              className="px-4 py-2 rounded-xl bg-bg-soft hover:bg-border text-text text-sm font-semibold transition-colors"
+            >
+              Cerrar
+            </button>
+          )
+        }
+      />
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { MdCalendarToday } from 'react-icons/md';
 import { estiloTipo, formatearFecha, formatearMoneda } from './data';
 
@@ -9,8 +8,6 @@ export default function HistorialCard({ c }) {
     <div className="bg-bg rounded-2xl border border-border overflow-hidden">
       <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
       <div className="p-4 flex items-center gap-4 flex-wrap sm:flex-nowrap">
-        <Image src={tipoStyle.imagen} width={24} height={24} alt="" className="object-contain w-10" />
-
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-sm font-bold text-text">{c.poliza_nombre}</p>

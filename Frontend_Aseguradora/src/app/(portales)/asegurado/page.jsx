@@ -104,7 +104,8 @@ export default function Home() {
   const cuotasPendientes = cuotas
     .filter((c) => c.estado_pago === 'PENDIENTE')
     .sort((a, b) => new Date(a.fecha_vencimiento) - new Date(b.fecha_vencimiento));
-  const proximaCuota = cuotasPendientes[0];
+  const proximasCuotas = cuotasPendientes.slice(0, 2);
+  const proximaCuota = proximasCuotas[0];
   const cuotasVencidas = cuotas.filter((c) => {
     if (c.estado_pago === 'VENCIDO') return true;
     if (c.estado_pago === 'PAGADO') return false;
@@ -161,7 +162,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6 ">
       <div className="flex justify-between items-center">
         <div>
           <p className="text-xs text-text-soft">Bienvenido de vuelta</p>
@@ -183,39 +184,41 @@ export default function Home() {
         <>
           {/* Tarjetas resumen */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="p-4 flex flex-col justify-center">
-              <div className="flex items-center gap-2 text-text-soft mb-1">
+            <Card className="px-4 py-3 flex flex-col justify-center">
+              <div className="flex items-center gap-2 text-text-soft mb-0.5">
                 <MdShield size={16} />
-                <p className="text-xs font-semibold">Pólizas activas</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider">Pólizas activas</p>
               </div>
-              <p className="text-2xl font-bold text-text">{polizasActivas.length}</p>
+              <p className="text-xl font-bold text-text">{polizasActivas.length}</p>
             </Card>
 
-            <Card className="p-4 flex flex-col justify-center">
-              <div className="flex items-center gap-2 text-text-soft mb-1">
+            <Card className="px-4 py-3 flex flex-col justify-center border">
+              <div className="flex items-center gap-2 text-text-soft mb-0.5">
                 <MdCreditCard size={16} />
-                <p className="text-xs font-semibold">Próximo pago</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider">Próximo pago</p>
               </div>
-              <p className="text-2xl font-bold text-text">
+              <p className="text-xl font-bold text-text">
                 {proximaCuota ? formatearMoneda(proximaCuota.monto) : 'S/ 0.00'}
               </p>
             </Card>
 
-            <Card className="p-4 flex flex-col justify-center">
-              <div className="flex items-center gap-2 text-text-soft mb-1">
+            <Card className="px-4 py-3 flex flex-col justify-center">
+              <div className="flex items-center gap-2 text-text-soft mb-0.5">
                 <MdInfo size={16} />
-                <p className="text-xs font-semibold">Siniestros abiertos</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider">Siniestros abiertos</p>
               </div>
-              <p className="text-2xl font-bold text-text">{siniestrosAbiertos.length}</p>
+              <p className="text-xl font-bold text-text">{siniestrosAbiertos.length}</p>
             </Card>
 
-            <Card className="p-4 flex flex-col justify-center" onClick={() => router.push('/asegurado/seguros')}>
-              <div className="flex items-center gap-2 text-text-soft mb-1">
+            <Card
+              className="px-4 py-3 flex flex-col justify-center hover:bg-primary/5 transition-colors border-primary/20"
+              onClick={() => router.push('/asegurado/seguros')}
+            >
+              <div className="flex items-center gap-2 text-primary mb-0.5">
                 <MdAssignment size={16} />
-                <p className="text-xs font-semibold">Cotizar</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider">Cotizar</p>
               </div>
               <p className="text-sm font-bold text-text truncate">Simula tu seguro</p>
-              <p className="text-xs text-text-soft mt-1">Pasa a contratacion en minutos</p>
             </Card>
           </div>
 
@@ -249,7 +252,7 @@ export default function Home() {
 
                           <div className="flex-1">
                             <p className="text-sm font-bold text-text leading-snug">{p.producto?.nombre}</p>
-                            <p className="text-xs text-text-soft mt-1 flex items-center gap-1">
+                            <p className="text-[11px] text-text-soft mt-0.5 flex items-center gap-1">
                               <MdCalendarToday size={11} /> Vence: {formatearFecha(p.vigencia_fin)}
                             </p>
                           </div>
@@ -276,36 +279,56 @@ export default function Home() {
               )}
             </div>
 
-            <div className="flex flex-col">
-              <SectionHeader title="Próximo pago" onClick={() => router.push('/asegurado/pagos')} />
-              {proximaCuota ? (
-                <Card onClick={() => router.push('/asegurado/pagos')} className="flex-1 flex flex-col">
-                  <div className="h-1 w-full bg-amber-400" />
-                  <div className="p-5 flex flex-col gap-4 flex-1">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-100">
-                      <MdCreditCard size={20} className="text-amber-500" />
-                    </div>
-                    <div className="flex-1 flex flex-col gap-1">
-                      <p className="text-xs text-text-soft">Poliza asociada</p>
-                      <p className="text-sm font-bold text-text">{proximaCuota.poliza_nombre}</p>
-                      <p className="text-xs text-text-soft flex items-center gap-1 mt-1">
-                        <MdCalendarToday size={11} /> Vence: {formatearFecha(proximaCuota.fecha_vencimiento)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-text">{formatearMoneda(proximaCuota.monto)}</p>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push('/asegurado/pagos');
-                      }}
-                      className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold transition-colors"
+            <div className="flex flex-col h-fit">
+              <SectionHeader title="Próximos pagos" onClick={() => router.push('/asegurado/pagos')} />
+              {proximasCuotas.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  {proximasCuotas.map((cuota) => (
+                    <Card
+                      key={cuota.id_cuota}
+                      onClick={() => router.push('/asegurado/pagos')}
+                      className="flex flex-col relative overflow-hidden"
                     >
-                      <MdCreditCard size={13} /> Ir a pagar
-                    </button>
-                  </div>
-                </Card>
+                      <div className="h-1 w-full bg-amber-400 absolute top-0 left-0" />
+                      <div className="p-4 flex flex-col gap-3">
+                        <div className="flex items-center gap-3 mt-1">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-100 shrink-0">
+                            <MdCreditCard size={20} className="text-amber-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-text-soft">Poliza asociada</p>
+                            <p className="text-sm font-bold text-text truncate">{cuota.poliza_nombre}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-end justify-between bg-bg-soft rounded-xl p-3 border border-border">
+                          <div>
+                            <p className="text-[10px] text-text-soft flex items-center gap-1 mb-0.5 uppercase tracking-wider font-bold">
+                              Vencimiento
+                            </p>
+                            <p className="text-xs font-semibold text-text">{formatearFecha(cuota.fecha_vencimiento)}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] text-text-soft uppercase tracking-wider font-bold mb-0.5">
+                              Total
+                            </p>
+                            <p className="text-lg font-bold text-text leading-none">{formatearMoneda(cuota.monto)}</p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push('/asegurado/pagos');
+                          }}
+                          className="w-full mt-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold transition-colors"
+                        >
+                          <MdCreditCard size={13} /> Pagar cuota
+                        </button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               ) : (
                 <Card onClick={() => router.push('/asegurado/pagos')} className="flex-1">
                   <div className="p-6 text-center flex flex-col items-center justify-center h-full">
@@ -322,18 +345,18 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="flex flex-col">
               <SectionHeader title="Avisos y notificaciones" />
-              <div className="flex flex-col gap-3 flex-1">
+              <div className="flex flex-col gap-3 flex-1 ">
                 {notificaciones.map((n) => {
                   const Icon = n.icon;
                   return (
-                    <Card key={n.id} className="flex-1">
-                      <div className="flex items-start gap-3 p-4 h-full">
+                    <Card key={n.id} className="h-fit">
+                      <div className="flex items-start gap-3 p-3 h-full">
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${n.bg}`}>
                           <Icon size={16} className={n.color} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-text">{n.titulo}</p>
-                          <p className="text-xs text-text-soft mt-0.5 leading-relaxed">{n.desc}</p>
+                          <p className="text-sm font-bold text-text leading-tight">{n.titulo}</p>
+                          <p className="text-xs text-text-soft mt-0.5 leading-snug">{n.desc}</p>
                         </div>
                       </div>
                     </Card>
@@ -356,18 +379,17 @@ export default function Home() {
                       onClick={() => router.push('/asegurado/seguros')}
                       className="flex-1 border-primary/20 bg-primary/5"
                     >
-                      <div className="flex items-start gap-3 p-4 h-full">
+                      <div className="flex items-center gap-3 p-3 h-full">
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-primary/20">
                           <MdLocalOffer size={16} className="text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-primary">{promo.titulo}</p>
-                          <p className="text-xs text-text-soft mt-0.5 leading-relaxed">{promo.descripcion}</p>
-                          <p className="text-[11px] text-primary mt-1 font-semibold">
+                          <p className="text-sm font-bold text-primary leading-tight">{promo.titulo}</p>
+                          <p className="text-[11px] text-primary/80 mt-0.5 font-medium truncate">
                             {Number(promo.descuento_pct).toFixed(0)}% off · {promo.producto_nombre}
                           </p>
                         </div>
-                        <MdChevronRight size={20} className="text-primary/50 self-center" />
+                        <MdChevronRight size={20} className="text-primary/50 shrink-0" />
                       </div>
                     </Card>
                   ))

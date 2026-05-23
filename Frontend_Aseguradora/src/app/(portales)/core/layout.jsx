@@ -19,6 +19,7 @@ import {
   MdInbox,
   MdMonetizationOn,
   MdCategory,
+  MdEditNote,
 } from 'react-icons/md';
 
 const segurosMenu = [
@@ -37,7 +38,10 @@ const segurosMenu = [
   },
   {
     section: 'Pólizas',
-    items: [{ label: 'Emisiones', icon: MdAssignmentTurnedIn, href: '/core/emisiones' }],
+    items: [
+      { label: 'Emisiones', icon: MdAssignmentTurnedIn, href: '/core/emisiones' },
+      { label: 'Endosos', icon: MdEditNote, href: '/core/endosos' },
+    ],
   },
   {
     section: 'Siniestros',

@@ -19,7 +19,10 @@ const clientMenu = [
   },
   {
     section: 'Siniestros',
-    items: [{ label: 'Reportar', icon: MdWarning, href: '/asegurado/reportar' }],
+    items: [
+      { label: 'Reportar', icon: MdWarning, href: '/asegurado/reportar' },
+      { label: 'Historial', icon: MdFolder, href: '/asegurado/siniestros' },
+    ],
   },
   {
     section: 'Pagos',

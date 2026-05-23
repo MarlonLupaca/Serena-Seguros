@@ -119,7 +119,8 @@ CREATE TABLE endoso_poliza (
     id_poliza INT NOT NULL,
     tipo_cambio VARCHAR(100) NOT NULL,
     descripcion_cambio TEXT NOT NULL,
-    estado_aprobacion ENUM('PENDIENTE', 'APROBADO', 'RECHAZADO') DEFAULT 'PENDIENTE' NOT NULL,
+    estado_aprobacion ENUM('PENDIENTE', 'EN_REVISION_TECNICA', 'EN_REVISION_FINANZAS', 'OBSERVADO', 'APROBADO', 'RECHAZADO') DEFAULT 'PENDIENTE' NOT NULL,
+    archivo_url VARCHAR(255) NULL,
     fecha_solicitud DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_poliza) REFERENCES poliza(id_poliza) ON DELETE CASCADE
 ) ENGINE=InnoDB;

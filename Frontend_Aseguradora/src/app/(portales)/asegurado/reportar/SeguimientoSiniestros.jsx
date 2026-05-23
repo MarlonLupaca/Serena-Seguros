@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { MdTimeline, MdClose, MdHistory, MdInsertDriveFile, MdDownload, MdDelete } from 'react-icons/md';
@@ -15,7 +15,7 @@ const ESTADO_BADGE = {
   LIQUIDADO: 'bg-emerald-100 text-emerald-700',
 };
 
-export default function SeguimientoSiniestros() {
+export default function SeguimientoSiniestros({ isStandalone }) {
   const [siniestros, setSiniestros] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [siniestroSeleccionado, setSiniestroSeleccionado] = useState(null);
@@ -31,9 +31,9 @@ export default function SeguimientoSiniestros() {
   if (siniestros.length === 0) return null;
 
   return (
-    <div className="mt-8 pt-8 border-t border-border mb-5">
-      <h3 className="text-lg font-bold text-text mb-4">Seguimiento de mis casos</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className={isStandalone ? 'mb-5' : 'mt-8 pt-8 border-t border-border mb-5'}>
+      {!isStandalone && <h3 className="text-lg font-bold text-text mb-4">Seguimiento de mis casos</h3>}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {siniestros.map((sin) => (
           <div
             key={sin.id_siniestro}

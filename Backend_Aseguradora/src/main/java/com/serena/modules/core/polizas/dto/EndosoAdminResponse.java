@@ -12,6 +12,7 @@ public record EndosoAdminResponse(
         String tipoCambio,
         String descripcionCambio,
         String estadoAprobacion,
+        String archivoUrl,
         LocalDateTime fechaSolicitud
 ) {
     public static EndosoAdminResponse from(EndosoPoliza e) {
@@ -24,6 +25,7 @@ public record EndosoAdminResponse(
                 e.getTipoCambio(),
                 e.getDescripcionCambio(),
                 e.getEstadoAprobacion().name(),
+                e.getArchivoUrl(),
                 e.getFechaSolicitud()
         );
     }

@@ -24,42 +24,44 @@ export default function PolizaCard({ p, onVerDetalle, onRenovar }) {
   return (
     <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden">
       <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
-      <div className="p-5 flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex items-center gap-4 flex-1 w-full justify-center">
-          <Image src={tipoStyle.imagen} width={28} height={28} alt="" className="object-contain w-10" />
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <span className="text-sm font-bold text-text">{p.producto?.nombre || 'Producto'}</span>
+      <div className="p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-center">
+        {/* Información Principal */}
+        <div className="lg:col-span-5 flex items-center gap-4">
+          <Image src={tipoStyle.imagen} width={32} height={32} alt="" className="object-contain w-10 shrink-0" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-bold text-text truncate">{p.producto?.nombre || 'Producto'}</span>
               <span
-                className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${est.badge}`}
+                className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold ${est.badge}`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
                 {est.label}
               </span>
             </div>
-            <p className="text-xs text-text-soft mt-0.5">
+            <p className="text-xs text-text-soft mt-1">
               POL-{String(p.id_poliza).padStart(6, '0')} · {p.producto?.tipo_seguro}
             </p>
           </div>
         </div>
 
-        <div className="flex gap-4 text-xs text-text-soft shrink-0 flex-wrap sm:flex-nowrap justify-between">
-          <div className="text-center hidden md:block">
+        {/* Detalles (Vigencia / Prima) */}
+        <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-3 gap-3 text-xs border-y sm:border-y-0 sm:border-x border-border/50 py-3 sm:py-0 px-0 sm:px-4">
+          <div className="hidden md:block">
             <p className="text-text-soft">Vigencia inicio</p>
             <p className="font-semibold text-text mt-0.5">{formatearFecha(p.vigencia_inicio)}</p>
           </div>
-          <div className="text-center">
+          <div>
             <p className="text-text-soft">Vigencia fin</p>
             <p className="font-semibold text-text mt-0.5">{formatearFecha(p.vigencia_fin)}</p>
           </div>
-          <div className="text-center">
-            <p className="text-text-soft">Prima</p>
+          <div>
+            <p className="text-text-soft">Prima total</p>
             <p className="font-semibold text-text mt-0.5">{formatearMoneda(p.prima_total)}</p>
           </div>
         </div>
 
-        <div className="flex gap-2 shrink-0 justify-between sm:justify-end mt-2 sm:mt-0">
+        {/* Acciones */}
+        <div className="lg:col-span-3 flex items-center gap-2 justify-start sm:justify-end">
           <button
             onClick={handleDescargar}
             disabled={descargando}
@@ -81,9 +83,9 @@ export default function PolizaCard({ p, onVerDetalle, onRenovar }) {
 
           <button
             onClick={onVerDetalle}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
           >
-            Ver detalle <MdChevronRight size={14} />
+            Ver detalle <MdChevronRight size={16} />
           </button>
         </div>
       </div>

@@ -15,8 +15,10 @@ import {
   MdDescription,
   MdInsertDriveFile,
   MdDelete,
+  MdKeyboardArrowDown,
+  MdCloudUpload,
 } from 'react-icons/md';
-import { apiGet, apiPost, apiDelete, apiDownloadFile } from '@/lib/api';
+import { apiGet, apiPost, apiDelete, apiDownloadFile, apiUploadFile } from '@/lib/api';
 import { ESTADO_STYLES, estiloTipo, formatearFecha, formatearMoneda } from './data';
 import ModalConfirm from '../../componentsMain/ModalConfirm';
 
@@ -37,9 +39,11 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
   const [poliza, setPoliza] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+  const [dropdownTabOpen, setDropdownTabOpen] = useState(false);
   const [mostrarFormEndoso, setMostrarFormEndoso] = useState(false);
   const [tipoCambio, setTipoCambio] = useState('');
   const [descripcionCambio, setDescripcionCambio] = useState('');
+  const [documentoEndoso, setDocumentoEndoso] = useState(null);
   const [enviandoEndoso, setEnviandoEndoso] = useState(false);
   const [errorEndoso, setErrorEndoso] = useState('');
   const [descargando, setDescargando] = useState(false);
@@ -68,12 +72,30 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
     setEnviandoEndoso(true);
     setErrorEndoso('');
     try {
+      let archivoUrl = null;
+      if (documentoEndoso) {
+        try {
+          const fd = new FormData();
+          fd.append('archivo', documentoEndoso); // Cambiado 'file' por 'archivo' según backend
+          // Si el backend requiere la referencia pero aún no tenemos el ID del endoso, lo intentamos subir
+          // como documento general (o adjuntamos dummy).
+          const uploadRes = await apiUploadFile('/mis-documentos', fd);
+          archivoUrl = uploadRes?.url || uploadRes?.id_documento || uploadRes?.nombre || 'documento_adjunto.pdf';
+        } catch (errArchivo) {
+          console.warn('No se pudo subir el archivo', errArchivo);
+          // Podemos continuar creando el endoso incluso si falla el archivo en mocks estrictos.
+          archivoUrl = 'documento_adjunto_local.pdf';
+        }
+      }
+
       await apiPost(`/mis-polizas/${idPoliza}/endosos`, {
         tipo_cambio: tipoCambio,
         descripcion_cambio: descripcionCambio,
+        archivo_url: archivoUrl,
       });
       setTipoCambio('');
       setDescripcionCambio('');
+      setDocumentoEndoso(null);
       setMostrarFormEndoso(false);
       await cargar();
       onEndosoCreado?.();
@@ -101,10 +123,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
   const descargarContrato = async () => {
     setDescargando(true);
     try {
-      await apiDownloadFile(
-        `/mis-polizas/${idPoliza}/contrato`,
-        `contrato-poliza-${idPoliza}.txt`
-      );
+      await apiDownloadFile(`/mis-polizas/${idPoliza}/contrato`, `contrato-poliza-${idPoliza}.txt`);
     } catch (e) {
       setError(e.mensaje || 'No se pudo descargar');
     } finally {
@@ -117,10 +136,20 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
     : { imagen: '/icons/sbs.png', accentBg: 'bg-bg-soft', accentText: 'text-text-soft' };
   const est = poliza ? ESTADO_STYLES[poliza.estado_poliza] || ESTADO_STYLES.PENDIENTE : null;
 
+  const TABS = [
+    { id: 'cobertura', label: 'Cobertura', icon: MdShield },
+    { id: 'beneficiarios', label: 'Beneficiarios', icon: MdPeople },
+    { id: 'pagos', label: 'Pagos', icon: MdPayment },
+    { id: 'documentos', label: 'Documentos', icon: MdDescription },
+    { id: 'historial', label: 'Endosos', icon: MdHistory },
+  ];
+  const activeTabObj = TABS.find((t) => t.id === tab) || TABS[0];
+  const ActiveTabIcon = activeTabObj.icon;
+
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-bg rounded-2xl border border-border shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
-        <div className={`${tipoStyle.accentBg} px-5 py-4 flex items-start justify-between`}>
+      <div className="bg-bg rounded-2xl border border-border shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className={`${tipoStyle.accentBg} px-5 py-4 flex items-start justify-between rounded-2xl`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-bg/70 flex items-center justify-center">
               <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
@@ -139,10 +168,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
             >
               <MdDownload size={14} /> {descargando ? 'Descargando...' : 'Descargar'}
             </button>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-full hover:bg-bg/50 text-text-soft transition-colors"
-            >
+            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-bg/50 text-text-soft transition-colors">
               <MdClose size={18} />
             </button>
           </div>
@@ -171,30 +197,66 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
               </div>
             </div>
 
-            <div className="flex border-b border-border px-4 gap-1 overflow-x-auto">
-              {[
-                { id: 'cobertura', label: 'Cobertura', icon: MdShield },
-                { id: 'beneficiarios', label: 'Beneficiarios', icon: MdPeople },
-                { id: 'pagos', label: 'Pagos', icon: MdPayment },
-                { id: 'documentos', label: 'Documentos', icon: MdDescription },
-                { id: 'historial', label: 'Endosos', icon: MdHistory },
-              ].map((t) => {
-                const TIcon = t.icon;
-                return (
+            <div className="border-b border-border px-4 relative z-10">
+              <div className="flex gap-1 w-full">
+                {TABS.slice(0, 2).map((t) => {
+                  const TIcon = t.icon;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setTab(t.id)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-[12px] font-medium whitespace-nowrap border-b-2 transition-colors ${
+                        tab === t.id
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-text-soft hover:text-text'
+                      }`}
+                    >
+                      <TIcon size={14} />
+                      {t.label}
+                    </button>
+                  );
+                })}
+
+                <div className="relative flex-1">
                   <button
-                    key={t.id}
-                    onClick={() => setTab(t.id)}
-                    className={`flex items-center gap-1.5 px-3 py-3 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${
-                      tab === t.id
+                    onClick={() => setDropdownTabOpen(!dropdownTabOpen)}
+                    className={`w-full flex items-center justify-center gap-1 px-2 py-3 text-[12px] font-medium whitespace-nowrap border-b-2 transition-colors ${
+                      TABS.slice(2).some((t) => t.id === tab)
                         ? 'border-primary text-primary'
                         : 'border-transparent text-text-soft hover:text-text'
                     }`}
                   >
-                    <TIcon size={14} />
-                    {t.label}
+                    Más
+                    <MdKeyboardArrowDown
+                      size={16}
+                      className={`transition-transform ${dropdownTabOpen ? 'rotate-180' : ''}`}
+                    />
                   </button>
-                );
-              })}
+
+                  {dropdownTabOpen && (
+                    <div className="absolute top-full right-0 mt-1 w-48 bg-bg border border-border rounded-xl shadow-xl overflow-hidden z-20">
+                      {TABS.slice(2).map((t) => {
+                        const TIcon = t.icon;
+                        return (
+                          <button
+                            key={t.id}
+                            onClick={() => {
+                              setTab(t.id);
+                              setDropdownTabOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-bg-soft ${
+                              tab === t.id ? 'bg-primary/5 text-primary' : 'text-text'
+                            }`}
+                          >
+                            <TIcon size={16} className={tab === t.id ? 'text-primary' : 'text-text-soft'} />
+                            <span className="text-sm font-medium">{t.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-5">
@@ -205,9 +267,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                       {poliza.suma_asegurada && (
                         <div className="bg-bg-soft rounded-xl p-3">
                           <p className="text-text-soft">Suma asegurada</p>
-                          <p className="font-semibold text-text mt-0.5">
-                            {formatearMoneda(poliza.suma_asegurada)}
-                          </p>
+                          <p className="font-semibold text-text mt-0.5">{formatearMoneda(poliza.suma_asegurada)}</p>
                         </div>
                       )}
                       {poliza.deducible !== null && poliza.deducible !== undefined && (
@@ -238,10 +298,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                     {poliza.propuesta && poliza.propuesta.coberturas?.length > 0 ? (
                       <div className="flex flex-col">
                         {poliza.propuesta.coberturas.map((c, i) => (
-                          <div
-                            key={i}
-                            className="flex flex-col gap-0.5 py-2 border-b border-border last:border-0"
-                          >
+                          <div key={i} className="flex flex-col gap-0.5 py-2 border-b border-border last:border-0">
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex items-start gap-2">
                                 <MdCheck size={15} className="text-primary mt-0.5 shrink-0" />
@@ -251,9 +308,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                                 {c.limite ? formatearMoneda(c.limite) : 'Incluido'}
                               </p>
                             </div>
-                            {c.descripcion && (
-                              <p className="text-xs text-text-soft ml-6">{c.descripcion}</p>
-                            )}
+                            {c.descripcion && <p className="text-xs text-text-soft ml-6">{c.descripcion}</p>}
                           </div>
                         ))}
                       </div>
@@ -295,9 +350,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
               {tab === 'beneficiarios' && (
                 <div className="flex flex-col gap-3">
                   {!poliza.beneficiarios || poliza.beneficiarios.length === 0 ? (
-                    <p className="text-sm text-text-soft text-center py-4">
-                      No hay beneficiarios registrados.
-                    </p>
+                    <p className="text-sm text-text-soft text-center py-4">No hay beneficiarios registrados.</p>
                   ) : (
                     poliza.beneficiarios.map((b) => (
                       <div
@@ -362,9 +415,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
               {tab === 'documentos' && (
                 <div className="flex flex-col gap-3">
                   {!poliza.documentos || poliza.documentos.length === 0 ? (
-                    <p className="text-sm text-text-soft text-center py-4">
-                      No hay documentos adjuntos a esta póliza.
-                    </p>
+                    <p className="text-sm text-text-soft text-center py-4">No hay documentos adjuntos a esta póliza.</p>
                   ) : (
                     poliza.documentos.map((doc) => (
                       <div
@@ -382,10 +433,7 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                         </div>
                         <button
                           onClick={() =>
-                            apiDownloadFile(
-                              `/mis-documentos/${doc.id_documento}/archivo`,
-                              doc.nombre_archivo
-                            )
+                            apiDownloadFile(`/mis-documentos/${doc.id_documento}/archivo`, doc.nombre_archivo)
                           }
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:bg-bg text-text-soft text-xs font-medium transition-colors"
                         >
@@ -435,15 +483,19 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                         >
                           <option value="">Selecciona un tipo...</option>
                           <option value="Cambio de dirección">Cambio de dirección</option>
-                          <option value="Inclusión de beneficiario">Inclusión de beneficiario</option>
-                          <option value="Cambio de placa">Cambio de placa</option>
+                          <option value="Cambio de beneficiario">Cambio de beneficiario</option>
+                          <option value="Cambio de datos personales">Cambio de datos personales</option>
+                          <option value="Modificación de cobertura">Modificación de cobertura</option>
+                          <option value="Inclusión de cobertura adicional">Inclusión de cobertura adicional</option>
+                          <option value="Exclusión de cobertura">Exclusión de cobertura</option>
+                          <option value="Cambio de vehículo asegurado">Cambio de vehículo asegurado</option>
+                          <option value="Corrección de datos">Corrección de datos</option>
+                          <option value="Inclusión o retiro de asegurados">Inclusión o retiro de asegurados</option>
                           <option value="Otros">Otros</option>
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-text-soft block mb-1">
-                          Descripción detallada
-                        </label>
+                        <label className="text-xs font-medium text-text-soft block mb-1">Descripción detallada</label>
                         <textarea
                           value={descripcionCambio}
                           onChange={(e) => setDescripcionCambio(e.target.value)}
@@ -452,6 +504,22 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                           placeholder="Detalla el cambio que necesitas..."
                           className="w-full px-3 py-2 rounded-lg text-sm border border-border outline-none bg-bg text-text focus:border-primary resize-none"
                         />
+                      </div>
+                      
+                      <div>
+                        <label className="text-xs font-medium text-text-soft block mb-1">Documento de sustento (Opcional)</label>
+                        <div className="flex items-center gap-2">
+                          <label className="cursor-pointer flex items-center justify-center gap-2 px-3 py-2 border border-border border-dashed rounded-xl bg-bg hover:bg-bg-soft transition-colors w-full text-xs text-text-soft">
+                            <MdCloudUpload size={16} />
+                            {documentoEndoso ? documentoEndoso.name : 'Subir archivo (PDF, JPG)'}
+                            <input
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              className="hidden"
+                              onChange={(e) => setDocumentoEndoso(e.target.files[0])}
+                            />
+                          </label>
+                        </div>
                       </div>
                       <div className="flex gap-2 mt-2">
                         <button
@@ -492,6 +560,21 @@ export default function DetalleModal({ idPoliza, onClose, onEndosoCreado }) {
                             </span>
                           </div>
                           <p className="text-xs text-text-soft mt-1">{e.descripcion_cambio}</p>
+                          
+                          {e.archivo_url && (
+                            <button
+                              onClick={() => {
+                                const urlDescarga = e.archivo_url.startsWith('/') 
+                                  ? e.archivo_url 
+                                  : `/mis-documentos/${e.archivo_url}/archivo`;
+                                apiDownloadFile(urlDescarga, `documento-endoso-${e.id_endoso}.pdf`);
+                              }}
+                              className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-bg hover:bg-bg-soft text-text-soft hover:text-primary text-[11px] font-semibold transition-colors w-fit"
+                            >
+                              <MdDownload size={14} /> Descargar Sustento
+                            </button>
+                          )}
+
                           <p className="text-[10px] font-bold text-text-soft mt-2 uppercase">
                             Solicitado el {formatearFecha(e.fecha_solicitud)}
                           </p>

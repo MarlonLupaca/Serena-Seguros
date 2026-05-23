@@ -10,6 +10,8 @@ public record CrearEndosoRequest(
         String tipoCambio,
 
         @NotBlank(message = "La descripcion es obligatoria")
-        String descripcionCambio
+        String descripcionCambio,
+
+        String archivoUrl
 
 ) {}

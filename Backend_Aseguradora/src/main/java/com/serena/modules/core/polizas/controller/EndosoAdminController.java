@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/endosos")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('TECNICO', 'EJECUTIVO')")
+@PreAuthorize("hasAnyRole('TECNICO', 'EJECUTIVO', 'COMERCIAL', 'OPERATIVO')")
 public class EndosoAdminController {
 
     private final EndosoPolizaRepository endosoRepository;

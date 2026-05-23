@@ -20,6 +20,7 @@ import {
   MdAccountBalance,
   MdAccountBalanceWallet,
   MdCalculate,
+  MdEditNote,
 } from 'react-icons/md';
 
 // 1. Configuramos el menú específico para Operaciones / Administración
@@ -46,6 +47,7 @@ const operativoMenu = [
     section: 'Finanzas',
     items: [
       { label: 'Cobranza', icon: MdPriceCheck, href: '/finanzas/cobranza' },
+      { label: 'Endosos', icon: MdEditNote, href: '/finanzas/endosos' },
       { label: 'Tesorería', icon: MdAccountBalanceWallet, href: '/finanzas/tesoreria' },
       { label: 'Contabilidad', icon: MdAccountBalance, href: '/finanzas/contabilidad' },
       { label: 'Presupuesto', icon: MdCalculate, href: '/finanzas/presupuesto' },

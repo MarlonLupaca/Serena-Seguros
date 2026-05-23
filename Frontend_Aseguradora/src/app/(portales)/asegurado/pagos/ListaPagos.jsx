@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { MdSearch, MdFilterList, MdDescription, MdWarningAmber, MdExpandMore, MdExpandLess } from 'react-icons/md';
+import { MdSearch, MdFilterList, MdDescription, MdWarningAmber, MdClose } from 'react-icons/md';
 import PagosKPIs from './PagosKPIs';
 import CuotaCard from './CuotaCard';
 import HistorialCard from './HistorialCard';
@@ -130,60 +130,113 @@ function agruparPorPoliza(cuotas) {
       grupos[key] = { nombre: c.poliza_nombre || 'Sin póliza', tipo: c.poliza_tipo, id: key, items: [] };
     grupos[key].items.push(c);
   });
-  return Object.values(grupos).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  return Object.values(grupos).sort((a, b) => b.id - a.id);
 }
 
 function GruposCuotas({ cuotas, onSelect, onPagar, historial }) {
+  const [grupoActivo, setGrupoActivo] = useState(null);
   const grupos = agruparPorPoliza(cuotas);
+
   return (
-    <div className="flex flex-col gap-4">
-      {grupos.map((g) => (
-        <GrupoPoliza key={g.id} grupo={g} onSelect={onSelect} onPagar={onPagar} historial={historial} />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {grupos.map((g) => (
+          <GrupoPolizaCard key={g.id} grupo={g} onClick={() => setGrupoActivo(g)} />
+        ))}
+      </div>
+      {grupoActivo && (
+        <ModalCuotasGrupo
+          grupo={grupoActivo}
+          onClose={() => setGrupoActivo(null)}
+          onSelect={onSelect}
+          onPagar={onPagar}
+          historial={historial}
+        />
+      )}
+    </>
   );
 }
 
-function GrupoPoliza({ grupo, onSelect, onPagar, historial }) {
-  const [abierto, setAbierto] = useState(true);
+function GrupoPolizaCard({ grupo, onClick }) {
   const tipoStyle = estiloTipo(grupo.tipo);
   const totalMonto = grupo.items.reduce((acc, c) => acc + Number(c.monto || 0), 0);
 
   return (
-    <div className="bg-bg rounded-2xl border border-border overflow-hidden">
-      <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
-      <button
-        onClick={() => setAbierto(!abierto)}
-        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-bg-soft transition-colors"
-      >
-        <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain w-10" />
-
-        <div className="flex-1 min-w-0 text-left">
-          <p className="text-sm font-bold text-text">{grupo.nombre}</p>
-          <p className="text-xs text-text-soft mt-0.5">
-            {grupo.items.length} cuota{grupo.items.length > 1 ? 's' : ''}
-          </p>
+    <button
+      onClick={onClick}
+      className="bg-bg rounded-2xl border border-border overflow-hidden hover:border-primary/50 hover:shadow-md transition-all text-left flex flex-col"
+    >
+      <div className={`h-1.5 w-full ${tipoStyle.accentBg}`} />
+      <div className="p-5 flex flex-col gap-4 flex-1">
+        <div className="flex items-center gap-3">
+          <Image src={tipoStyle.imagen} width={36} height={36} alt="" className="object-contain w-11 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-text truncate leading-tight">{grupo.nombre}</p>
+            <p className="text-xs text-text-soft truncate mt-0.5">{grupo.tipo}</p>
+          </div>
         </div>
-        <p className="text-sm font-bold text-text shrink-0">
-          S/ {totalMonto.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-        </p>
-        {abierto ? (
-          <MdExpandLess size={18} className="text-text-soft shrink-0" />
-        ) : (
-          <MdExpandMore size={18} className="text-text-soft shrink-0" />
-        )}
-      </button>
-      {abierto && (
-        <div className="border-t border-border px-3 pb-3 pt-2 flex flex-col gap-2">
+        <div className="mt-auto bg-bg-soft rounded-xl p-3 flex justify-between items-center border border-border">
+          <div>
+            <p className="text-[10px] text-text-soft font-bold uppercase tracking-wider">Cuotas</p>
+            <p className="text-sm font-semibold text-text">{grupo.items.length}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-text-soft font-bold uppercase tracking-wider">Total a pagar</p>
+            <p className="text-sm font-bold text-primary">
+              S/ {totalMonto.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function ModalCuotasGrupo({ grupo, onClose, onSelect, onPagar, historial }) {
+  const tipoStyle = estiloTipo(grupo.tipo);
+  return (
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-bg rounded-3xl border border-border shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] overflow-hidden">
+        <div className={`h-2 w-full ${tipoStyle.accentBg}`} />
+        <div className="flex items-center justify-between p-5 border-b border-border shrink-0">
+          <div className="flex items-center gap-3">
+            <Image src={tipoStyle.imagen} width={24} height={24} alt="" className="object-contain w-8" />
+            <div>
+              <p className="text-sm font-bold text-text">{grupo.nombre}</p>
+              <p className="text-[11px] text-text-soft">
+                {grupo.items.length} cuota{grupo.items.length > 1 ? 's' : ''} enlistada
+                {grupo.items.length > 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-xl border border-border hover:bg-bg-soft text-text-soft transition-colors"
+          >
+            <MdClose size={18} />
+          </button>
+        </div>
+        <div className="p-5 overflow-y-auto space-y-3 bg-bg-soft/30">
           {grupo.items.map((c) =>
             historial ? (
               <HistorialCard key={c.id_cuota} c={c} />
             ) : (
-              <CuotaCard key={c.id_cuota} c={c} onSelect={onSelect} onPagar={onPagar} />
+              <CuotaCard
+                key={c.id_cuota}
+                c={c}
+                onSelect={(cuota) => {
+                  onSelect(cuota);
+                  onClose();
+                }}
+                onPagar={(cuota) => {
+                  onPagar(cuota);
+                  onClose();
+                }}
+              />
             )
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

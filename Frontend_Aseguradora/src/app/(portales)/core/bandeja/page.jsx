@@ -116,7 +116,7 @@ export default function BandejaPage() {
     try {
       const [pol, end, sin, val, ren] = await Promise.all([
         apiGet('/polizas?estado=PENDIENTE').catch(() => []),
-        apiGet('/endosos?estado=PENDIENTE').catch(() => []),
+        apiGet('/endosos?estado=EN_REVISION_TECNICA').catch(() => []),
         apiGet('/siniestros').catch(() => []),
         apiGet('/validaciones?estado=PENDIENTE').catch(() => []),
         apiGet('/polizas/renovaciones?dias=30').catch(() => []),
@@ -331,7 +331,7 @@ function construirItems(raw, tipo) {
           diasTranscurridos: diasDesde(r.fecha_solicitud),
           responsable: null,
           prioridad: 'MEDIA',
-          linkExpediente: '/core/siniestros',
+          linkExpediente: '/core/endosos',
         };
       case 'siniestros':
         return {

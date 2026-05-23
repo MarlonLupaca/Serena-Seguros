@@ -79,7 +79,6 @@ public class AuthService {
         String refreshToken = jwtTokenProvider
                 .generarRefreshToken(usuario.getIdUsuario());
 
-        // 🔥 CORRECCIÓN CLAVE:
         // Ejecutar auditoría DESPUÉS del commit para evitar locks
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
