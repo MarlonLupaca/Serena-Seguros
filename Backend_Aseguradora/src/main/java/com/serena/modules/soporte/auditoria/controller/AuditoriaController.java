@@ -53,14 +53,13 @@ public class AuditoriaController {
             @RequestParam(defaultValue = "100") int limite
     ) {
         var paginacion = PageRequest.of(0, Math.min(Math.max(limite, 1), 500));
-        List<AuditoriaAccion> data;
-        if (modulo != null && !modulo.isBlank()) {
-            data = repo.findByModuloOrderByFechaDesc(modulo, paginacion);
-        } else if (username != null && !username.isBlank()) {
-            data = repo.findByUsernameOrderByFechaDesc(username, paginacion);
-        } else {
-            data = repo.findAllByOrderByFechaDesc(paginacion);
-        }
+        List<AuditoriaAccion> data = repo.buscarConFiltros(modulo, username, paginacion);
         return ResponseEntity.ok(data.stream().map(AuditoriaResponse::from).toList());
+    }
+
+    @GetMapping("/modulos")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<String>> listarModulos() {
+        return ResponseEntity.ok(repo.findDistinctModulos());
     }
 }

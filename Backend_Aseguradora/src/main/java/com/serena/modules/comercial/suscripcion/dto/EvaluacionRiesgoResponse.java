@@ -15,7 +15,8 @@ public record EvaluacionRiesgoResponse(
         BigDecimal factorRiesgo,
         String estadoSuscripcion,
         String motivoRechazo,
-        LocalDateTime fechaEvaluacion
+        LocalDateTime fechaEvaluacion,
+        BigDecimal sumaAsegurada
 ) {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -26,6 +27,10 @@ public record EvaluacionRiesgoResponse(
         } catch (Exception ex) {
             datos = Map.of();
         }
+        BigDecimal sumaAsegurada = null;
+        if (datos.containsKey("sumaAsegurada")) {
+            sumaAsegurada = new BigDecimal(datos.get("sumaAsegurada").toString());
+        }
         return new EvaluacionRiesgoResponse(
                 e.getIdEvaluacion(),
                 e.getCotizacion().getIdCotizacion(),
@@ -34,7 +39,8 @@ public record EvaluacionRiesgoResponse(
                 e.getFactorRiesgo(),
                 e.getEstadoSuscripcion().name(),
                 e.getMotivoRechazo(),
-                e.getFechaEvaluacion()
+                e.getFechaEvaluacion(),
+                sumaAsegurada
         );
     }
 }

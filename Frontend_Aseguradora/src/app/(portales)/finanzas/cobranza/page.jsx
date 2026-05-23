@@ -2,7 +2,19 @@
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
-import { MdAttachMoney, MdCalendarToday, MdCheckCircle, MdHourglassEmpty, MdPriceCheck, MdSearch, MdWarning, MdUploadFile, MdClose, MdExpandMore, MdExpandLess } from 'react-icons/md';
+import {
+  MdAttachMoney,
+  MdCalendarToday,
+  MdCheckCircle,
+  MdHourglassEmpty,
+  MdPriceCheck,
+  MdSearch,
+  MdWarning,
+  MdUploadFile,
+  MdClose,
+  MdExpandMore,
+  MdExpandLess,
+} from 'react-icons/md';
 import Image from 'next/image';
 import { apiGet, apiPatch, apiUploadFile } from '@/lib/api';
 import { estiloTipo } from '@/lib/tipoSeguroConfig';
@@ -33,9 +45,11 @@ export default function CobranzaPage() {
   const [filtro, setFiltro] = useState('PENDIENTE');
   const [busq, setBusq] = useState('');
   const [actualizandoId, setActualizandoId] = useState(null);
-const [modalImportar, setModalImportar] = useState(false);
+  const [modalImportar, setModalImportar] = useState(false);
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => {
+    cargar();
+  }, []);
 
   const cargar = async () => {
     setCargando(true);
@@ -50,7 +64,7 @@ const [modalImportar, setModalImportar] = useState(false);
       setCargando(false);
     }
   };
-const marcar = async (id) => {
+  const marcar = async (id) => {
     setActualizandoId(id);
     try {
       await apiPatch(`/cobranza/${id}/pagar`);
@@ -87,19 +101,52 @@ const marcar = async (id) => {
 
       {resumen && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Kpi label="Recaudado" val={formatearMoneda(resumen.recaudado)} icon={MdCheckCircle} bg="bg-emerald-100" color="text-emerald-600" />
-          <Kpi label="Por cobrar" val={formatearMoneda(resumen.por_cobrar)} icon={MdHourglassEmpty} bg="bg-amber-100" color="text-amber-600" />
-          <Kpi label="Vencido" val={formatearMoneda(resumen.vencido)} icon={MdWarning} bg="bg-rose-100" color="text-rose-500" />
-          <Kpi label="Total cuotas" val={resumen.total_cuotas} icon={MdAttachMoney} bg="bg-primary/10" color="text-primary" />
+          <Kpi
+            label="Recaudado"
+            val={formatearMoneda(resumen.recaudado)}
+            icon={MdCheckCircle}
+            bg="bg-emerald-100"
+            color="text-emerald-600"
+          />
+          <Kpi
+            label="Por cobrar"
+            val={formatearMoneda(resumen.por_cobrar)}
+            icon={MdHourglassEmpty}
+            bg="bg-amber-100"
+            color="text-amber-600"
+          />
+          <Kpi
+            label="Vencido"
+            val={formatearMoneda(resumen.vencido)}
+            icon={MdWarning}
+            bg="bg-rose-100"
+            color="text-rose-500"
+          />
+          <Kpi
+            label="Total cuotas"
+            val={resumen.total_cuotas}
+            icon={MdAttachMoney}
+            bg="bg-primary/10"
+            color="text-primary"
+          />
         </div>
       )}
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <MdSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
-          <input placeholder="Buscar..." value={busq} onChange={(e) => setBusq(e.target.value)} className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary" />
+          <input
+            placeholder="Buscar..."
+            value={busq}
+            onChange={(e) => setBusq(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary"
+          />
         </div>
-        <select value={filtro} onChange={(e) => setFiltro(e.target.value)} className="px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary appearance-none">
+        <select
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+          className="px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary appearance-none"
+        >
           <option value="todos">Todas</option>
           <option value="PENDIENTE">Pendientes</option>
           <option value="VENCIDO">Vencidas</option>
@@ -108,11 +155,15 @@ const marcar = async (id) => {
       </div>
 
       {cargando ? (
-        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">Cargando...</div>
+        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
+          Cargando...
+        </div>
       ) : error ? (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-600 text-center">{error}</div>
       ) : filtradas.length === 0 ? (
-        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">Sin cuotas con este filtro</div>
+        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
+          Sin cuotas con este filtro
+        </div>
       ) : (
         <GruposPoliza cuotas={filtradas} marcar={marcar} actualizandoId={actualizandoId} />
       )}
@@ -135,7 +186,8 @@ function GruposPoliza({ cuotas, marcar, actualizandoId }) {
   const grupos = {};
   cuotas.forEach((c) => {
     const key = c.id_poliza || 0;
-    if (!grupos[key]) grupos[key] = { nombre: c.poliza_nombre || 'Sin póliza', tipo: c.poliza_tipo, id: key, items: [] };
+    if (!grupos[key])
+      grupos[key] = { nombre: c.poliza_nombre || 'Sin póliza', tipo: c.poliza_tipo, id: key, items: [] };
     grupos[key].items.push(c);
   });
   const lista = Object.values(grupos).sort((a, b) => a.nombre.localeCompare(b.nombre));
@@ -158,16 +210,25 @@ function GrupoPoliza({ grupo, marcar, actualizandoId }) {
   return (
     <div className="bg-bg rounded-2xl border border-border overflow-hidden">
       <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
-      <button onClick={() => setAbierto(!abierto)} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-bg-soft transition-colors">
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg} overflow-hidden`}>
-          <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain" />
-        </div>
+      <button
+        onClick={() => setAbierto(!abierto)}
+        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-bg-soft transition-colors"
+      >
+        <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain w-10" />
+
         <div className="flex-1 min-w-0 text-left">
           <p className="text-sm font-bold text-text">{grupo.nombre}</p>
-          <p className="text-xs text-text-soft mt-0.5">POL-{String(grupo.id).padStart(6, '0')} · {grupo.items.length} cuota{grupo.items.length > 1 ? 's' : ''} · {pendientes} pendiente{pendientes !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-text-soft mt-0.5">
+            POL-{String(grupo.id).padStart(6, '0')} · {grupo.items.length} cuota{grupo.items.length > 1 ? 's' : ''} ·{' '}
+            {pendientes} pendiente{pendientes !== 1 ? 's' : ''}
+          </p>
         </div>
         <p className="text-sm font-bold text-text shrink-0">{formatearMoneda(totalMonto)}</p>
-        {abierto ? <MdExpandLess size={18} className="text-text-soft shrink-0" /> : <MdExpandMore size={18} className="text-text-soft shrink-0" />}
+        {abierto ? (
+          <MdExpandLess size={18} className="text-text-soft shrink-0" />
+        ) : (
+          <MdExpandMore size={18} className="text-text-soft shrink-0" />
+        )}
       </button>
       {abierto && (
         <div className="border-t border-border divide-y divide-border/50">
@@ -178,16 +239,25 @@ function GrupoPoliza({ grupo, marcar, actualizandoId }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-text">Cuota {c.numero_cuota}</p>
-                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />{est.label}
+                    <span
+                      className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+                      {est.label}
                     </span>
                   </div>
-                  <p className="text-xs text-text-soft mt-0.5 flex items-center gap-1"><MdCalendarToday size={11} /> Vence {formatearFecha(c.fecha_vencimiento)}</p>
+                  <p className="text-xs text-text-soft mt-0.5 flex items-center gap-1">
+                    <MdCalendarToday size={11} /> Vence {formatearFecha(c.fecha_vencimiento)}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <p className="text-sm font-bold text-text">{formatearMoneda(c.monto)}</p>
                   {c.estado_pago !== 'PAGADO' && (
-                    <button onClick={() => marcar(c.id_cuota)} disabled={actualizandoId === c.id_cuota} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-success hover:bg-success/80 text-white text-xs font-semibold transition-colors disabled:opacity-50">
+                    <button
+                      onClick={() => marcar(c.id_cuota)}
+                      disabled={actualizandoId === c.id_cuota}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-success hover:bg-success/80 text-white text-xs font-semibold transition-colors disabled:opacity-50"
+                    >
                       <MdPriceCheck size={13} /> Pagar
                     </button>
                   )}
@@ -242,9 +312,9 @@ function ModalImportarCobranza({ onClose, onSuccess }) {
           {!resultado && (
             <>
               <p className="text-xs text-text-soft leading-relaxed">
-                Sube un CSV con los IDs de las cuotas a marcar como pagadas. Formato esperado: la primera columna
-                debe ser <code className="bg-bg-soft px-1 rounded">id_cuota</code>; las cuotas listadas pasan a
-                estado PAGADO.
+                Sube un CSV con los IDs de las cuotas a marcar como pagadas. Formato esperado: la primera columna debe
+                ser <code className="bg-bg-soft px-1 rounded">id_cuota</code>; las cuotas listadas pasan a estado
+                PAGADO.
               </p>
               <input
                 type="file"
@@ -309,8 +379,13 @@ function Stat({ label, val, color }) {
 function Kpi({ label, val, icon: Icon, bg, color }) {
   return (
     <div className="bg-bg rounded-xl border border-border px-4 py-3 flex items-center gap-3">
-      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${bg}`}><Icon size={17} className={color} /></div>
-      <div><p className={`text-xl font-bold leading-tight ${color}`}>{val}</p><p className="text-xs text-text-soft">{label}</p></div>
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${bg}`}>
+        <Icon size={17} className={color} />
+      </div>
+      <div>
+        <p className={`text-xl font-bold leading-tight ${color}`}>{val}</p>
+        <p className="text-xs text-text-soft">{label}</p>
+      </div>
     </div>
   );
 }

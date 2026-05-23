@@ -16,5 +16,16 @@ public interface AuditoriaRepository extends JpaRepository<AuditoriaAccion, Inte
 
     List<AuditoriaAccion> findByUsernameOrderByFechaDesc(String username, Pageable pageable);
 
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT a.modulo FROM AuditoriaAccion a WHERE a.modulo IS NOT NULL")
+    List<String> findDistinctModulos();
+
     List<AuditoriaAccion> findByModuloAndDetalleStartingWithOrderByFechaAsc(String modulo, String prefijo);
+
+    @org.springframework.data.jpa.repository.Query("SELECT a FROM AuditoriaAccion a " +
+            "WHERE (:modulo IS NULL OR :modulo = '' OR a.modulo = :modulo) " +
+            "AND (:username IS NULL OR :username = '' OR LOWER(a.username) LIKE LOWER(CONCAT('%', :username, '%'))) " +
+            "ORDER BY a.fecha DESC")
+    List<AuditoriaAccion> buscarConFiltros(@org.springframework.data.repository.query.Param("modulo") String modulo,
+                                           @org.springframework.data.repository.query.Param("username") String username,
+                                           Pageable pageable);
 }

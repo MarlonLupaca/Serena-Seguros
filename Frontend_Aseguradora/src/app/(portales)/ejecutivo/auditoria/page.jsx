@@ -33,6 +33,7 @@ export default function AuditoriaPage() {
   const [error, setError] = useState(null);
   const [filtroModulo, setFiltroModulo] = useState('');
   const [filtroUsuario, setFiltroUsuario] = useState('');
+  const [modulos, setModulos] = useState([]);
 
   async function cargar() {
     setCargando(true);
@@ -52,10 +53,17 @@ export default function AuditoriaPage() {
   }
 
   useEffect(() => {
-    cargar();
+    apiGet('/auditoria/modulos')
+      .then((res) => setModulos(res || []))
+      .catch(() => {});
   }, []);
 
-  const modulos = ['', 'auth', 'cobranza', 'siniestros', 'aprobaciones'];
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      cargar();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [filtroModulo, filtroUsuario]);
 
   return (
     <div className="flex flex-col gap-5 p-6">
@@ -77,7 +85,8 @@ export default function AuditoriaPage() {
             onChange={(e) => setFiltroModulo(e.target.value)}
             className="border border-border rounded-lg px-3 py-2 text-sm bg-bg"
           >
-            {modulos.map((m) => <option key={m} value={m}>{m || 'Todos'}</option>)}
+            <option value="">Todos</option>
+            {modulos.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
 
@@ -89,12 +98,6 @@ export default function AuditoriaPage() {
             onChange={(e) => setFiltroUsuario(e.target.value)}
             className="border border-border rounded-lg px-3 py-2 text-sm bg-bg"
           />
-        </div>
-
-        <div className="flex items-end">
-          <button onClick={cargar} className="bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-primary-hover">
-            Filtrar
-          </button>
         </div>
       </div>
 

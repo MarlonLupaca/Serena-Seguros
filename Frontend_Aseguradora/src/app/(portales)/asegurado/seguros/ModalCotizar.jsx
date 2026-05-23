@@ -51,6 +51,7 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
   ]);
 
   const [documentos, setDocumentos] = useState([]);
+  const [documentosRiesgo, setDocumentosRiesgo] = useState([]);
   const [terminos, setTerminos] = useState(false);
   const [declaracion, setDeclaracion] = useState(false);
 
@@ -91,6 +92,21 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
         });
         setCotizacion(lead);
       }
+
+      if (documentosRiesgo.length > 0) {
+        for (const f of documentosRiesgo) {
+          try {
+            const fd = new FormData();
+            fd.append('archivo', f);
+            fd.append('tabla_referencia', 'cotizacion');
+            fd.append('id_referencia', String(lead.id_cotizacion));
+            await apiUploadFile('/mis-documentos', fd);
+          } catch (eFile) {
+            console.warn('No se pudo subir', f.name, eFile);
+          }
+        }
+      }
+
       const evalResp = await apiPost(`/mis-cotizaciones/${lead.id_cotizacion}/evaluacion`, {
         datos_riesgo: datosRiesgo,
         suma_asegurada: Number(sumaAsegurada),
@@ -309,6 +325,45 @@ export default function ModalCotizar({ producto, onClose, prefill }) {
                   placeholder="Ej: 50000"
                 />
               </div>
+
+              <div>
+                <p className="text-xs font-medium text-text-soft mb-1.5">Documentos de respaldo (Opcional)</p>
+                <label className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:bg-bg-soft transition-colors cursor-pointer">
+                  <MdUploadFile size={20} className="text-primary" />
+                  <p className="text-xs text-text font-medium">
+                    {documentosRiesgo.length > 0 ? 'Agregar mas archivos' : 'Sube fotos, exámenes o evidencia'}
+                  </p>
+                  <p className="text-[10px] text-text-soft text-center">PDF, JPG, PNG · Max 10 MB</p>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx"
+                    className="hidden"
+                    onChange={(e) => {
+                      const nuevos = Array.from(e.target.files || []).filter((f) => f.size < 10 * 1024 * 1024);
+                      setDocumentosRiesgo((prev) => [...prev, ...nuevos]);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+                {documentosRiesgo.length > 0 && (
+                  <div className="mt-2 flex flex-col gap-1.5">
+                    {documentosRiesgo.map((f, i) => (
+                      <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-bg-soft">
+                        <MdAttachFile size={14} className="text-primary shrink-0" />
+                        <p className="text-xs text-text flex-1 truncate">{f.name}</p>
+                        <button
+                          onClick={() => setDocumentosRiesgo((prev) => prev.filter((_, idx) => idx !== i))}
+                          className="p-1 rounded hover:bg-rose-100 text-text-soft hover:text-rose-500"
+                        >
+                          <MdDeleteOutline size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={irACotizacionPreliminar}
                 disabled={cargando}

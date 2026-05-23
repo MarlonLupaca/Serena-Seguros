@@ -38,7 +38,11 @@ public class EvaluacionRiesgoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cotizacion", idCotizacion));
 
         ProductoSeguro.TipoSeguro tipo = ProductoSeguro.TipoSeguro.valueOf(lead.getProductoInteres().name());
-        String datosJson = serializar(request.datosRiesgo());
+        Map<String, Object> mutableDatos = new java.util.HashMap<>(request.datosRiesgo());
+        if (request.sumaAsegurada() != null) {
+            mutableDatos.put("sumaAsegurada", request.sumaAsegurada());
+        }
+        String datosJson = serializar(mutableDatos);
 
         BigDecimal factor;
         ProductoSeguro producto = lead.getProducto();
