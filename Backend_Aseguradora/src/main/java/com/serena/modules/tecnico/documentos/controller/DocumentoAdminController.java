@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.serena.modules.tecnico.documentos.dto.DocumentoResponse;
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/documentos")
@@ -21,6 +23,14 @@ import java.io.IOException;
 public class DocumentoAdminController {
 
     private final DocumentoService documentoService;
+
+    @GetMapping("/{tabla}/{idReferencia}")
+    public ResponseEntity<List<DocumentoResponse>> listarPorReferencia(
+            @PathVariable String tabla,
+            @PathVariable Integer idReferencia
+    ) {
+        return ResponseEntity.ok(documentoService.listarPorReferencia(tabla, idReferencia));
+    }
 
     @GetMapping("/{id}/archivo")
     public ResponseEntity<Resource> descargar(@PathVariable Integer id) throws IOException {

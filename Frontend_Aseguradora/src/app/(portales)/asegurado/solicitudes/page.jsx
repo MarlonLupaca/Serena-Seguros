@@ -1,4 +1,5 @@
 'use client';
+import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import {
@@ -18,7 +19,7 @@ import {
   MdClose,
   MdLock,
 } from 'react-icons/md';
-import { apiGet } from '@/lib/api';
+import { apiGet, apiPost } from '@/lib/api';
 
 const TIPO_STYLES = {
   VEHICULAR: { icon: MdDirectionsCar, accentBg: 'bg-primary/10', accentText: 'text-primary', label: 'Vehicular' },
@@ -210,6 +211,9 @@ function DetalleModal({ cotizacion, onClose, onRefresh }) {
   const [propuesta, setPropuesta] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [verificando, setVerificando] = useState(false);
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
+  const [declaracionVeraz, setDeclaracionVeraz] = useState(false);
+  const [aceptando, setAceptando] = useState(false);
 
   const tipoStyle = estiloTipo(cotizacion.producto_interes);
   const TipoIcon = tipoStyle.icon;
@@ -244,6 +248,27 @@ function DetalleModal({ cotizacion, onClose, onRefresh }) {
       // ignore
     } finally {
       setVerificando(false);
+    }
+  };
+
+  const aceptarPropuesta = async () => {
+    if (!aceptaTerminos || !declaracionVeraz) {
+      toast.error('Debes aceptar los términos y declarar la veracidad de la información.');
+      return;
+    }
+    setAceptando(true);
+    try {
+      await apiPost(`/mis-cotizaciones/${cotizacion.id_cotizacion}/aceptar`, {
+        acepta_terminos: aceptaTerminos,
+        declaracion_veraz: declaracionVeraz,
+      });
+      toast.success('¡Felicidades! Póliza emitida exitosamente.');
+      onRefresh();
+      onClose();
+    } catch (e) {
+      toast.error(e.mensaje || 'No se pudo aceptar la propuesta.');
+    } finally {
+      setAceptando(false);
     }
   };
 
@@ -354,34 +379,69 @@ function DetalleModal({ cotizacion, onClose, onRefresh }) {
 
               {/* Proposal info */}
               {propuesta && (
-                <div className="bg-bg-soft rounded-xl p-4 border border-border">
-                  <p className="text-xs font-semibold text-text mb-3">Propuesta formal</p>
-                  <div className="grid grid-cols-3 gap-3 text-xs">
-                    <div>
-                      <p className="text-text-soft">Prima</p>
-                      <p className="font-bold text-text">{formatearMoneda(propuesta.prima_calculada)}</p>
-                    </div>
-                    <div>
-                      <p className="text-text-soft">Suma asegurada</p>
-                      <p className="font-bold text-text">{formatearMoneda(propuesta.suma_asegurada)}</p>
-                    </div>
-                    <div>
-                      <p className="text-text-soft">Valida hasta</p>
-                      <p className="font-bold text-text">{formatearFecha(propuesta.valida_hasta)}</p>
-                    </div>
-                    <div>
-                      <p className="text-text-soft">Deducible</p>
-                      <p className="font-bold text-text">{formatearMoneda(propuesta.deducible)}</p>
-                    </div>
-                    <div>
-                      <p className="text-text-soft">Frecuencia</p>
-                      <p className="font-bold text-text">{propuesta.frecuencia_pago}</p>
-                    </div>
-                    <div>
-                      <p className="text-text-soft">Vigencia</p>
-                      <p className="font-bold text-text">{propuesta.vigencia_meses} meses</p>
+                <div className="flex flex-col gap-3">
+                  <div className="bg-bg-soft rounded-xl p-4 border border-border">
+                    <p className="text-xs font-semibold text-text mb-3">Propuesta formal</p>
+                    <div className="grid grid-cols-3 gap-3 text-xs">
+                      <div>
+                        <p className="text-text-soft">Prima</p>
+                        <p className="font-bold text-text">{formatearMoneda(propuesta.prima_calculada)}</p>
+                      </div>
+                      <div>
+                        <p className="text-text-soft">Suma asegurada</p>
+                        <p className="font-bold text-text">{formatearMoneda(propuesta.suma_asegurada)}</p>
+                      </div>
+                      <div>
+                        <p className="text-text-soft">Valida hasta</p>
+                        <p className="font-bold text-text">{formatearFecha(propuesta.valida_hasta)}</p>
+                      </div>
+                      <div>
+                        <p className="text-text-soft">Deducible</p>
+                        <p className="font-bold text-text">{formatearMoneda(propuesta.deducible)}</p>
+                      </div>
+                      <div>
+                        <p className="text-text-soft">Frecuencia</p>
+                        <p className="font-bold text-text">{propuesta.frecuencia_pago}</p>
+                      </div>
+                      <div>
+                        <p className="text-text-soft">Vigencia</p>
+                        <p className="font-bold text-text">{propuesta.vigencia_meses} meses</p>
+                      </div>
                     </div>
                   </div>
+
+                  {cotizacion.estado_kanban !== 'GANADO' && cotizacion.estado_kanban !== 'PERDIDO' && (
+                    <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                      <p className="text-sm font-semibold text-blue-900 mb-3">Contratación de Póliza</p>
+                      <div className="flex flex-col gap-2 mb-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={aceptaTerminos}
+                            onChange={(e) => setAceptaTerminos(e.target.checked)}
+                            className="w-4 h-4 rounded text-primary border-border focus:ring-primary cursor-pointer"
+                          />
+                          <span className="text-xs text-blue-800">Acepto los términos y condiciones de la póliza.</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={declaracionVeraz}
+                            onChange={(e) => setDeclaracionVeraz(e.target.checked)}
+                            className="w-4 h-4 rounded text-primary border-border focus:ring-primary cursor-pointer"
+                          />
+                          <span className="text-xs text-blue-800">Declaro que toda la información brindada es veraz.</span>
+                        </label>
+                      </div>
+                      <button
+                        onClick={aceptarPropuesta}
+                        disabled={aceptando || !aceptaTerminos || !declaracionVeraz}
+                        className="w-full py-2.5 flex items-center justify-center gap-2 rounded-xl bg-primary text-text-inverse text-sm font-semibold hover:bg-primary-hover disabled:opacity-50 transition-colors"
+                      >
+                        {aceptando ? 'Aceptando...' : 'Aceptar y Contratar'} <MdCheckCircle size={16} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
