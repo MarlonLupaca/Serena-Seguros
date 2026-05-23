@@ -14,6 +14,7 @@ import {
 import Image from 'next/image';
 import { apiGet } from '@/lib/api';
 import { estiloTipo } from '@/lib/tipoSeguroConfig';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADO_CONFIG = {
   PAGADA: {
@@ -180,7 +181,7 @@ export default function ComisionesPage() {
           </p>
         </div>
       ) : (
-        <GruposComision comisiones={filtradas} />
+        <TablaComisiones comisiones={filtradas} />
       )}
     </div>
   );
@@ -200,78 +201,58 @@ function KpiCard({ label, val, icon: Icon, bg, color }) {
   );
 }
 
-function GruposComision({ comisiones }) {
-  const grupos = {};
-  comisiones.forEach((c) => {
-    const key = c.id_poliza || 0;
-    if (!grupos[key])
-      grupos[key] = { nombre: c.poliza_nombre || 'Sin póliza', tipo: c.poliza_tipo, id: key, items: [] };
-    grupos[key].items.push(c);
-  });
-  const lista = Object.values(grupos).sort((a, b) => a.nombre.localeCompare(b.nombre));
-
+function TablaComisiones({ comisiones }) {
   return (
-    <div className="flex flex-col gap-4">
-      {lista.map((g) => (
-        <GrupoComision key={g.id} grupo={g} />
-      ))}
-    </div>
-  );
-}
-
-function GrupoComision({ grupo }) {
-  const [abierto, setAbierto] = useState(true);
-  const tipoStyle = estiloTipo(grupo.tipo);
-  const totalMonto = grupo.items.reduce((acc, c) => acc + Number(c.monto_generado || 0), 0);
-  const pendientes = grupo.items.filter((c) => c.estado_pago === 'PENDIENTE').length;
-
-  return (
-    <div className="bg-bg rounded-2xl border border-border overflow-hidden">
-      <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
-      <button
-        onClick={() => setAbierto(!abierto)}
-        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-bg-soft transition-colors"
-      >
-        <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain w-10" />
-
-        <div className="flex-1 min-w-0 text-left">
-          <p className="text-sm font-bold text-text">{grupo.nombre}</p>
-          <p className="text-xs text-text-soft mt-0.5">
-            POL-{String(grupo.id).padStart(6, '0')} · {grupo.items.length} comisión{grupo.items.length > 1 ? 'es' : ''}{' '}
-            · {pendientes} pendiente{pendientes !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <p className="text-sm font-bold text-text shrink-0">{formatearMoneda(totalMonto)}</p>
-        {abierto ? (
-          <MdExpandLess size={18} className="text-text-soft shrink-0" />
-        ) : (
-          <MdExpandMore size={18} className="text-text-soft shrink-0" />
-        )}
-      </button>
-      {abierto && (
-        <div className="border-t border-border divide-y divide-border/50">
-          {grupo.items.map((c) => {
-            const est = ESTADO_CONFIG[c.estado_pago] || ESTADO_CONFIG.PENDIENTE;
-            return (
-              <div key={c.id_comision} className="px-4 py-3 flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-text">COM-{String(c.id_comision).padStart(6, '0')}</p>
-                    <span
-                      className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-                      {est.label}
-                    </span>
+    <Table>
+      <TableHeader>
+        <TableHead>ID Comisión</TableHead>
+        <TableHead>Póliza</TableHead>
+        <TableHead>Porcentaje</TableHead>
+        <TableHead>Estado</TableHead>
+        <TableHead align="right">Monto</TableHead>
+      </TableHeader>
+      <TableBody>
+        {comisiones.map((c) => {
+          const est = ESTADO_CONFIG[c.estado_pago] || ESTADO_CONFIG.PENDIENTE;
+          const tipoStyle = estiloTipo(c.poliza_tipo);
+          return (
+            <TableRow key={c.id_comision}>
+              <TableCell className="text-sm font-medium text-text">
+                COM-{String(c.id_comision).padStart(6, '0')}
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  {tipoStyle?.imagen && (
+                    <Image
+                      src={tipoStyle.imagen}
+                      width={24}
+                      height={24}
+                      alt=""
+                      className="object-contain w-6 h-6 opacity-80"
+                    />
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-text">{c.poliza_nombre || 'Sin póliza'}</p>
+                    <p className="text-xs text-text-soft mt-0.5">POL-{String(c.id_poliza).padStart(6, '0')}</p>
                   </div>
-                  <p className="text-xs text-text-soft mt-0.5">Comisión: {c.porcentaje}% sobre la prima</p>
                 </div>
-                <p className="text-base font-bold text-text shrink-0">{formatearMoneda(c.monto_generado)}</p>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
+              </TableCell>
+              <TableCell className="text-sm text-text-soft">{c.porcentaje}%</TableCell>
+              <TableCell>
+                <span
+                  className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${est.badge}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+                  {est.label}
+                </span>
+              </TableCell>
+              <TableCell align="right" className="text-sm font-bold text-text">
+                {formatearMoneda(c.monto_generado)}
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }

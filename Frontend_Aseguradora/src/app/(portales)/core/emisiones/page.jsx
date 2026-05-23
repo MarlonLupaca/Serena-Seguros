@@ -15,8 +15,10 @@ import {
   MdFlight,
   MdBusiness,
   MdSend,
+  MdPets,
 } from 'react-icons/md';
 import { apiGet, apiPatch, apiPost } from '@/lib/api';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const TIPO_STYLES = {
   VEHICULAR: { icon: MdDirectionsCar, accentBg: 'bg-primary/10', accentText: 'text-primary' },
@@ -25,6 +27,7 @@ const TIPO_STYLES = {
   HOGAR: { icon: MdHome, accentBg: 'bg-amber-100', accentText: 'text-amber-600' },
   VIAJE: { icon: MdFlight, accentBg: 'bg-sky-100', accentText: 'text-sky-600' },
   EMPRESA: { icon: MdBusiness, accentBg: 'bg-violet-100', accentText: 'text-violet-600' },
+  MASCOTAS: { icon: MdPets, accentBg: 'bg-orange-100', accentText: 'text-orange-600' },
 };
 
 const ESTADOS = {
@@ -155,16 +158,26 @@ export default function EmisionesPage() {
           <p className="text-sm font-medium text-text">Sin resultados</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {filtradas.map((p) => (
-            <PolizaRow
-              key={p.id_poliza}
-              p={p}
-              actualizando={actualizandoId === p.id_poliza}
-              onCambiarEstado={(estado) => cambiarEstado(p.id_poliza, estado)}
-            />
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableHead>Póliza</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Producto</TableHead>
+            <TableHead>Vigencia</TableHead>
+            <TableHead align="right">Prima Total</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filtradas.map((p) => (
+              <PolizaTableRow
+                key={p.id_poliza}
+                p={p}
+                actualizando={actualizandoId === p.id_poliza}
+                onCambiarEstado={(estado) => cambiarEstado(p.id_poliza, estado)}
+              />
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {modalNueva && (
@@ -181,68 +194,80 @@ export default function EmisionesPage() {
   );
 }
 
-function PolizaRow({ p, onCambiarEstado, actualizando }) {
+function PolizaTableRow({ p, onCambiarEstado, actualizando }) {
   const tipoStyle = estiloTipo(p.producto?.tipo_seguro);
   const Icon = tipoStyle.icon;
   const est = ESTADOS[p.estado_poliza] || ESTADOS.PENDIENTE;
   const [menu, setMenu] = useState(false);
 
   return (
-    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow">
-      <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
-      <div className="p-4 flex items-start gap-4 flex-wrap sm:flex-nowrap">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
-          <Icon size={20} className={tipoStyle.accentText} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-bold text-text">POL-{String(p.id_poliza).padStart(6, '0')}</p>
-            <span
-              className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-              {est.label}
-            </span>
+    <TableRow>
+      <TableCell>
+        <p className="text-sm font-bold text-text">POL-{String(p.id_poliza).padStart(6, '0')}</p>
+      </TableCell>
+
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
+            <Icon size={18} className={tipoStyle.accentText} />
           </div>
-          <p className="text-xs text-text-soft mt-0.5">
-            {p.producto?.nombre} · {p.producto?.tipo_seguro}
-          </p>
-          <p className="text-xs text-text-soft mt-1 flex items-center gap-1 flex-wrap">
-            <MdCalendarToday size={11} />
-            {formatearFecha(p.vigencia_inicio)} → {formatearFecha(p.vigencia_fin)}
-          </p>
+          <div>
+            <p className="text-sm font-bold text-text">{p.producto?.nombre}</p>
+            <p className="text-xs text-text-soft mt-0.5">{p.producto?.tipo_seguro}</p>
+          </div>
         </div>
-        <div className="flex flex-col items-end gap-2 shrink-0 relative">
-          <p className="text-sm font-bold text-text">{formatearMoneda(p.prima_total)}</p>
+      </TableCell>
+      <TableCell>
+        <span
+          className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${est.badge}`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+          {est.label}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span className="flex items-center gap-1.5 text-xs text-text-soft">
+          <MdCalendarToday size={12} />
+          {formatearFecha(p.vigencia_inicio)} → {formatearFecha(p.vigencia_fin)}
+        </span>
+      </TableCell>
+      <TableCell align="right" className="text-sm font-bold text-text">
+        {formatearMoneda(p.prima_total)}
+      </TableCell>
+      <TableCell align="right">
+        <div className="relative inline-block text-left">
           <button
             onClick={() => setMenu((v) => !v)}
             disabled={actualizando}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors disabled:opacity-50"
           >
-            {actualizando ? 'Actualizando...' : 'Cambiar estado'}
+            {actualizando ? '...' : 'Cambiar estado'}
           </button>
           {menu && (
-            <div className="absolute right-0 top-full mt-1 w-44 bg-bg border border-border rounded-xl shadow-lg z-10 overflow-hidden">
-              {Object.entries(ESTADOS)
-                .filter(([k]) => k !== p.estado_poliza)
-                .map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      setMenu(false);
-                      onCambiarEstado(key);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-soft hover:bg-bg-soft transition-colors"
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                    {cfg.label}
-                  </button>
-                ))}
-            </div>
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setMenu(false)} />
+              <div className="absolute right-0 top-full mt-1 w-36 bg-bg border border-border rounded-xl shadow-lg z-20 overflow-hidden">
+                {Object.entries(ESTADOS)
+                  .filter(([k]) => k !== p.estado_poliza)
+                  .map(([key, cfg]) => (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setMenu(false);
+                        onCambiarEstado(key);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-text-soft hover:bg-bg-soft transition-colors"
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                      {cfg.label}
+                    </button>
+                  ))}
+              </div>
+            </>
           )}
         </div>
-      </div>
-    </div>
+      </TableCell>
+    </TableRow>
   );
 }
 

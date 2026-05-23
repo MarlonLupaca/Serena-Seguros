@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
@@ -14,6 +14,7 @@ import {
 } from 'react-icons/md';
 import { apiGet, apiPatch } from '@/lib/api';
 import ModalDetalleCliente from './ModalDetalleCliente';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADO_CRM = {
   NUEVO: { label: 'Nuevo', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-500' },
@@ -140,17 +141,26 @@ export default function ClientesPage() {
           <p className="text-xs text-text-soft">Prueba con otro filtro o búsqueda.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {filtrados.map((c) => (
-            <ClienteCard
-              key={c.id_cliente}
-              cliente={c}
-              actualizando={actualizandoId === c.id_cliente}
-              onCambiarEstado={(estado) => cambiarEstado(c.id_cliente, estado)}
-              onVerDetalle={() => setDetalleId(c.id_cliente)}
-            />
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableHead>Cliente</TableHead>
+            <TableHead>Contacto</TableHead>
+            <TableHead>Registro</TableHead>
+            <TableHead>Estado CRM</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filtrados.map((c) => (
+              <ClienteTableRow
+                key={c.id_cliente}
+                cliente={c}
+                actualizando={actualizandoId === c.id_cliente}
+                onCambiarEstado={(estado) => cambiarEstado(c.id_cliente, estado)}
+                onVerDetalle={() => setDetalleId(c.id_cliente)}
+              />
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {detalleId && <ModalDetalleCliente idCliente={detalleId} onClose={() => setDetalleId(null)} />}
@@ -158,83 +168,90 @@ export default function ClientesPage() {
   );
 }
 
-function ClienteCard({ cliente, onCambiarEstado, actualizando, onVerDetalle }) {
+function ClienteTableRow({ cliente, onCambiarEstado, actualizando, onVerDetalle }) {
   const est = ESTADO_CRM[cliente.estado_crm] || ESTADO_CRM.NUEVO;
   const [menu, setMenu] = useState(false);
   const iniciales = ((cliente.nombres || '')[0] || '') + ((cliente.apellidos || '')[0] || '');
 
   return (
-    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow ">
-      <div className="h-1 w-full bg-primary/30" />
-      <div className="p-5 flex items-start gap-4 flex-wrap sm:flex-nowrap">
-        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-sm font-bold text-primary uppercase shrink-0">
-          {iniciales || <MdPerson size={20} />}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-sm font-bold text-primary uppercase shrink-0">
+            {iniciales || <MdPerson size={18} />}
+          </div>
+          <div>
             <p className="text-sm font-bold text-text">
               {cliente.nombres} {cliente.apellidos}
             </p>
-            <span
-              className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-              {est.label}
-            </span>
-          </div>
-          <p className="text-xs text-text-soft mt-0.5">CLI-{String(cliente.id_cliente).padStart(6, '0')}</p>
-          <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-text-soft">
-            <span className="flex items-center gap-1">
-              <MdBadge size={11} /> DNI {cliente.documento_identidad}
-            </span>
-            <span className="flex items-center gap-1">
-              <MdEmail size={11} /> {cliente.email}
-            </span>
-            {cliente.telefono && (
-              <span className="flex items-center gap-1">
-                <MdPhone size={11} /> {cliente.telefono}
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <MdCalendarToday size={11} /> Desde {formatearFecha(cliente.fecha_registro)}
-            </span>
+            <p className="text-xs text-text-soft mt-0.5">CLI-{String(cliente.id_cliente).padStart(6, '0')}</p>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2 shrink-0 relative">
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1 text-xs text-text-soft">
+          <span className="flex items-center gap-1">
+            <MdBadge size={11} /> {cliente.documento_identidad}
+          </span>
+          <span className="flex items-center gap-1">
+            <MdEmail size={11} /> {cliente.email}
+          </span>
+          {cliente.telefono && (
+            <span className="flex items-center gap-1">
+              <MdPhone size={11} /> {cliente.telefono}
+            </span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <span className="flex items-center gap-1 text-xs text-text-soft">
+          <MdCalendarToday size={11} /> {formatearFecha(cliente.fecha_registro)}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${est.badge}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+          {est.label}
+        </span>
+      </TableCell>
+      <TableCell align="right">
+        <div className="flex items-center justify-end gap-2 relative">
           <button
             onClick={onVerDetalle}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
           >
             Ver detalle
           </button>
-          <button
-            onClick={() => setMenu((v) => !v)}
-            disabled={actualizando}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
-          >
-            <MdEdit size={13} /> {actualizando ? 'Actualizando...' : 'Cambiar estado'}
-          </button>
-          {menu && (
-            <div className="absolute right-0 top-full mt-1 w-44 bg-bg border border-border rounded-xl shadow-lg z-10 overflow-hidden">
-              {Object.entries(ESTADO_CRM)
-                .filter(([k]) => k !== cliente.estado_crm)
-                .map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      setMenu(false);
-                      onCambiarEstado(key);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-soft hover:bg-bg-soft transition-colors"
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                    Marcar como {cfg.label}
-                  </button>
-                ))}
-            </div>
-          )}
+          <div className="relative">
+            <button
+              onClick={() => setMenu((v) => !v)}
+              disabled={actualizando}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
+            >
+              <MdEdit size={13} /> {actualizando ? '...' : 'Estado'}
+            </button>
+            {menu && (
+              <div className="absolute right-0 top-full mt-1 w-44 bg-bg border border-border rounded-xl shadow-lg z-50 overflow-hidden text-left">
+                {Object.entries(ESTADO_CRM)
+                  .filter(([k]) => k !== cliente.estado_crm)
+                  .map(([key, cfg]) => (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setMenu(false);
+                        onCambiarEstado(key);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-soft hover:bg-bg-soft transition-colors"
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                      Marcar como {cfg.label}
+                    </button>
+                  ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </TableCell>
+    </TableRow>
   );
 }

@@ -12,6 +12,7 @@ import {
   MdPeopleOutline,
 } from 'react-icons/md';
 import { apiGet } from '@/lib/api';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const AREA_COLORS = {
   COMERCIAL: 'bg-primary/10 text-primary',
@@ -107,38 +108,67 @@ export default function EmpleadosPage() {
           <p className="text-sm font-medium text-text">Sin resultados</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {filtrados.map((e) => {
-            const iniciales = ((e.nombres || '')[0] || '') + ((e.apellidos || '')[0] || '');
-            return (
-              <div key={e.id_empleado} className="bg-bg rounded-2xl border border-border overflow-hidden">
-                <div className="h-1 w-full bg-primary/30" />
-                <div className="p-4 flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-sm font-bold text-primary uppercase shrink-0">
-                    {iniciales || <MdPerson size={20} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-bold text-text">{e.nombres} {e.apellidos}</p>
-                      <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full ${AREA_COLORS[e.area] || 'bg-bg-soft text-text-soft'}`}>
-                        {e.area}
-                      </span>
-                    </div>
-                    <p className="text-xs text-text-soft mt-0.5">EMP-{String(e.id_empleado).padStart(6, '0')}</p>
-                    <div className="flex flex-col gap-1 mt-2 text-xs text-text-soft">
-                      <span className="flex items-center gap-1"><MdBusinessCenter size={11} /> {e.cargo}</span>
-                      <span className="flex items-center gap-1"><MdBadge size={11} /> DNI {e.documento_identidad}</span>
-                      <span className="flex items-center gap-1"><MdEmail size={11} /> {e.email}</span>
-                      {e.telefono && <span className="flex items-center gap-1"><MdPhone size={11} /> {e.telefono}</span>}
-                      <span className="flex items-center gap-1"><MdAttachMoney size={11} /> {formatearMoneda(e.sueldo_base)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableHead>Empleado</TableHead>
+            <TableHead>Área / Cargo</TableHead>
+            <TableHead>DNI</TableHead>
+            <TableHead>Contacto</TableHead>
+            <TableHead align="right">Sueldo Base</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filtrados.map((e) => (
+              <EmpleadoTableRow key={e.id_empleado} e={e} />
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
+  );
+}
+
+function EmpleadoTableRow({ e }) {
+  const iniciales = ((e.nombres || '')[0] || '') + ((e.apellidos || '')[0] || '');
+  
+  return (
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-xs font-bold text-primary uppercase shrink-0">
+            {iniciales || <MdPerson size={16} />}
+          </div>
+          <div>
+            <p className="text-sm font-bold text-text truncate max-w-[200px]">{e.nombres} {e.apellidos}</p>
+            <p className="text-[11px] text-text-soft">EMP-{String(e.id_empleado).padStart(6, '0')}</p>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <p className="text-sm font-semibold text-text">{e.cargo}</p>
+        <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-1 uppercase ${AREA_COLORS[e.area] || 'bg-bg-soft text-text-soft'}`}>
+          {e.area}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span className="flex items-center gap-1 text-sm font-medium text-text">
+          <MdBadge size={14} className="text-text-soft" /> {e.documento_identidad}
+        </span>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          <span className="flex items-center gap-1.5 text-xs text-text-soft truncate max-w-[200px]">
+            <MdEmail size={12} /> {e.email}
+          </span>
+          {e.telefono && (
+            <span className="flex items-center gap-1.5 text-xs text-text-soft">
+              <MdPhone size={12} /> {e.telefono}
+            </span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell align="right">
+        <span className="text-sm font-bold text-emerald-600">{formatearMoneda(e.sueldo_base)}</span>
+      </TableCell>
+    </TableRow>
   );
 }

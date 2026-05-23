@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
@@ -21,6 +21,7 @@ import {
 } from 'react-icons/md';
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api';
 import ModalConfirm from '../../componentsMain/ModalConfirm';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const TIPOS = ['VEHICULAR', 'SALUD', 'VIDA', 'HOGAR', 'VIAJE', 'EMPRESA'];
 
@@ -47,7 +48,7 @@ function formatearMoneda(v) {
   return `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export default function TarifasPage() {
+export default function ProductosPage() {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -103,7 +104,7 @@ const eliminar = (p) => {
 
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-base font-bold text-text">Catálogo de productos y tarifas</h1>
+          <h1 className="text-base font-bold text-text">Catálogo de productos</h1>
           <p className="text-xs text-text-soft mt-0.5">
             Administra los productos del negocio asegurador: primas, tasas, deducibles y restricciones.
           </p>
@@ -162,16 +163,27 @@ const eliminar = (p) => {
           <p className="text-sm font-medium text-text">No hay productos</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {filtrados.map((p) => (
-            <ProductoCard
-              key={p.id_producto}
-              producto={p}
-              onEditar={() => setModal({ producto: p })}
-              onEliminar={() => eliminar(p)}
-            />
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableHead>Producto</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead align="right">Prima Base</TableHead>
+            <TableHead align="right">Tasa</TableHead>
+            <TableHead align="right">Edad min.</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filtrados.map((p) => (
+              <ProductoTableRow
+                key={p.id_producto}
+                producto={p}
+                onEditar={() => setModal({ producto: p })}
+                onEliminar={() => eliminar(p)}
+              />
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       <ModalConfirm
@@ -199,79 +211,65 @@ const eliminar = (p) => {
   );
 }
 
-function ProductoCard({ producto, onEditar, onEliminar }) {
+function ProductoTableRow({ producto, onEditar, onEliminar }) {
   const s = estiloTipo(producto.tipo_seguro);
   const Icon = s.icon;
+  const inactivo = producto.estado === 'INACTIVO';
+  
   return (
-    <div className="bg-bg rounded-2xl border border-border overflow-hidden">
-      <div className={`h-1 w-full ${s.bg}`} />
-      <div className="p-4 flex flex-col gap-3">
-        <div className="flex items-start gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.bg}`}>
-            <Icon size={20} className={s.text} />
+    <TableRow className={inactivo ? 'opacity-60' : ''}>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${s.bg}`}>
+            <Icon size={18} className={s.text} />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-bold text-text">{producto.nombre}</p>
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  ESTADO_BADGE[producto.estado] || 'bg-bg-soft'
-                }`}
-              >
-                {producto.estado}
-              </span>
-            </div>
-            <p className="text-xs text-text-soft mt-0.5">
-              PRD-{String(producto.id_producto).padStart(6, '0')} · {producto.tipo_seguro}
-            </p>
+          <div>
+            <p className="text-sm font-bold text-text truncate max-w-[200px]">{producto.nombre}</p>
+            <p className="text-xs text-text-soft mt-0.5">PRD-{String(producto.id_producto).padStart(6, '0')}</p>
           </div>
         </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          <Linea icon={MdAttachMoney} label="Prima base" valor={formatearMoneda(producto.prima_base)} />
-          <Linea icon={MdPercent} label="Tasa" valor={`${producto.tasas ?? 0}%`} />
-          <Linea
-            icon={MdEventNote}
-            label="Edad min."
-            valor={`${producto.restricciones_edad ?? 0} años`}
-          />
-        </div>
-
-        {producto.limites_cobertura && (
-          <div className="bg-bg-soft rounded-xl p-3">
-            <p className="text-[11px] text-text-soft mb-1">Cobertura</p>
-            <p className="text-xs text-text leading-relaxed">{producto.limites_cobertura}</p>
-          </div>
-        )}
-
-        <div className="flex gap-2 pt-1 border-t border-border">
+      </TableCell>
+      <TableCell>
+        <span className="text-sm font-semibold text-text">{producto.tipo_seguro}</span>
+      </TableCell>
+      <TableCell align="right">
+        <span className="text-sm font-bold text-emerald-600">{formatearMoneda(producto.prima_base)}</span>
+      </TableCell>
+      <TableCell align="right">
+        <span className="text-sm font-semibold text-text">{producto.tasas ?? 0}%</span>
+      </TableCell>
+      <TableCell align="right">
+        <span className="text-sm font-semibold text-text">{producto.restricciones_edad ?? 0} años</span>
+      </TableCell>
+      <TableCell>
+        <span
+          className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+            ESTADO_BADGE[producto.estado] || 'bg-bg-soft'
+          }`}
+        >
+          {producto.estado}
+        </span>
+      </TableCell>
+      <TableCell align="right">
+        <div className="flex gap-2 justify-end shrink-0">
           <button
             onClick={onEditar}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors"
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-border hover:bg-bg-soft text-text-soft transition-colors"
+            title="Editar"
           >
-            <MdEdit size={13} /> Editar
+            <MdEdit size={14} />
           </button>
           <button
             onClick={onEliminar}
-            disabled={producto.estado === 'INACTIVO'}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 hover:bg-rose-50 disabled:opacity-50 text-rose-600 text-xs font-medium transition-colors"
+            disabled={inactivo}
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-rose-200 hover:bg-rose-50 text-rose-600 transition-colors disabled:opacity-50"
+            title="Desactivar"
           >
-            <MdDelete size={13} /> Desactivar
+            <MdDelete size={14} />
           </button>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function Linea({ icon: Icon, label, valor }) {
-  return (
-    <div className="bg-bg-soft rounded-xl p-2">
-      <p className="text-[10px] text-text-soft flex items-center gap-1">
-        <Icon size={10} /> {label}
-      </p>
-      <p className="text-xs font-bold text-text mt-0.5 truncate">{valor}</p>
-    </div>
+      </TableCell>
+    </TableRow>
   );
 }
 

@@ -1,9 +1,10 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import { MdAdd, MdAssuredWorkload, MdClose, MdDelete, MdEdit, MdSearch } from 'react-icons/md';
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 function formatearMoneda(v) {
   if (v == null) return '—';
@@ -104,54 +105,37 @@ const eliminar = async (id) => {
           <p className="text-sm font-medium text-text">Sin contratos</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {filtrados.map((r) => (
-            <div key={r.id_reaseguro} className="bg-bg rounded-2xl border border-border overflow-hidden">
-              <div className="h-1 w-full bg-primary/30" />
-              <div className="p-4 flex items-start gap-4 flex-wrap sm:flex-nowrap">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <MdAssuredWorkload size={20} className="text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-text">RSG-{String(r.id_reaseguro).padStart(6, '0')}</p>
-                  <p className="text-xs text-text-soft mt-0.5">
-                    POL-{String(r.id_poliza).padStart(6, '0')} · {r.poliza_nombre}
-                  </p>
-                  <p className="text-sm text-text mt-1">{r.reaseguradora_asociada}</p>
-                  <div className="flex gap-3 mt-2 text-xs text-text-soft flex-wrap">
-                    <span>Retenido: <strong>{formatearMoneda(r.riesgo_retenido)}</strong></span>
-                    <span>Cedido: <strong>{formatearMoneda(r.riesgo_cedido)}</strong></span>
-                  </div>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <button
-                    onClick={() =>
-                      setModal({
-                        modo: 'editar',
-                        data: {
-                          id_reaseguro: r.id_reaseguro,
-                          id_poliza: String(r.id_poliza),
-                          riesgo_retenido: String(r.riesgo_retenido),
-                          riesgo_cedido: String(r.riesgo_cedido),
-                          reaseguradora_asociada: r.reaseguradora_asociada,
-                        },
-                      })
-                    }
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors"
-                  >
-                    <MdEdit size={13} /> Editar
-                  </button>
-                  <button
-                    onClick={() => eliminar(r.id_reaseguro)}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-medium transition-colors"
-                  >
-                    <MdDelete size={13} /> Eliminar
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableHead>Contrato</TableHead>
+            <TableHead>Reaseguradora</TableHead>
+            <TableHead>Póliza</TableHead>
+            <TableHead align="right">Retenido</TableHead>
+            <TableHead align="right">Cedido</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filtrados.map((r) => (
+              <ReaseguroTableRow
+                key={r.id_reaseguro}
+                r={r}
+                onEditar={() =>
+                  setModal({
+                    modo: 'editar',
+                    data: {
+                      id_reaseguro: r.id_reaseguro,
+                      id_poliza: String(r.id_poliza),
+                      riesgo_retenido: String(r.riesgo_retenido),
+                      riesgo_cedido: String(r.riesgo_cedido),
+                      reaseguradora_asociada: r.reaseguradora_asociada,
+                    },
+                  })
+                }
+                onEliminar={() => eliminar(r.id_reaseguro)}
+              />
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {modal && (
@@ -177,6 +161,52 @@ function Kpi({ label, val, bg, color }) {
       <p className={`text-xl font-bold leading-tight ${color}`}>{val}</p>
       <p className="text-xs text-text-soft mt-0.5">{label}</p>
     </div>
+  );
+}
+
+function ReaseguroTableRow({ r, onEditar, onEliminar }) {
+  return (
+    <TableRow>
+      <TableCell>
+        <p className="text-sm font-bold text-text">RSG-{String(r.id_reaseguro).padStart(6, '0')}</p>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <MdAssuredWorkload size={16} className="text-primary" />
+          </div>
+          <span className="text-sm font-semibold text-text">{r.reaseguradora_asociada}</span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <p className="text-xs font-bold text-text">POL-{String(r.id_poliza).padStart(6, '0')}</p>
+        <p className="text-[11px] text-text-soft truncate max-w-[150px]">{r.poliza_nombre}</p>
+      </TableCell>
+      <TableCell align="right">
+        <span className="text-sm font-bold text-emerald-600">{formatearMoneda(r.riesgo_retenido)}</span>
+      </TableCell>
+      <TableCell align="right">
+        <span className="text-sm font-bold text-amber-600">{formatearMoneda(r.riesgo_cedido)}</span>
+      </TableCell>
+      <TableCell align="right">
+        <div className="flex gap-2 justify-end shrink-0">
+          <button
+            onClick={onEditar}
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-border hover:bg-bg-soft text-text-soft transition-colors"
+            title="Editar"
+          >
+            <MdEdit size={14} />
+          </button>
+          <button
+            onClick={onEliminar}
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-rose-200 hover:bg-rose-50 text-rose-600 transition-colors"
+            title="Eliminar"
+          >
+            <MdDelete size={14} />
+          </button>
+        </div>
+      </TableCell>
+    </TableRow>
   );
 }
 

@@ -11,6 +11,7 @@ import {
   MdAdd,
 } from 'react-icons/md';
 import { apiGet, apiPost, apiPatch } from '@/lib/api';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADOS = ['TODOS', 'PENDIENTE', 'APROBADO', 'RECHAZADO'];
 const MODULOS = ['SINIESTROS', 'REASEGURO', 'COMPRAS', 'CAMPANAS', 'COMISIONES', 'PRESUPUESTO', 'OTRO'];
@@ -138,31 +139,55 @@ export default function AprobacionesPage() {
       ) : aprobaciones.length === 0 ? (
         <div className="bg-bg rounded-xl border border-border p-10 text-center text-sm text-text-soft">No hay aprobaciones en este filtro.</div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {aprobaciones.map((a) => (
-            <div key={a.id_aprobacion} onClick={() => setDetalle(a)} className="bg-bg rounded-xl border border-border p-4 flex flex-col md:flex-row md:items-center gap-3 cursor-pointer hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <MdCategory size={18} className="text-primary" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-bold text-text">{a.modulo_origen}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${COLORES_ESTADO[a.estado_gerencial]}`}>
-                      {a.estado_gerencial}
-                    </span>
+        <Table>
+          <TableHeader>
+            <TableHead>Solicitud</TableHead>
+            <TableHead>Fecha</TableHead>
+            <TableHead>Comentarios</TableHead>
+            <TableHead align="right">Monto</TableHead>
+            <TableHead align="right">Estado</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {aprobaciones.map((a) => (
+              <TableRow key={a.id_aprobacion}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <MdCategory size={18} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-text truncate max-w-[150px]">{a.modulo_origen}</p>
+                      <p className="text-[11px] text-text-soft">APR-{String(a.id_aprobacion).padStart(6, '0')}</p>
+                    </div>
                   </div>
-                  <p className="text-xs text-text-soft truncate">{a.comentarios_previos || 'Sin comentarios'}</p>
-                  <p className="text-[10px] text-text-mute mt-0.5">{formatearFecha(a.fecha_solicitud)}</p>
-                </div>
-              </div>
-
-              <div className="text-right shrink-0">
-                <p className="text-base font-bold text-text">{formatearMoneda(a.monto_impacto)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm text-text-soft">{formatearFecha(a.fecha_solicitud)}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm text-text-soft truncate max-w-[200px] block">{a.comentarios_previos || 'Sin comentarios'}</span>
+                </TableCell>
+                <TableCell align="right">
+                  <span className="text-sm font-bold text-text">{formatearMoneda(a.monto_impacto)}</span>
+                </TableCell>
+                <TableCell align="right">
+                  <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${COLORES_ESTADO[a.estado_gerencial]}`}>
+                    {a.estado_gerencial}
+                  </span>
+                </TableCell>
+                <TableCell align="right">
+                  <button
+                    onClick={() => setDetalle(a)}
+                    className="px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors"
+                  >
+                    Ver detalle
+                  </button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {detalle && (

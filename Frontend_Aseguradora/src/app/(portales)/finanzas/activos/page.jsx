@@ -1,9 +1,10 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import { MdAdd, MdClose, MdDomain, MdEdit, MdSearch, MdBlock } from 'react-icons/md';
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADOS = {
   OPERATIVO: { label: 'Operativo', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
@@ -90,48 +91,84 @@ const baja = async (id) => {
       ) : filtrados.length === 0 ? (
         <div className="bg-bg rounded-2xl border border-border p-12 text-center"><MdDomain size={32} className="text-text-soft mx-auto mb-3 opacity-40" /><p className="text-sm font-medium text-text">Sin activos</p></div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {filtrados.map((a) => {
-            const est = ESTADOS[a.estado] || ESTADOS.OPERATIVO;
-            return (
-              <div key={a.id_activo} className="bg-bg rounded-2xl border border-border overflow-hidden">
-                <div className="h-1 w-full bg-primary/30" />
-                <div className="p-4 flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <MdDomain size={20} className="text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-bold text-text">{a.tipo} · {a.marca}</p>
-                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />{est.label}
-                      </span>
-                    </div>
-                    <p className="text-xs text-text-soft mt-0.5">ACT-{String(a.id_activo).padStart(6, '0')}</p>
-                    <p className="text-xs text-text-soft mt-1">Asignado a: {a.empleado_asignado || 'Sin asignar'}</p>
-                    <p className="text-xs text-text-soft mt-0.5">Depreciación: <strong>{formatearMoneda(a.valor_depreciacion)}</strong></p>
-                  </div>
-                  <div className="flex flex-col gap-2 shrink-0">
-                    <button onClick={() => setModal({ modo: 'editar', data: { id_activo: a.id_activo, tipo: a.tipo, marca: a.marca, valor_depreciacion: String(a.valor_depreciacion ?? '0'), estado: a.estado, id_empleado_asignado: a.id_empleado_asignado ? String(a.id_empleado_asignado) : '' } })} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors">
-                      <MdEdit size={12} /> Editar
-                    </button>
-                    {a.estado !== 'BAJA' && (
-                      <button onClick={() => baja(a.id_activo)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-medium transition-colors">
-                        <MdBlock size={12} /> Baja
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableHead>Activo</TableHead>
+            <TableHead>Asignado a</TableHead>
+            <TableHead align="right">Depreciación</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filtrados.map((a) => (
+              <ActivoTableRow
+                key={a.id_activo}
+                a={a}
+                onEditar={() => setModal({ modo: 'editar', data: { id_activo: a.id_activo, tipo: a.tipo, marca: a.marca, valor_depreciacion: String(a.valor_depreciacion ?? '0'), estado: a.estado, id_empleado_asignado: a.id_empleado_asignado ? String(a.id_empleado_asignado) : '' } })}
+                onBaja={() => baja(a.id_activo)}
+              />
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {modal && (
         <ModalActivo modo={modal.modo} dataInicial={modal.data} empleados={empleados} onClose={() => setModal(null)} onSuccess={() => { setModal(null); toast.success(modal.modo === 'crear' ? 'Activo creado' : 'Activo actualizado'); cargar(); }} />
       )}
     </div>
+  );
+}
+
+function ActivoTableRow({ a, onEditar, onBaja }) {
+  const est = ESTADOS[a.estado] || ESTADOS.OPERATIVO;
+  const inactivo = a.estado === 'BAJA';
+
+  return (
+    <TableRow className={inactivo ? 'opacity-60' : ''}>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <MdDomain size={18} className="text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-text truncate max-w-[200px]">{a.tipo} · {a.marca}</p>
+            <p className="text-[11px] text-text-soft">ACT-{String(a.id_activo).padStart(6, '0')}</p>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <span className="text-sm font-semibold text-text">{a.empleado_asignado || 'Sin asignar'}</span>
+      </TableCell>
+      <TableCell align="right">
+        <span className="text-sm font-bold text-emerald-600">{formatearMoneda(a.valor_depreciacion)}</span>
+      </TableCell>
+      <TableCell>
+        <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${est.badge}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+          {est.label}
+        </span>
+      </TableCell>
+      <TableCell align="right">
+        <div className="flex gap-2 justify-end shrink-0">
+          <button
+            onClick={onEditar}
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-border hover:bg-bg-soft text-text-soft transition-colors"
+            title="Editar"
+          >
+            <MdEdit size={14} />
+          </button>
+          {!inactivo && (
+            <button
+              onClick={onBaja}
+              className="flex items-center justify-center w-8 h-8 rounded-lg border border-rose-200 hover:bg-rose-50 text-rose-600 transition-colors"
+              title="Dar de baja"
+            >
+              <MdBlock size={14} />
+            </button>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
   );
 }
 

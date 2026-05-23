@@ -8,9 +8,12 @@ import {
   MdHome,
   MdFlight,
   MdBusiness,
-  MdShield,
   MdCalculate,
   MdRefresh,
+  MdKeyboardArrowDown,
+  MdKeyboardArrowUp,
+  MdPets,
+  MdShield,
 } from 'react-icons/md';
 import { apiGet } from '@/lib/api';
 
@@ -21,6 +24,7 @@ const TIPO_STYLES = {
   HOGAR: { icon: MdHome, accentBg: 'bg-amber-100', accentText: 'text-amber-600' },
   VIAJE: { icon: MdFlight, accentBg: 'bg-sky-100', accentText: 'text-sky-600' },
   EMPRESA: { icon: MdBusiness, accentBg: 'bg-violet-100', accentText: 'text-violet-600' },
+  MASCOTAS: { icon: MdPets, accentBg: 'bg-orange-100', accentText: 'text-orange-600' },
 };
 
 function estiloTipo(tipo) {
@@ -37,6 +41,7 @@ export default function SimuladorPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [productoId, setProductoId] = useState(null);
+  const [categoriaExpandida, setCategoriaExpandida] = useState(null);
   const [edad, setEdad] = useState('30');
   const [montoAsegurado, setMontoAsegurado] = useState('100000');
   const [meses, setMeses] = useState('12');
@@ -45,11 +50,23 @@ export default function SimuladorPage() {
     apiGet('/productos?estado=ACTIVO')
       .then((data) => {
         setProductos(data || []);
-        if (data && data[0]) setProductoId(data[0].id_producto);
+        if (data && data[0]) {
+          setProductoId(data[0].id_producto);
+          setCategoriaExpandida(data[0].tipo_seguro);
+        }
       })
       .catch((e) => setError(e.mensaje || 'No se pudieron cargar los productos'))
       .finally(() => setCargando(false));
   }, []);
+
+  const productosPorTipo = useMemo(() => {
+    const groups = {};
+    for (const p of productos) {
+      if (!groups[p.tipo_seguro]) groups[p.tipo_seguro] = [];
+      groups[p.tipo_seguro].push(p);
+    }
+    return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [productos]);
 
   const producto = productos.find((p) => p.id_producto === productoId);
 
@@ -103,35 +120,6 @@ export default function SimuladorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="bg-bg rounded-2xl border border-border p-5 flex flex-col gap-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-text-soft">Parámetros</p>
-            <div>
-              <label className="text-xs font-medium text-text-soft block mb-1.5">Producto</label>
-              <div className="grid grid-cols-2 gap-2">
-                {productos.map((p) => {
-                  const t = estiloTipo(p.tipo_seguro);
-                  const Icon = t.icon;
-                  const sel = productoId === p.id_producto;
-                  return (
-                    <button
-                      key={p.id_producto}
-                      onClick={() => setProductoId(p.id_producto)}
-                      className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-colors ${
-                        sel
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:bg-bg-soft'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${t.accentBg}`}>
-                        <Icon size={16} className={t.accentText} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-text truncate">{p.nombre}</p>
-                        <p className="text-xs text-text-soft">{p.tipo_seguro}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-text-soft block mb-1.5">Edad del cliente</label>
@@ -141,7 +129,7 @@ export default function SimuladorPage() {
                   max="120"
                   value={edad}
                   onChange={(e) => setEdad(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
+                  className="w-full px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary transition-colors"
                 />
               </div>
               <div>
@@ -152,7 +140,7 @@ export default function SimuladorPage() {
                   max="120"
                   value={meses}
                   onChange={(e) => setMeses(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
+                  className="w-full px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary transition-colors"
                 />
               </div>
               <div className="col-span-2">
@@ -162,10 +150,71 @@ export default function SimuladorPage() {
                   min="0"
                   value={montoAsegurado}
                   onChange={(e) => setMontoAsegurado(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary"
+                  className="w-full px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg-soft focus:border-primary transition-colors"
                 />
               </div>
             </div>
+
+            <div className="h-px bg-border my-1" />
+
+            <div>
+              <label className="text-xs font-medium text-text-soft block mb-1.5">Categoría y Producto</label>
+              <div className="flex flex-col gap-2">
+                {productosPorTipo.map(([tipo, prods]) => {
+                  const t = estiloTipo(tipo);
+                  const Icon = t.icon;
+                  const isExpanded = categoriaExpandida === tipo;
+                  return (
+                    <div key={tipo} className="border border-border rounded-xl overflow-hidden bg-bg">
+                      <button
+                        onClick={() => setCategoriaExpandida(isExpanded ? null : tipo)}
+                        className="w-full flex items-center justify-between p-3 hover:bg-bg-soft transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${t.accentBg}`}>
+                            <Icon size={16} className={t.accentText} />
+                          </div>
+                          <span className="text-sm font-bold text-text uppercase">{tipo}</span>
+                          <span className="text-[10px] font-bold text-text-soft px-2 py-0.5 bg-border/50 rounded-full">
+                            {prods.length} prod.
+                          </span>
+                        </div>
+                        {isExpanded ? (
+                          <MdKeyboardArrowUp size={20} className="text-text-soft" />
+                        ) : (
+                          <MdKeyboardArrowDown size={20} className="text-text-soft" />
+                        )}
+                      </button>
+
+                      {isExpanded && (
+                        <div className="p-3 border-t border-border bg-bg-soft/50 grid grid-cols-1 gap-2">
+                          {prods.map((p) => {
+                            const sel = productoId === p.id_producto;
+                            return (
+                              <button
+                                key={p.id_producto}
+                                onClick={() => setProductoId(p.id_producto)}
+                                className={`flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
+                                  sel
+                                    ? 'border-primary bg-primary/5 shadow-sm'
+                                    : 'border-border bg-bg hover:border-primary/30'
+                                }`}
+                              >
+                                <p className={`text-xs font-semibold truncate ${sel ? 'text-primary' : 'text-text'}`}>
+                                  {p.nombre}
+                                </p>
+                                {sel && <div className="w-2 h-2 rounded-full bg-primary" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             <button
               onClick={() => {
                 setEdad('30');
@@ -174,7 +223,7 @@ export default function SimuladorPage() {
               }}
               className="flex items-center gap-1.5 self-start px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors"
             >
-              <MdRefresh size={13} /> Restablecer
+              <MdRefresh size={13} /> Restablecer datos
             </button>
           </div>
 
@@ -208,8 +257,8 @@ export default function SimuladorPage() {
                   <Linea label="Producto" val={producto.nombre} />
                 </div>
                 <p className="text-xs text-text-soft leading-relaxed">
-                  Este cálculo es referencial. La prima final se confirma al emitir la póliza con la información completa
-                  del cliente.
+                  Este cálculo es referencial. La prima final se confirma al emitir la póliza con la información
+                  completa del cliente.
                 </p>
               </>
             )}

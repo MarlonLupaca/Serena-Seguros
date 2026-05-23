@@ -1,9 +1,10 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import { MdAdd, MdCalculate, MdClose, MdEdit, MdWarning } from 'react-icons/md';
 import { apiGet, apiPost, apiPut } from '@/lib/api';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 function formatearMoneda(v) {
   if (v == null) return '—';
@@ -80,41 +81,60 @@ const totalAsignado = presupuestos.reduce((acc, p) => acc + Number(p.presupuesto
       ) : presupuestos.length === 0 ? (
         <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">Sin presupuestos</div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {presupuestos.map((p) => {
-            const colorBarra = p.porcentaje_uso >= 100 ? 'bg-rose-500' : p.porcentaje_uso >= 80 ? 'bg-amber-500' : 'bg-primary';
-            return (
-              <div key={p.id_presupuesto} className="bg-bg rounded-2xl border border-border p-4">
-                <div className="flex items-start justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <MdCalculate size={20} className="text-primary" />
+        <Table>
+          <TableHeader>
+            <TableHead>Área</TableHead>
+            <TableHead align="right">Ejecutado</TableHead>
+            <TableHead align="right">Asignado</TableHead>
+            <TableHead>Uso del Presupuesto</TableHead>
+            <TableHead align="right">Disponible</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {presupuestos.map((p) => {
+              const colorBarra = p.porcentaje_uso >= 100 ? 'bg-rose-500' : p.porcentaje_uso >= 80 ? 'bg-amber-500' : 'bg-primary';
+              return (
+                <TableRow key={p.id_presupuesto}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <MdCalculate size={18} className="text-primary" />
+                      </div>
+                      <span className="text-sm font-bold text-text truncate max-w-[200px]">{p.area}</span>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-text">{p.area}</p>
-                      <p className="text-xs text-text-soft">{formatearMoneda(p.monto_ejecutado)} de {formatearMoneda(p.presupuesto_asignado)}</p>
+                  </TableCell>
+                  <TableCell align="right">
+                    <span className="text-sm font-medium text-text">{formatearMoneda(p.monto_ejecutado)}</span>
+                  </TableCell>
+                  <TableCell align="right">
+                    <span className="text-sm font-medium text-text">{formatearMoneda(p.presupuesto_asignado)}</span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 w-full max-w-[150px]">
+                      <div className="flex-1 h-2 bg-bg-soft rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${colorBarra}`} style={{ width: `${Math.min(100, p.porcentaje_uso)}%` }} />
+                      </div>
+                      <span className="text-[11px] font-semibold text-text-soft w-8 text-right">{p.porcentaje_uso}%</span>
                     </div>
-                  </div>
-                  <button onClick={() => setModal({ modo: 'editar', data: { id_presupuesto: p.id_presupuesto, area: p.area, presupuesto_asignado: String(p.presupuesto_asignado), monto_ejecutado: String(p.monto_ejecutado), alertas_sobreconsumo: p.alertas_sobreconsumo } })} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors">
-                    <MdEdit size={12} /> Editar
-                  </button>
-                </div>
-                <div className="mt-3">
-                  <div className="flex justify-between text-xs text-text-soft mb-1">
-                    <span>Uso del presupuesto</span>
-                    <span className="font-semibold">{p.porcentaje_uso}%</span>
-                  </div>
-                  <div className="h-2 bg-bg-soft rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${colorBarra}`} style={{ width: `${Math.min(100, p.porcentaje_uso)}%` }} />
-                  </div>
-                  <p className={`text-xs mt-2 ${Number(p.disponible) >= 0 ? 'text-emerald-600' : 'text-rose-500'} font-medium`}>
-                    Disponible: {formatearMoneda(p.disponible)}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                  </TableCell>
+                  <TableCell align="right">
+                    <span className={`text-sm font-bold ${Number(p.disponible) >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                      {formatearMoneda(p.disponible)}
+                    </span>
+                  </TableCell>
+                  <TableCell align="right">
+                    <button
+                      onClick={() => setModal({ modo: 'editar', data: { id_presupuesto: p.id_presupuesto, area: p.area, presupuesto_asignado: String(p.presupuesto_asignado), monto_ejecutado: String(p.monto_ejecutado), alertas_sobreconsumo: p.alertas_sobreconsumo } })}
+                      className="px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors flex items-center justify-center"
+                    >
+                      Editar
+                    </button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       )}
 
       {modal && <ModalPresupuesto modo={modal.modo} dataInicial={modal.data} onClose={() => setModal(null)} onSuccess={() => { setModal(null); toast.success(modal.modo === 'crear' ? 'Creado' : 'Actualizado'); cargar(); }} />}

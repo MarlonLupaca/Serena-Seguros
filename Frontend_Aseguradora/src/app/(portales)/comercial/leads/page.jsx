@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
@@ -27,6 +27,7 @@ import {
 import { apiGet, apiPatch, apiPost } from '@/lib/api';
 import FormularioRiesgo from '@/components/riesgo/FormularioRiesgo';
 import { valoresIniciales, validarCampos } from '@/lib/riesgo/camposPorTipo';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADOS = {
   NUEVO: { label: 'Nuevo', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-500' },
@@ -70,7 +71,6 @@ export default function LeadsPage() {
   const [error, setError] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
-  const [actualizandoId, setActualizandoId] = useState(null);
   const [leadSeleccionado, setLeadSeleccionado] = useState(null);
   useEffect(() => {
     cargar();
@@ -89,22 +89,6 @@ export default function LeadsPage() {
     }
   };
 
-  const cambiarEstado = async (id, nuevoEstado) => {
-    setActualizandoId(id);
-    try {
-      const actualizada = await apiPatch(`/cotizaciones/${id}/estado`, { estado_kanban: nuevoEstado });
-      if (!ESTADOS_LEAD.includes(actualizada.estado_kanban)) {
-        setLeads((prev) => prev.filter((l) => l.id_cotizacion !== id));
-      } else {
-        setLeads((prev) => prev.map((l) => (l.id_cotizacion === id ? actualizada : l)));
-      }
-      toast.success('Estado actualizado');
-    } catch (e) {
-      toast.error(e.mensaje || 'No se pudo actualizar');
-    } finally {
-      setActualizandoId(null);
-    }
-  };
   const filtrados = leads.filter((l) => {
     const matchBusq =
       busqueda === '' ||
@@ -182,17 +166,25 @@ export default function LeadsPage() {
           <p className="text-xs text-text-soft max-w-xs">No hay leads que coincidan con los filtros.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {filtrados.map((lead) => (
-            <LeadCard
-              key={lead.id_cotizacion}
-              lead={lead}
-              actualizando={actualizandoId === lead.id_cotizacion}
-              onCambiarEstado={(estado) => cambiarEstado(lead.id_cotizacion, estado)}
-              onVerDetalle={() => setLeadSeleccionado(lead)}
-            />
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableHead>ID Lead</TableHead>
+            <TableHead>Producto</TableHead>
+            <TableHead>Agente & Fecha</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead align="right">Prima Estimada</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filtrados.map((lead) => (
+              <LeadTableRow
+                key={lead.id_cotizacion}
+                lead={lead}
+                onVerDetalle={() => setLeadSeleccionado(lead)}
+              />
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {leadSeleccionado && (
@@ -209,83 +201,59 @@ export default function LeadsPage() {
   );
 }
 
-function LeadCard({ lead, onCambiarEstado, actualizando, onVerDetalle }) {
+function LeadTableRow({ lead, onVerDetalle }) {
   const tipoStyle = estiloTipo(lead.producto_interes);
   const Icon = tipoStyle.icon;
   const est = ESTADOS[lead.estado_kanban];
-  const [menu, setMenu] = useState(false);
 
   return (
-    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow">
-      <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
-      <div className="p-5">
-        <div className="flex items-start gap-4 flex-wrap sm:flex-nowrap">
-          <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
-            <Icon size={22} className={tipoStyle.accentText} />
+    <TableRow>
+      <TableCell className="text-sm font-medium text-text">
+        COT-{String(lead.id_cotizacion).padStart(6, '0')}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
+            <Icon size={16} className={tipoStyle.accentText} />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-bold text-text">COT-{String(lead.id_cotizacion).padStart(6, '0')}</p>
-              <span
-                className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-                {est.label}
-              </span>
-              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
-                <MdAutoAwesome size={11} /> Generado por asegurado
-              </span>
-            </div>
-            <p className="text-xs text-text-soft mt-0.5">{lead.producto_interes}</p>
-            <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-text-soft">
-              <span className="flex items-center gap-1">
-                <MdPerson size={11} /> Agente: {lead.agente_asignado}
-              </span>
-              <span className="flex items-center gap-1">
-                <MdCalendarToday size={11} /> {formatearFecha(lead.fecha_ingreso)}
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-2 shrink-0 relative ">
-            <p className="text-sm font-bold text-text">{formatearMoneda(lead.prima_estimada)}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={onVerDetalle}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-medium transition-colors"
-              >
-                <MdAssessment size={13} /> Gestionar
-              </button>
-              <button
-                onClick={() => setMenu((v) => !v)}
-                disabled={actualizando}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
-              >
-                <MdMoreVert size={13} /> {actualizando ? 'Actualizando...' : 'Mover a'}
-              </button>
-            </div>
-            {menu && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-bg border border-border rounded-xl shadow-lg z-10 overflow-hidden">
-                {Object.entries(ESTADOS)
-                  .filter(([k]) => k !== lead.estado_kanban)
-                  .map(([key, cfg]) => (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        setMenu(false);
-                        onCambiarEstado(key);
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-soft hover:bg-bg-soft transition-colors"
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                      {cfg.label}
-                    </button>
-                  ))}
-              </div>
-            )}
+          <div>
+            <p className="text-sm font-semibold text-text">{lead.producto_interes}</p>
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 mt-1">
+              <MdAutoAwesome size={9} /> Asegurado
+            </span>
           </div>
         </div>
-      </div>
-    </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1 text-xs text-text-soft">
+          <span className="flex items-center gap-1">
+            <MdPerson size={11} /> {lead.agente_asignado || 'Sin asignar'}
+          </span>
+          <span className="flex items-center gap-1">
+            <MdCalendarToday size={11} /> {formatearFecha(lead.fecha_ingreso)}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${est.badge}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+          {est.label}
+        </span>
+      </TableCell>
+      <TableCell align="right" className="text-sm font-bold text-text">
+        {formatearMoneda(lead.prima_estimada)}
+      </TableCell>
+      <TableCell align="right">
+        <div className="flex items-center justify-end gap-2 relative">
+          <button
+            onClick={onVerDetalle}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-medium transition-colors"
+          >
+            <MdAssessment size={13} /> Gestionar
+          </button>
+        </div>
+      </TableCell>
+    </TableRow>
   );
 }
 

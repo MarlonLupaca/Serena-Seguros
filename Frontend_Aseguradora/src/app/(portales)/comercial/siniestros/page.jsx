@@ -15,6 +15,8 @@ import {
   MdBusiness,
 } from 'react-icons/md';
 import { apiGet } from '@/lib/api';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import ModalDetalleSiniestro from './ModalDetalleSiniestro';
 
 const ESTADOS = {
   REPORTADO: { label: 'Reportado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
@@ -56,6 +58,7 @@ export default function SiniestrosComercialPage() {
   const [error, setError] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [siniestroSeleccionado, setSiniestroSeleccionado] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -79,7 +82,7 @@ export default function SiniestrosComercialPage() {
       busqueda === '' ||
       String(s.id_siniestro).includes(busqueda) ||
       (s.descripcion || '').toLowerCase().includes(busqueda.toLowerCase());
-    const matchEstado = filtroEstado === 'todos' || s.estado_siniestro === filtroEstado;
+    const matchEstado = filtroEstado === 'todos' || s.estado_resolucion === filtroEstado;
     return matchBusq && matchEstado;
   });
 
@@ -127,49 +130,67 @@ export default function SiniestrosComercialPage() {
           <p className="text-xs text-text-soft max-w-xs">No hay siniestros que coincidan con los filtros.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-left border-b border-border">
-                <th className="py-3 px-3 font-semibold text-text-soft">ID</th>
-                <th className="py-3 px-3 font-semibold text-text-soft">Poliza</th>
-                <th className="py-3 px-3 font-semibold text-text-soft">Tipo</th>
-                <th className="py-3 px-3 font-semibold text-text-soft">Estado</th>
-                <th className="py-3 px-3 font-semibold text-text-soft">Fecha reporte</th>
-                <th className="py-3 px-3 font-semibold text-text-soft">Monto reclamado</th>
-                <th className="py-3 px-3 font-semibold text-text-soft">Descripcion</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtrados.map((s) => {
-                const est = ESTADOS[s.estado_siniestro] || { label: s.estado_siniestro, badge: 'bg-bg-soft text-text-soft', dot: 'bg-text-soft' };
-                const tipoStyle = estiloTipo(s.tipo_seguro);
-                const TipoIcon = tipoStyle.icon;
-                return (
-                  <tr key={s.id_siniestro} className="border-b border-border/50 hover:bg-bg-soft/50 transition-colors">
-                    <td className="py-3 px-3 font-bold text-text">SIN-{String(s.id_siniestro).padStart(6, '0')}</td>
-                    <td className="py-3 px-3 text-text">POL-{String(s.id_poliza).padStart(6, '0')}</td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-1.5">
-                        <TipoIcon size={14} className={tipoStyle.accentText} />
-                        <span className="text-text">{s.tipo_seguro || '—'}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-                        {est.label}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-text-soft">{formatearFecha(s.fecha_reporte)}</td>
-                    <td className="py-3 px-3 font-medium text-text">{formatearMoneda(s.monto_reclamado)}</td>
-                    <td className="py-3 px-3 text-text-soft max-w-[200px] truncate">{s.descripcion || '—'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableHead>ID</TableHead>
+            <TableHead>Póliza</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Fecha reporte</TableHead>
+            <TableHead align="right">Monto reclamado</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filtrados.map((s) => {
+              const est = ESTADOS[s.estado_resolucion] || { label: s.estado_resolucion, badge: 'bg-bg-soft text-text-soft', dot: 'bg-text-soft' };
+              const tipoStyle = estiloTipo(s.poliza_tipo);
+              const TipoIcon = tipoStyle.icon;
+              return (
+                <TableRow key={s.id_siniestro}>
+                  <TableCell className="text-sm font-bold text-text">
+                    SIN-{String(s.id_siniestro).padStart(6, '0')}
+                  </TableCell>
+                  <TableCell className="text-sm text-text">
+                    POL-{String(s.id_poliza).padStart(6, '0')}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <TipoIcon size={16} className={tipoStyle.accentText} />
+                      <span className="text-text font-medium">{s.poliza_tipo || '—'}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${est.badge}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+                      {est.label}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-sm text-text-soft">
+                    {formatearFecha(s.fecha_reporte)}
+                  </TableCell>
+                  <TableCell align="right" className="text-sm font-bold text-text">
+                    {formatearMoneda(s.monto_reclamado)}
+                  </TableCell>
+                  <TableCell align="right">
+                    <button
+                      onClick={() => setSiniestroSeleccionado(s)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
+                    >
+                      Ver detalle
+                    </button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      )}
+
+      {siniestroSeleccionado && (
+        <ModalDetalleSiniestro 
+          siniestro={siniestroSeleccionado} 
+          onClose={() => setSiniestroSeleccionado(null)} 
+        />
       )}
     </div>
   );

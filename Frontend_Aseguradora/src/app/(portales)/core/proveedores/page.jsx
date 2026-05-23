@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
@@ -18,6 +18,7 @@ import {
   MdMoreHoriz,
 } from 'react-icons/md';
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const RUBROS = [
   { value: 'CLINICA', label: 'Clínica', icon: MdLocalHospital, accentBg: 'bg-emerald-100', accentText: 'text-emerald-600' },
@@ -132,72 +133,36 @@ const suspender = async (id) => {
           <p className="text-sm font-medium text-text">Sin resultados</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {filtrados.map((p) => {
-            const r = rubroStyle(p.rubro);
-            const Icon = r.icon;
-            const inactivo = p.estado === 'SUSPENDIDO';
-            return (
-              <div
+        <Table>
+          <TableHeader>
+            <TableHead>Proveedor</TableHead>
+            <TableHead>Ciudad</TableHead>
+            <TableHead>Rating</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filtrados.map((p) => (
+              <ProveedorTableRow
                 key={p.id_proveedor}
-                className={`bg-bg rounded-2xl border border-border overflow-hidden ${inactivo ? 'opacity-60' : ''}`}
-              >
-                <div className={`h-1 w-full ${r.accentBg}`} />
-                <div className="p-4 flex items-start gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${r.accentBg}`}>
-                    <Icon size={20} className={r.accentText} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-text">{p.nombre}</p>
-                    <p className="text-xs text-text-soft mt-0.5 flex items-center gap-1">
-                      <MdLocationCity size={11} /> {p.ciudad} · {r.label}
-                    </p>
-                    {p.rating_interno != null && (
-                      <p className="text-xs text-text-soft mt-1 flex items-center gap-1">
-                        <MdStar size={11} className="text-amber-500" />
-                        {Number(p.rating_interno).toFixed(2)}
-                      </p>
-                    )}
-                  </div>
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${
-                      inactivo ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-700'
-                    }`}
-                  >
-                    {p.estado}
-                  </span>
-                </div>
-                <div className="p-4 pt-0 flex gap-2">
-                  <button
-                    onClick={() =>
-                      setModal({
-                        modo: 'editar',
-                        data: {
-                          id_proveedor: p.id_proveedor,
-                          rubro: p.rubro,
-                          nombre: p.nombre,
-                          ciudad: p.ciudad,
-                          rating_interno: String(p.rating_interno ?? '4.00'),
-                        },
-                      })
-                    }
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors"
-                  >
-                    <MdEdit size={13} /> Editar
-                  </button>
-                  {!inactivo && (
-                    <button
-                      onClick={() => suspender(p.id_proveedor)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-medium transition-colors"
-                    >
-                      <MdBlock size={13} /> Suspender
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                p={p}
+                onEditar={() =>
+                  setModal({
+                    modo: 'editar',
+                    data: {
+                      id_proveedor: p.id_proveedor,
+                      rubro: p.rubro,
+                      nombre: p.nombre,
+                      ciudad: p.ciudad,
+                      rating_interno: String(p.rating_interno ?? '4.00'),
+                    },
+                  })
+                }
+                onSuspender={() => suspender(p.id_proveedor)}
+              />
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {modal && (
@@ -213,6 +178,72 @@ const suspender = async (id) => {
         />
       )}
     </div>
+  );
+}
+
+function ProveedorTableRow({ p, onEditar, onSuspender }) {
+  const r = rubroStyle(p.rubro);
+  const Icon = r.icon;
+  const inactivo = p.estado === 'SUSPENDIDO';
+
+  return (
+    <TableRow className={inactivo ? 'opacity-60' : ''}>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${r.accentBg}`}>
+            <Icon size={18} className={r.accentText} />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-text truncate max-w-[200px]">{p.nombre}</p>
+            <p className="text-xs text-text-soft">{r.label}</p>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <span className="flex items-center gap-1 text-sm font-medium text-text">
+          <MdLocationCity size={14} className="text-text-soft" /> {p.ciudad}
+        </span>
+      </TableCell>
+      <TableCell>
+        {p.rating_interno != null ? (
+          <span className="flex items-center gap-1 text-sm font-bold text-text">
+            <MdStar size={14} className="text-amber-500" />
+            {Number(p.rating_interno).toFixed(2)}
+          </span>
+        ) : (
+          <span className="text-text-soft text-xs">—</span>
+        )}
+      </TableCell>
+      <TableCell>
+        <span
+          className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+            inactivo ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-700'
+          }`}
+        >
+          {p.estado}
+        </span>
+      </TableCell>
+      <TableCell align="right">
+        <div className="flex gap-2 justify-end shrink-0">
+          <button
+            onClick={onEditar}
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-border hover:bg-bg-soft text-text-soft transition-colors"
+            title="Editar"
+          >
+            <MdEdit size={14} />
+          </button>
+          {!inactivo && (
+            <button
+              onClick={onSuspender}
+              className="flex items-center justify-center w-8 h-8 rounded-lg border border-rose-200 hover:bg-rose-50 text-rose-600 transition-colors"
+              title="Suspender"
+            >
+              <MdBlock size={14} />
+            </button>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
   );
 }
 

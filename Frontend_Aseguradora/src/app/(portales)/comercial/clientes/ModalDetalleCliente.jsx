@@ -134,9 +134,7 @@ export default function ModalDetalleCliente({ idCliente, onClose }) {
                 {cliente ? `${cliente.nombres} ${cliente.apellidos}` : 'Detalle de cliente'}
               </p>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                <span className="text-xs text-text-soft">
-                  CLI-{String(idCliente).padStart(6, '0')}
-                </span>
+                <span className="text-xs text-text-soft">CLI-{String(idCliente).padStart(6, '0')}</span>
                 {cliente && (
                   <span
                     className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
@@ -157,7 +155,7 @@ export default function ModalDetalleCliente({ idCliente, onClose }) {
           </button>
         </div>
 
-        <div className="flex border-b border-border px-4 gap-1 overflow-x-auto">
+        <div className="flex border-b border-border px-4 gap-1 h-10 border">
           {TABS.map((t) => {
             const Icon = t.icon;
             return (
@@ -165,9 +163,7 @@ export default function ModalDetalleCliente({ idCliente, onClose }) {
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={`flex items-center gap-1.5 px-3 py-3 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${
-                  tab === t.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-text-soft hover:text-text'
+                  tab === t.id ? 'border-primary text-primary' : 'border-transparent text-text-soft hover:text-text'
                 }`}
               >
                 <Icon size={14} />
@@ -292,7 +288,10 @@ function TabPagos({ cuotas }) {
       {lista.map((g) => (
         <div key={g.id}>
           <p className="text-xs font-bold text-text mb-2">
-            {g.nombre} <span className="text-text-soft font-normal">· {g.items.length} cuota{g.items.length > 1 ? 's' : ''}</span>
+            {g.nombre}{' '}
+            <span className="text-text-soft font-normal">
+              · {g.items.length} cuota{g.items.length > 1 ? 's' : ''}
+            </span>
           </p>
           <table className="w-full text-left text-sm">
             <thead>
@@ -310,7 +309,9 @@ function TabPagos({ cuotas }) {
                   <td className="py-2 text-text">{formatearFecha(c.fecha_vencimiento)}</td>
                   <td className="py-2 text-text font-medium">{formatearMoneda(c.monto)}</td>
                   <td className="py-2 text-right">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ESTADO_CUOTA_BADGE[c.estado_pago] || 'bg-bg-soft text-text-soft'}`}>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ESTADO_CUOTA_BADGE[c.estado_pago] || 'bg-bg-soft text-text-soft'}`}
+                    >
                       {c.estado_pago}
                     </span>
                   </td>
@@ -366,7 +367,10 @@ function TabHistorial({ leads }) {
   return (
     <div className="flex flex-col gap-2">
       {leads.map((l) => (
-        <div key={l.id_cotizacion} className="bg-bg-soft rounded-xl border border-border p-3 flex items-center justify-between gap-3 flex-wrap">
+        <div
+          key={l.id_cotizacion}
+          className="bg-bg-soft rounded-xl border border-border p-3 flex items-center justify-between gap-3 flex-wrap"
+        >
           <div className="min-w-0">
             <p className="text-sm font-semibold text-text">
               COT-{String(l.id_cotizacion).padStart(6, '0')} · {l.producto_interes}
@@ -392,9 +396,7 @@ function TabNotas({ notas, texto, onTextoChange, onEnviar, guardando, error }) {
   return (
     <div className="flex flex-col gap-4">
       <form onSubmit={onEnviar} className="flex flex-col gap-2 p-3 bg-bg-soft rounded-xl border border-border">
-        {error && (
-          <div className="p-2 text-xs bg-red-50 text-red-500 rounded-lg border border-red-100">{error}</div>
-        )}
+        {error && <div className="p-2 text-xs bg-red-50 text-red-500 rounded-lg border border-red-100">{error}</div>}
         <textarea
           value={texto}
           onChange={(e) => onTextoChange(e.target.value)}
@@ -411,7 +413,7 @@ function TabNotas({ notas, texto, onTextoChange, onEnviar, guardando, error }) {
         </button>
       </form>
 
-      {(!notas || notas.length === 0) ? (
+      {!notas || notas.length === 0 ? (
         <Empty texto="Aun no hay notas internas para este cliente." />
       ) : (
         <div className="flex flex-col gap-2">
@@ -431,8 +433,6 @@ function TabNotas({ notas, texto, onTextoChange, onEnviar, guardando, error }) {
 
 function Empty({ texto }) {
   return (
-    <div className="py-8 text-center text-sm text-text-soft border border-dashed border-border rounded-xl">
-      {texto}
-    </div>
+    <div className="py-8 text-center text-sm text-text-soft border border-dashed border-border rounded-xl">{texto}</div>
   );
 }

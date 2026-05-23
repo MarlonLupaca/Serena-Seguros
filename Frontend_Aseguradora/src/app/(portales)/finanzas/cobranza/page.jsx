@@ -18,6 +18,7 @@ import {
 import Image from 'next/image';
 import { apiGet, apiPatch, apiUploadFile } from '@/lib/api';
 import { estiloTipo } from '@/lib/tipoSeguroConfig';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADOS = {
   PENDIENTE: { label: 'Pendiente', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
@@ -46,6 +47,7 @@ export default function CobranzaPage() {
   const [busq, setBusq] = useState('');
   const [actualizandoId, setActualizandoId] = useState(null);
   const [modalImportar, setModalImportar] = useState(false);
+  const [modalGrupo, setModalGrupo] = useState(null);
 
   useEffect(() => {
     cargar();
@@ -165,7 +167,7 @@ export default function CobranzaPage() {
           Sin cuotas con este filtro
         </div>
       ) : (
-        <GruposPoliza cuotas={filtradas} marcar={marcar} actualizandoId={actualizandoId} />
+        <TablaGrupos cuotas={filtradas} onVerCuotas={setModalGrupo} />
       )}
 
       {modalImportar && (
@@ -178,11 +180,19 @@ export default function CobranzaPage() {
           }}
         />
       )}
+      {modalGrupo && (
+        <ModalCuotas
+          grupo={modalGrupo}
+          marcar={marcar}
+          actualizandoId={actualizandoId}
+          onClose={() => setModalGrupo(null)}
+        />
+      )}
     </div>
   );
 }
 
-function GruposPoliza({ cuotas, marcar, actualizandoId }) {
+function TablaGrupos({ cuotas, onVerCuotas }) {
   const grupos = {};
   cuotas.forEach((c) => {
     const key = c.id_poliza || 0;
@@ -193,80 +203,121 @@ function GruposPoliza({ cuotas, marcar, actualizandoId }) {
   const lista = Object.values(grupos).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
   return (
-    <div className="flex flex-col gap-4">
-      {lista.map((g) => (
-        <GrupoPoliza key={g.id} grupo={g} marcar={marcar} actualizandoId={actualizandoId} />
-      ))}
-    </div>
+    <Table>
+      <TableHeader>
+        <TableHead>Póliza</TableHead>
+        <TableHead>Cuotas</TableHead>
+        <TableHead>Estado</TableHead>
+        <TableHead align="right">Monto Total</TableHead>
+        <TableHead align="right">Acciones</TableHead>
+      </TableHeader>
+      <TableBody>
+        {lista.map((g) => {
+          const tipoStyle = estiloTipo(g.tipo);
+          const pendientes = g.items.filter((c) => c.estado_pago !== 'PAGADO').length;
+          const totalMonto = g.items.reduce((acc, c) => acc + Number(c.monto || 0), 0);
+
+          return (
+            <TableRow key={g.id}>
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain w-10" />
+
+                  <div>
+                    <p className="text-sm font-bold text-text truncate max-w-[200px]">{g.nombre}</p>
+                    <p className="text-[11px] text-text-soft">POL-{String(g.id).padStart(6, '0')}</p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <p className="text-sm font-semibold text-text">
+                  {g.items.length} cuota{g.items.length !== 1 ? 's' : ''}
+                </p>
+              </TableCell>
+              <TableCell>
+                <span
+                  className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase ${pendientes > 0 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}
+                >
+                  {pendientes} pendiente{pendientes !== 1 ? 's' : ''}
+                </span>
+              </TableCell>
+              <TableCell align="right">
+                <span className="text-sm font-bold text-emerald-600">{formatearMoneda(totalMonto)}</span>
+              </TableCell>
+              <TableCell align="right">
+                <button
+                  onClick={() => onVerCuotas(g)}
+                  className="px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors"
+                >
+                  Ver cuotas
+                </button>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
 
-function GrupoPoliza({ grupo, marcar, actualizandoId }) {
-  const [abierto, setAbierto] = useState(true);
-  const tipoStyle = estiloTipo(grupo.tipo);
-  const pendientes = grupo.items.filter((c) => c.estado_pago !== 'PAGADO').length;
+function ModalCuotas({ grupo, marcar, actualizandoId, onClose }) {
   const totalMonto = grupo.items.reduce((acc, c) => acc + Number(c.monto || 0), 0);
 
   return (
-    <div className="bg-bg rounded-2xl border border-border overflow-hidden">
-      <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
-      <button
-        onClick={() => setAbierto(!abierto)}
-        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-bg-soft transition-colors"
-      >
-        <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain w-10" />
-
-        <div className="flex-1 min-w-0 text-left">
-          <p className="text-sm font-bold text-text">{grupo.nombre}</p>
-          <p className="text-xs text-text-soft mt-0.5">
-            POL-{String(grupo.id).padStart(6, '0')} · {grupo.items.length} cuota{grupo.items.length > 1 ? 's' : ''} ·{' '}
-            {pendientes} pendiente{pendientes !== 1 ? 's' : ''}
-          </p>
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div className="bg-bg w-full max-w-lg rounded-2xl border border-border shadow-xl overflow-hidden flex flex-col max-h-[92vh]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-bg-soft">
+          <div>
+            <p className="text-sm font-bold text-text">{grupo.nombre}</p>
+            <p className="text-[11px] text-text-soft mt-0.5">
+              POL-{String(grupo.id).padStart(6, '0')} · {formatearMoneda(totalMonto)}
+            </p>
+          </div>
+          <button onClick={onClose} className="text-text-soft hover:text-text">
+            <MdClose size={18} />
+          </button>
         </div>
-        <p className="text-sm font-bold text-text shrink-0">{formatearMoneda(totalMonto)}</p>
-        {abierto ? (
-          <MdExpandLess size={18} className="text-text-soft shrink-0" />
-        ) : (
-          <MdExpandMore size={18} className="text-text-soft shrink-0" />
-        )}
-      </button>
-      {abierto && (
-        <div className="border-t border-border divide-y divide-border/50">
-          {grupo.items.map((c) => {
-            const est = ESTADOS[c.estado_pago] || ESTADOS.PENDIENTE;
-            return (
-              <div key={c.id_cuota} className="px-4 py-3 flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-text">Cuota {c.numero_cuota}</p>
-                    <span
-                      className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-                      {est.label}
-                    </span>
+        <div className="overflow-y-auto p-5">
+          <div className="flex flex-col gap-3">
+            {grupo.items.map((c) => {
+              const est = ESTADOS[c.estado_pago] || ESTADOS.PENDIENTE;
+              return (
+                <div
+                  key={c.id_cuota}
+                  className="bg-bg rounded-xl border border-border p-4 flex items-center gap-3 flex-wrap sm:flex-nowrap"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-bold text-text">Cuota {c.numero_cuota}</p>
+                      <span
+                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${est.badge}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+                        {est.label}
+                      </span>
+                    </div>
+                    <p className="text-xs text-text-soft mt-1 flex items-center gap-1">
+                      <MdCalendarToday size={12} /> Vence {formatearFecha(c.fecha_vencimiento)}
+                    </p>
                   </div>
-                  <p className="text-xs text-text-soft mt-0.5 flex items-center gap-1">
-                    <MdCalendarToday size={11} /> Vence {formatearFecha(c.fecha_vencimiento)}
-                  </p>
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <p className="text-sm font-bold text-text">{formatearMoneda(c.monto)}</p>
+                    {c.estado_pago !== 'PAGADO' && (
+                      <button
+                        onClick={() => marcar(c.id_cuota)}
+                        disabled={actualizandoId === c.id_cuota}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
+                      >
+                        <MdPriceCheck size={14} /> Pagar
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <p className="text-sm font-bold text-text">{formatearMoneda(c.monto)}</p>
-                  {c.estado_pago !== 'PAGADO' && (
-                    <button
-                      onClick={() => marcar(c.id_cuota)}
-                      disabled={actualizandoId === c.id_cuota}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-success hover:bg-success/80 text-white text-xs font-semibold transition-colors disabled:opacity-50"
-                    >
-                      <MdPriceCheck size={13} /> Pagar
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

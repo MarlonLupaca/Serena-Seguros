@@ -29,6 +29,8 @@ import {
 } from 'react-icons/md';
 import { apiGet, apiPatch, apiPost, apiDelete, apiDownloadFile } from '@/lib/api';
 import ModalConfirm from '../../componentsMain/ModalConfirm';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import ModalGestionSiniestro from './ModalGestionSiniestro';
 
 const ESTADOS = {
   REPORTADO: { label: 'Reportado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
@@ -75,6 +77,8 @@ export default function SiniestrosCorePage() {
   const [modalProveedores, setModalProveedores] = useState(null);
   const [modalPerito, setModalPerito] = useState(null);
   const [modalIndemnizar, setModalIndemnizar] = useState(null);
+  const [modalGestion, setModalGestion] = useState(null);
+
   useEffect(() => {
     cargar();
   }, []);
@@ -167,20 +171,35 @@ export default function SiniestrosCorePage() {
           <p className="text-sm font-medium text-text">Sin siniestros</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {filtrados.map((s) => (
-            <SiniestroRow
-              key={s.id_siniestro}
-              s={s}
-              actualizando={actualizandoId === s.id_siniestro}
-              onCambiarEstado={(estado) => cambiarEstado(s.id_siniestro, estado)}
-              onAsignar={() => setModalAsignar(s)}
-              onProveedores={() => setModalProveedores(s)}
-              onPerito={() => setModalPerito(s)}
-              onIndemnizar={() => setModalIndemnizar(s)}
-            />
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableHead>Siniestro</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Póliza</TableHead>
+            <TableHead>Cliente</TableHead>
+            <TableHead>Fecha Reporte</TableHead>
+            <TableHead align="right">Monto Reclamado</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filtrados.map((s) => (
+              <SiniestroTableRow key={s.id_siniestro} s={s} onGestionar={() => setModalGestion(s)} />
+            ))}
+          </TableBody>
+        </Table>
+      )}
+
+      {modalGestion && (
+        <ModalGestionSiniestro
+          siniestro={siniestros.find((s) => s.id_siniestro === modalGestion.id_siniestro) || modalGestion}
+          onClose={() => setModalGestion(null)}
+          onAsignar={() => setModalAsignar(modalGestion)}
+          onProveedores={() => setModalProveedores(modalGestion)}
+          onPerito={() => setModalPerito(modalGestion)}
+          onIndemnizar={() => setModalIndemnizar(modalGestion)}
+          onCambiarEstado={(estado) => cambiarEstado(modalGestion.id_siniestro, estado)}
+          actualizando={actualizandoId === modalGestion.id_siniestro}
+        />
       )}
 
       {modalAsignar && (
@@ -230,110 +249,57 @@ export default function SiniestrosCorePage() {
   );
 }
 
-function SiniestroRow({ s, onCambiarEstado, onAsignar, onProveedores, onPerito, onIndemnizar, actualizando }) {
+function SiniestroTableRow({ s, onGestionar }) {
   const tipoStyle = estiloTipo(s.poliza_tipo);
   const Icon = tipoStyle.icon;
   const est = ESTADOS[s.estado_resolucion] || ESTADOS.REPORTADO;
-  const [menu, setMenu] = useState(false);
 
   return (
-    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow">
-      <div className={`h-1 w-full ${tipoStyle.accentBg}`} />
-      <div className="p-4 flex items-start gap-4 flex-wrap sm:flex-nowrap">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
-          <Icon size={20} className={tipoStyle.accentText} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-bold text-text">SIN-{String(s.id_siniestro).padStart(6, '0')}</p>
-            <span
-              className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${est.badge}`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-              {est.label}
-            </span>
+    <TableRow>
+      <TableCell>
+        <p className="text-sm font-bold text-text">SIN-{String(s.id_siniestro).padStart(6, '0')}</p>
+        <p className="text-xs text-text-soft mt-0.5">{s.tipo_incidente}</p>
+      </TableCell>
+      <TableCell>
+        <span
+          className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${est.badge}`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+          {est.label}
+        </span>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${tipoStyle.accentBg}`}>
+            <Icon size={16} className={tipoStyle.accentText} />
           </div>
-          <p className="text-xs text-text-soft mt-0.5">
-            POL-{String(s.id_poliza).padStart(6, '0')} · {s.poliza_nombre}
-          </p>
-          <p className="text-sm text-text mt-1">{s.tipo_incidente}</p>
-          <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-text-soft">
-            <span className="flex items-center gap-1">
-              <MdPerson size={11} /> Cliente: {s.cliente_nombre}
-            </span>
-            <span className="flex items-center gap-1">
-              <MdAssignmentInd size={11} /> Analista: {s.analista_asignado || 'Sin asignar'}
-            </span>
-            <span className="flex items-center gap-1">
-              <MdCalendarToday size={11} /> {formatearFecha(s.fecha_reporte)}
-            </span>
-            <span className="flex items-center gap-1">
-              <MdAttachMoney size={11} /> {formatearMoneda(s.monto_reclamado)}
-            </span>
+          <div>
+            <p className="text-xs font-bold text-text">POL-{String(s.id_poliza).padStart(6, '0')}</p>
+            <p className="text-xs text-text-soft">{s.poliza_tipo}</p>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2 shrink-0 relative">
-          <button
-            onClick={onAsignar}
-            disabled={actualizando}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors disabled:opacity-50"
-          >
-            <MdAssignmentInd size={13} /> {s.id_empleado_analista ? 'Reasignar' : 'Asignar'}
-          </button>
-          <button
-            onClick={onProveedores}
-            disabled={actualizando}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
-          >
-            <MdHandyman size={13} /> Proveedores
-          </button>
-          <button
-            onClick={onPerito}
-            disabled={actualizando}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
-            title={s.observaciones_perito ? 'Ver informe del perito' : 'Registrar informe del perito'}
-          >
-            <MdEngineering size={13} /> {s.observaciones_perito ? 'Ver perito' : 'Perito'}
-          </button>
-          {(s.estado_resolucion === 'APROBADO' || s.estado_resolucion === 'LIQUIDADO') && (
-            <button
-              onClick={onIndemnizar}
-              disabled={actualizando}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald-200 hover:bg-emerald-50 text-emerald-700 text-xs font-semibold transition-colors disabled:opacity-50"
-              title="Liquidar e indemnizar"
-            >
-              <MdPaid size={13} /> {s.estado_resolucion === 'LIQUIDADO' ? 'Ver indemnizacion' : 'Liquidar e indemnizar'}
-            </button>
-          )}
-          <button
-            onClick={() => setMenu((v) => !v)}
-            disabled={actualizando}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
-          >
-            <MdEdit size={13} /> Cambiar estado
-          </button>
-          {menu && (
-            <div className="absolute right-0 top-full mt-1 w-44 bg-bg border border-border rounded-xl shadow-lg z-10 overflow-hidden">
-              {Object.entries(ESTADOS)
-                .filter(([k]) => k !== s.estado_resolucion)
-                .map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      setMenu(false);
-                      onCambiarEstado(key);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-soft hover:bg-bg-soft transition-colors"
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                    {cfg.label}
-                  </button>
-                ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+      </TableCell>
+      <TableCell>
+        <span className="text-sm font-semibold text-text">{s.cliente_nombre}</span>
+      </TableCell>
+      <TableCell>
+        <span className="flex items-center gap-1.5 text-xs text-text-soft">
+          <MdCalendarToday size={12} />
+          {formatearFecha(s.fecha_reporte)}
+        </span>
+      </TableCell>
+      <TableCell align="right" className="text-sm font-bold text-text">
+        {formatearMoneda(s.monto_reclamado)}
+      </TableCell>
+      <TableCell align="right">
+        <button
+          onClick={onGestionar}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
+        >
+          Gestionar
+        </button>
+      </TableCell>
+    </TableRow>
   );
 }
 

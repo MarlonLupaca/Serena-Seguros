@@ -60,7 +60,7 @@ const segurosMenu = [
   },
   {
     section: 'Configuración',
-    items: [{ label: 'Tarifas', icon: MdMonetizationOn, href: '/core/tarifas' }],
+    items: [{ label: 'Productos', icon: MdCategory, href: '/core/productos' }],
   },
 ];
 

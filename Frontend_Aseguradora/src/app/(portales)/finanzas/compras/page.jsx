@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
@@ -14,6 +14,7 @@ import {
   MdAttachMoney,
 } from 'react-icons/md';
 import { apiGet, apiPatch, apiPost } from '@/lib/api';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const PRIORIDADES = {
   BAJA: { label: 'Baja', badge: 'bg-bg-soft text-text-soft' },
@@ -263,71 +264,87 @@ function SolicitudesList({ solicitudes, busq, actualizando, onCambiarEstado, onE
     );
 
   return (
-    <div className="flex flex-col gap-3">
-      {filtradas.map((s) => {
-        const est = ESTADOS[s.estado] || ESTADOS.PENDIENTE;
-        const prio = PRIORIDADES[s.prioridad] || PRIORIDADES.MEDIA;
-        const ocupada = actualizando === s.id_solicitud;
-        return (
-          <div key={s.id_solicitud} className="bg-bg rounded-2xl border border-border overflow-hidden">
-            <div className="h-1 w-full bg-primary/30" />
-            <div className="p-5 flex items-start gap-4 flex-wrap sm:flex-nowrap">
-              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <MdShoppingCart size={20} className="text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-bold text-text">{s.producto}</p>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${est.badge}`}>
-                    {est.label}
-                  </span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${prio.badge}`}>
-                    Prioridad {prio.label}
-                  </span>
-                </div>
-                <p className="text-xs text-text-soft mt-0.5">
-                  SOL-{String(s.id_solicitud).padStart(6, '0')} · Área {s.area}
-                </p>
-                {s.descripcion && <p className="text-xs text-text-soft mt-1 line-clamp-2">{s.descripcion}</p>}
-                <p className="text-[11px] text-text-soft mt-2">
-                  Solicitante: {s.solicitante_nombre || '—'} · {formatearFecha(s.fecha_solicitud)}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-2 shrink-0">
-                <p className="text-base font-bold text-text">{formatearMoneda(s.monto_estimado)}</p>
-                {s.estado === 'PENDIENTE' && (
-                  <div className="flex gap-2 flex-wrap justify-end">
-                    <button
-                      onClick={() => onCambiarEstado(s.id_solicitud, 'APROBADO')}
-                      disabled={ocupada}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold disabled:opacity-50"
-                    >
-                      Aprobar
-                    </button>
-                    <button
-                      onClick={() => onCambiarEstado(s.id_solicitud, 'RECHAZADO')}
-                      disabled={ocupada}
-                      className="px-3 py-1.5 rounded-lg border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-medium disabled:opacity-50"
-                    >
-                      Rechazar
-                    </button>
+    <Table>
+      <TableHeader>
+        <TableHead>Solicitud</TableHead>
+        <TableHead>Prioridad</TableHead>
+        <TableHead>Solicitante</TableHead>
+        <TableHead>Estado</TableHead>
+        <TableHead align="right">Monto Estimado</TableHead>
+        <TableHead align="right">Acciones</TableHead>
+      </TableHeader>
+      <TableBody>
+        {filtradas.map((s) => {
+          const est = ESTADOS[s.estado] || ESTADOS.PENDIENTE;
+          const prio = PRIORIDADES[s.prioridad] || PRIORIDADES.MEDIA;
+          const ocupada = actualizando === s.id_solicitud;
+          return (
+            <TableRow key={s.id_solicitud}>
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <MdShoppingCart size={18} className="text-primary" />
                   </div>
-                )}
-                {s.estado === 'APROBADO' && (
-                  <button
-                    onClick={() => onEmitirOrden(s)}
-                    disabled={ocupada}
-                    className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold disabled:opacity-50"
-                  >
-                    Emitir orden
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+                  <div>
+                    <p className="text-sm font-bold text-text truncate max-w-[200px]">{s.producto}</p>
+                    <p className="text-[11px] text-text-soft">SOL-{String(s.id_solicitud).padStart(6, '0')} · {s.area}</p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${prio.badge}`}>
+                  {prio.label}
+                </span>
+              </TableCell>
+              <TableCell>
+                <p className="text-sm font-semibold text-text">{s.solicitante_nombre || '—'}</p>
+                <p className="text-[11px] text-text-soft">{formatearFecha(s.fecha_solicitud)}</p>
+              </TableCell>
+              <TableCell>
+                <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${est.badge}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+                  {est.label}
+                </span>
+              </TableCell>
+              <TableCell align="right">
+                <span className="text-sm font-bold text-emerald-600">{formatearMoneda(s.monto_estimado)}</span>
+              </TableCell>
+              <TableCell align="right">
+                <div className="flex gap-2 justify-end shrink-0">
+                  {s.estado === 'PENDIENTE' && (
+                    <>
+                      <button
+                        onClick={() => onCambiarEstado(s.id_solicitud, 'APROBADO')}
+                        disabled={ocupada}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
+                      >
+                        Aprobar
+                      </button>
+                      <button
+                        onClick={() => onCambiarEstado(s.id_solicitud, 'RECHAZADO')}
+                        disabled={ocupada}
+                        className="px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-medium transition-colors disabled:opacity-50"
+                      >
+                        Rechazar
+                      </button>
+                    </>
+                  )}
+                  {s.estado === 'APROBADO' && (
+                    <button
+                      onClick={() => onEmitirOrden(s)}
+                      disabled={ocupada}
+                      className="px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors disabled:opacity-50"
+                    >
+                      Emitir orden
+                    </button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -349,40 +366,43 @@ function ProveedoresList({ proveedores, busq }) {
     );
 
   return (
-    <div className="bg-bg rounded-2xl border border-border overflow-hidden overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-bg-soft">
-          <tr className="text-xs text-text-soft">
-            <th className="px-3 py-2 text-left font-medium">Nombre</th>
-            <th className="px-3 py-2 text-left font-medium">RUC</th>
-            <th className="px-3 py-2 text-left font-medium">Rubro</th>
-            <th className="px-3 py-2 text-left font-medium">Contacto</th>
-            <th className="px-3 py-2 text-left font-medium">Teléfono</th>
-            <th className="px-3 py-2 text-right font-medium">Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtrados.map((p) => (
-            <tr key={p.id_proveedor_interno} className="border-t border-border">
-              <td className="px-3 py-2.5 font-semibold text-text">{p.nombre}</td>
-              <td className="px-3 py-2.5 text-text-soft">{p.ruc}</td>
-              <td className="px-3 py-2.5 text-text-soft">{p.rubro}</td>
-              <td className="px-3 py-2.5 text-text-soft">{p.contacto || '—'}</td>
-              <td className="px-3 py-2.5 text-text-soft">{p.telefono || '—'}</td>
-              <td className="px-3 py-2.5 text-right">
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    p.estado === 'ACTIVO' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  {p.estado}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableHead>Nombre</TableHead>
+        <TableHead>RUC</TableHead>
+        <TableHead>Contacto</TableHead>
+        <TableHead>Teléfono</TableHead>
+        <TableHead align="right">Estado</TableHead>
+      </TableHeader>
+      <TableBody>
+        {filtrados.map((p) => (
+          <TableRow key={p.id_proveedor_interno}>
+            <TableCell>
+              <p className="text-sm font-bold text-text truncate max-w-[200px]">{p.nombre}</p>
+              <p className="text-[11px] text-text-soft">{p.rubro}</p>
+            </TableCell>
+            <TableCell>
+              <span className="text-sm font-medium text-text">{p.ruc}</span>
+            </TableCell>
+            <TableCell>
+              <span className="text-sm font-medium text-text">{p.contacto || '—'}</span>
+            </TableCell>
+            <TableCell>
+              <span className="text-sm font-medium text-text">{p.telefono || '—'}</span>
+            </TableCell>
+            <TableCell align="right">
+              <span
+                className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                  p.estado === 'ACTIVO' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {p.estado}
+              </span>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -404,36 +424,54 @@ function OrdenesList({ ordenes, busq }) {
     );
 
   return (
-    <div className="flex flex-col gap-3">
-      {filtradas.map((o) => (
-        <div key={o.id_orden} className="bg-bg rounded-2xl border border-border p-5 flex items-center gap-4 flex-wrap">
-          <div className="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
-            <MdLocalShipping size={20} className="text-emerald-600" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-text">{o.solicitud_producto}</p>
-            <p className="text-xs text-text-soft mt-0.5">
-              OC-{String(o.id_orden).padStart(6, '0')} · Proveedor: {o.proveedor_nombre}
-            </p>
-            <p className="text-[11px] text-text-soft mt-1">{formatearFecha(o.fecha_emision)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-base font-bold text-text">{formatearMoneda(o.monto_total)}</p>
-            <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                o.estado === 'CERRADA'
-                  ? 'bg-slate-100 text-slate-600'
-                  : o.estado === 'RECIBIDA'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-sky-100 text-sky-700'
-              }`}
-            >
-              {o.estado}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
+    <Table>
+      <TableHeader>
+        <TableHead>Orden</TableHead>
+        <TableHead>Proveedor</TableHead>
+        <TableHead>Fecha Emisión</TableHead>
+        <TableHead align="right">Monto Total</TableHead>
+        <TableHead align="right">Estado</TableHead>
+      </TableHeader>
+      <TableBody>
+        {filtradas.map((o) => (
+          <TableRow key={o.id_orden}>
+            <TableCell>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+                  <MdLocalShipping size={18} className="text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-text truncate max-w-[200px]">{o.solicitud_producto}</p>
+                  <p className="text-[11px] text-text-soft">OC-{String(o.id_orden).padStart(6, '0')}</p>
+                </div>
+              </div>
+            </TableCell>
+            <TableCell>
+              <span className="text-sm font-semibold text-text">{o.proveedor_nombre}</span>
+            </TableCell>
+            <TableCell>
+              <span className="text-sm font-medium text-text">{formatearFecha(o.fecha_emision)}</span>
+            </TableCell>
+            <TableCell align="right">
+              <span className="text-sm font-bold text-text">{formatearMoneda(o.monto_total)}</span>
+            </TableCell>
+            <TableCell align="right">
+              <span
+                className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                  o.estado === 'CERRADA'
+                    ? 'bg-slate-100 text-slate-600'
+                    : o.estado === 'RECIBIDA'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-sky-100 text-sky-700'
+                }`}
+              >
+                {o.estado}
+              </span>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 

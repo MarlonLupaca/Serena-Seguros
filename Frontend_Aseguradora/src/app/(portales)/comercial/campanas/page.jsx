@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
@@ -14,6 +14,8 @@ import {
   MdTrendingUp,
 } from 'react-icons/md';
 import { apiGet, apiPatch, apiPost } from '@/lib/api';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import ModalDetalleCampana from './ModalDetalleCampana';
 
 function formatearFecha(iso) {
   if (!iso) return '—';
@@ -29,6 +31,7 @@ export default function CampanasPage() {
   const [busq, setBusq] = useState('');
   const [modalNueva, setModalNueva] = useState(false);
   const [modalEnvio, setModalEnvio] = useState(null);
+  const [modalDetalle, setModalDetalle] = useState(null);
 useEffect(() => {
     cargar();
   }, []);
@@ -110,11 +113,26 @@ const filtradas = campanas.filter((c) =>
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {filtradas.map((c) => (
-            <CampanaCard key={c.id_campana} c={c} onRegistrarEnvio={() => setModalEnvio(c)} />
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableHead>ID</TableHead>
+            <TableHead>Campaña</TableHead>
+            <TableHead>Creación</TableHead>
+            <TableHead>Métricas</TableHead>
+            <TableHead>Rendimiento</TableHead>
+            <TableHead align="right">Acciones</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filtradas.map((c) => (
+              <CampanaTableRow 
+                key={c.id_campana} 
+                c={c} 
+                onRegistrarEnvio={() => setModalEnvio(c)} 
+                onVerDetalle={() => setModalDetalle(c)}
+              />
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {modalNueva && (
@@ -138,6 +156,12 @@ const filtradas = campanas.filter((c) =>
           }}
         />
       )}
+      {modalDetalle && (
+        <ModalDetalleCampana 
+          campana={modalDetalle} 
+          onClose={() => setModalDetalle(null)} 
+        />
+      )}
     </div>
   );
 }
@@ -156,42 +180,70 @@ function Kpi({ label, val, icon: Icon, bg, color }) {
   );
 }
 
-function CampanaCard({ c, onRegistrarEnvio }) {
+function CampanaTableRow({ c, onRegistrarEnvio, onVerDetalle }) {
   const apertura = c.enviados > 0 ? Math.round((c.abiertos / c.enviados) * 100) : 0;
+  
+  let badgeInfo = { label: 'Sin envíos', badge: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' };
+  if (c.enviados > 0) {
+    if (apertura >= 40) {
+      badgeInfo = { label: 'Excelente', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' };
+    } else if (apertura >= 20) {
+      badgeInfo = { label: 'Bueno', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-500' };
+    } else {
+      badgeInfo = { label: 'Bajo', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' };
+    }
+  }
+
   return (
-    <div className="bg-bg rounded-2xl border border-border hover:shadow-md transition-shadow overflow-hidden">
-      <div className="h-1 w-full bg-primary/30" />
-      <div className="p-5">
-        <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">
-          <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-            <MdEmail size={20} className="text-primary" />
+    <TableRow>
+      <TableCell className="text-sm font-bold text-text">
+        CAM-{String(c.id_campana).padStart(6, '0')}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <MdEmail size={18} className="text-primary" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-text">{c.asunto}</p>
-            <p className="text-xs text-text-soft mt-0.5">CAM-{String(c.id_campana).padStart(6, '0')}</p>
-            <p className="text-xs text-text-soft mt-1 line-clamp-2">{c.plantilla}</p>
-            <p className="text-xs text-text-soft mt-2 flex items-center gap-1">
-              <MdCalendarToday size={11} /> {formatearFecha(c.fecha_creacion)}
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <div className="text-right">
-              <p className="text-xs text-text-soft">Enviados / Abiertos</p>
-              <p className="text-sm font-bold text-text">
-                {c.enviados} / {c.abiertos}
-              </p>
-              <p className="text-xs text-emerald-600 font-medium">{apertura}% apertura</p>
-            </div>
-            <button
-              onClick={onRegistrarEnvio}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
-            >
-              <MdSend size={13} /> Registrar envío
-            </button>
-          </div>
+          <p className="text-sm font-bold text-text">{c.asunto}</p>
         </div>
-      </div>
-    </div>
+      </TableCell>
+      <TableCell>
+        <span className="flex items-center gap-1 text-xs text-text-soft">
+          <MdCalendarToday size={11} /> {formatearFecha(c.fecha_creacion)}
+        </span>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-0.5 text-xs">
+          <span className="text-text-soft">Env. <span className="font-bold text-text">{c.enviados}</span></span>
+          <span className="text-text-soft">Abr. <span className="font-bold text-text">{c.abiertos}</span></span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col items-start gap-1">
+          <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${badgeInfo.badge}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${badgeInfo.dot}`} />
+            {badgeInfo.label}
+          </span>
+          <span className="text-[10px] font-semibold text-text-soft ml-1">{apertura}% aperturas</span>
+        </div>
+      </TableCell>
+      <TableCell align="right">
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={onVerDetalle}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bg-soft border border-border hover:bg-border/50 text-text text-xs font-semibold transition-colors"
+          >
+            Ver detalle
+          </button>
+          <button
+            onClick={onRegistrarEnvio}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
+          >
+            <MdSend size={13} /> Registrar envío
+          </button>
+        </div>
+      </TableCell>
+    </TableRow>
   );
 }
 

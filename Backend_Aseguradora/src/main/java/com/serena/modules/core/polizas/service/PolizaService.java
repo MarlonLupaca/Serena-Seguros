@@ -2,6 +2,8 @@ package com.serena.modules.core.polizas.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serena.modules.comercial.cotizaciones.entity.LeadCotizacion;
+import com.serena.modules.comercial.comisiones.entity.ComisionAgente;
+import com.serena.modules.comercial.comisiones.repository.ComisionAgenteRepository;
 import com.serena.modules.comercial.propuestas.dto.PropuestaResponse;
 import com.serena.modules.comercial.propuestas.entity.PropuestaPoliza;
 import com.serena.modules.comercial.suscripcion.entity.EvaluacionRiesgo;
@@ -28,6 +30,7 @@ import com.serena.modules.finanzas.cuotas.entity.Cuota;
 import com.serena.modules.finanzas.cuotas.repository.CuotaRepository;
 import com.serena.modules.finanzas.cuotas.service.CuotaService;
 import com.serena.modules.seguridad.auth.entity.Usuario;
+import com.serena.modules.seguridad.empleados.entity.Empleado;
 import com.serena.modules.seguridad.auth.repository.PersonaRepository;
 import com.serena.modules.seguridad.clientes.entity.Cliente;
 import com.serena.modules.seguridad.clientes.repository.ClienteRepository;
@@ -64,6 +67,7 @@ public class PolizaService {
     private final EvaluacionRiesgoService evaluacionService;
     private final CuotaService cuotaService;
     private final DocumentoService documentoService;
+    private final ComisionAgenteRepository comisionRepository;
 
     @Transactional(readOnly = true)
     public List<PolizaResponse> misPolizas(Usuario usuario, Poliza.EstadoPoliza estado) {
@@ -154,6 +158,25 @@ public class PolizaService {
         Poliza guardada = polizaRepository.save(poliza);
 
         cuotaService.generarCuotasParaPoliza(guardada);
+        
+        // Generar Comision del Vendedor (10%)
+        if (propuesta.getCotizacion() != null && propuesta.getCotizacion().getEmpleadoAgente() != null) {
+            Empleado agente = propuesta.getCotizacion().getEmpleadoAgente();
+            BigDecimal porcentaje = new BigDecimal("10.00");
+            BigDecimal montoGenerado = guardada.getPrimaTotal()
+                    .multiply(porcentaje)
+                    .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+
+            ComisionAgente comision = ComisionAgente.builder()
+                    .empleadoAgente(agente)
+                    .poliza(guardada)
+                    .porcentaje(porcentaje)
+                    .montoGenerado(montoGenerado)
+                    .estadoPago(ComisionAgente.EstadoPago.PENDIENTE)
+                    .build();
+            comisionRepository.save(comision);
+        }
+
         return guardada;
     }
 

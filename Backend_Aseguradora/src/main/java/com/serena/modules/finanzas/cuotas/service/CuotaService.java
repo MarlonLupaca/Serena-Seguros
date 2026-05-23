@@ -2,6 +2,8 @@ package com.serena.modules.finanzas.cuotas.service;
 
 import com.serena.modules.core.polizas.entity.Poliza;
 import com.serena.modules.core.polizas.repository.PolizaRepository;
+import com.serena.modules.comercial.comisiones.entity.ComisionAgente;
+import com.serena.modules.comercial.comisiones.repository.ComisionAgenteRepository;
 import com.serena.modules.finanzas.cuotas.dto.CuotaResponse;
 import com.serena.modules.finanzas.cuotas.entity.Cuota;
 import com.serena.modules.finanzas.cuotas.repository.CuotaRepository;
@@ -34,6 +36,7 @@ public class CuotaService {
     private final PolizaRepository polizaRepository;
     private final AuditoriaService auditoriaService;
     private final NotificacionService notificacionService;
+    private final ComisionAgenteRepository comisionRepository;
 
     @Transactional(readOnly = true)
     public List<CuotaResponse> misCuotas(Usuario usuario, Cuota.EstadoPago estado) {
@@ -130,6 +133,12 @@ public class CuotaService {
                 "Tu poliza fue activada",
                 "Pagaste la primera cuota. La poliza esta vigente hasta " + poliza.getVigenciaFin(),
                 "/asegurado/polizas");
+
+        // Liberar el pago de la comision
+        comisionRepository.findByPoliza(poliza).ifPresent(comision -> {
+            comision.setEstadoPago(ComisionAgente.EstadoPago.PAGADA);
+            comisionRepository.save(comision);
+        });
     }
 
     private Cliente clienteDelUsuario(Usuario usuario) {

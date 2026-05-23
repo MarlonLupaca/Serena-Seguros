@@ -10,6 +10,7 @@ import {
   MdTrendingDown,
 } from 'react-icons/md';
 import { apiGet } from '@/lib/api';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const TIPO_FACTURA = {
   FACTURA: 'bg-primary/10 text-primary',
@@ -142,42 +143,44 @@ function TabFacturas({ facturas }) {
         <Kpi label="Total cobrado" val={formatearMoneda(totalPagado)} accent="emerald" />
       </div>
 
-      <div className="bg-bg rounded-2xl border border-border overflow-hidden overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-bg-soft">
-            <tr className="text-xs text-text-soft">
-              <th className="px-3 py-2 text-left font-medium">Tipo</th>
-              <th className="px-3 py-2 text-left font-medium">Serie-Número</th>
-              <th className="px-3 py-2 text-left font-medium">Cliente</th>
-              <th className="px-3 py-2 text-left font-medium">Fecha</th>
-              <th className="px-3 py-2 text-right font-medium">Total</th>
-              <th className="px-3 py-2 text-right font-medium">Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {facturas.map((f) => (
-              <tr key={f.id_factura} className="border-t border-border">
-                <td className="px-3 py-2.5">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TIPO_FACTURA[f.tipo] || 'bg-bg-soft'}`}>
-                    {f.tipo}
-                  </span>
-                </td>
-                <td className="px-3 py-2.5 font-semibold text-text">
-                  {f.serie}-{f.numero}
-                </td>
-                <td className="px-3 py-2.5 text-text-soft">{f.cliente_nombre || '—'}</td>
-                <td className="px-3 py-2.5 text-text-soft">{formatearFecha(f.fecha_emision)}</td>
-                <td className="px-3 py-2.5 text-right font-bold text-text">{formatearMoneda(f.total)}</td>
-                <td className="px-3 py-2.5 text-right">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ESTADO_FACTURA[f.estado]}`}>
-                    {f.estado}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableHead>Tipo</TableHead>
+          <TableHead>Serie-Número</TableHead>
+          <TableHead>Cliente</TableHead>
+          <TableHead>Fecha</TableHead>
+          <TableHead align="right">Total</TableHead>
+          <TableHead align="right">Estado</TableHead>
+        </TableHeader>
+        <TableBody>
+          {facturas.map((f) => (
+            <TableRow key={f.id_factura}>
+              <TableCell>
+                <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${TIPO_FACTURA[f.tipo] || 'bg-bg-soft'}`}>
+                  {f.tipo}
+                </span>
+              </TableCell>
+              <TableCell>
+                <span className="font-semibold text-text">{f.serie}-{f.numero}</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-sm font-medium text-text">{f.cliente_nombre || '—'}</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-sm text-text-soft">{formatearFecha(f.fecha_emision)}</span>
+              </TableCell>
+              <TableCell align="right">
+                <span className="text-sm font-bold text-text">{formatearMoneda(f.total)}</span>
+              </TableCell>
+              <TableCell align="right">
+                <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${ESTADO_FACTURA[f.estado]}`}>
+                  {f.estado}
+                </span>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
@@ -209,37 +212,44 @@ function TabDiario({ asientos }) {
               {a.estado}
             </span>
           </div>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-xs text-text-soft">
-                <th className="px-3 py-2 text-left font-medium">Código</th>
-                <th className="px-3 py-2 text-left font-medium">Cuenta</th>
-                <th className="px-3 py-2 text-right font-medium">Debe</th>
-                <th className="px-3 py-2 text-right font-medium">Haber</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableHead>Código</TableHead>
+              <TableHead>Cuenta</TableHead>
+              <TableHead align="right">Debe</TableHead>
+              <TableHead align="right">Haber</TableHead>
+            </TableHeader>
+            <TableBody>
               {a.movimientos.map((m) => (
-                <tr key={m.id_movimiento} className="border-t border-border">
-                  <td className="px-3 py-2 text-text-soft font-mono text-xs">{m.cuenta_codigo}</td>
-                  <td className="px-3 py-2 text-text">{m.cuenta_nombre}</td>
-                  <td className="px-3 py-2 text-right text-text">
-                    {Number(m.debe) > 0 ? formatearMoneda(m.debe) : '—'}
-                  </td>
-                  <td className="px-3 py-2 text-right text-text">
-                    {Number(m.haber) > 0 ? formatearMoneda(m.haber) : '—'}
-                  </td>
-                </tr>
+                <TableRow key={m.id_movimiento}>
+                  <TableCell>
+                    <span className="text-text-soft font-mono text-xs">{m.cuenta_codigo}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm font-medium text-text">{m.cuenta_nombre}</span>
+                  </TableCell>
+                  <TableCell align="right">
+                    <span className="text-sm font-medium text-text">{Number(m.debe) > 0 ? formatearMoneda(m.debe) : '—'}</span>
+                  </TableCell>
+                  <TableCell align="right">
+                    <span className="text-sm font-medium text-text">{Number(m.haber) > 0 ? formatearMoneda(m.haber) : '—'}</span>
+                  </TableCell>
+                </TableRow>
               ))}
-              <tr className="border-t border-border bg-bg-soft font-bold">
-                <td colSpan={2} className="px-3 py-2 text-text-soft">
-                  Totales
-                </td>
-                <td className="px-3 py-2 text-right text-text">{formatearMoneda(a.total_debe)}</td>
-                <td className="px-3 py-2 text-right text-text">{formatearMoneda(a.total_haber)}</td>
-              </tr>
-            </tbody>
-          </table>
+              <TableRow className="bg-bg-soft">
+                <TableCell>
+                  <span className="text-sm font-bold text-text-soft">Totales</span>
+                </TableCell>
+                <TableCell></TableCell>
+                <TableCell align="right">
+                  <span className="text-sm font-bold text-text">{formatearMoneda(a.total_debe)}</span>
+                </TableCell>
+                <TableCell align="right">
+                  <span className="text-sm font-bold text-text">{formatearMoneda(a.total_haber)}</span>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
       ))}
     </div>
