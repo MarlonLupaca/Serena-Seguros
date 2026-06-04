@@ -151,20 +151,21 @@ public class FlujoAdquisicionSeeder implements CommandLineRunner {
         int creadas = (int) indemnizacionRepository.count();
         for (Siniestro s : siniestros) {
             if (creadas >= 5) break;
-            if (s.getEstadoResolucion() != Siniestro.EstadoResolucion.LIQUIDADO
-                    && s.getEstadoResolucion() != Siniestro.EstadoResolucion.APROBADO) continue;
+            if (s.getEstadoResolucion() != Siniestro.EstadoResolucion.FINALIZADO
+                    && s.getEstadoResolucion() != Siniestro.EstadoResolucion.APROBADO
+                    && s.getEstadoResolucion() != Siniestro.EstadoResolucion.PENDIENTE_ACEPTACION) continue;
             if (!indemnizacionRepository.findBySiniestro(s).isEmpty()) continue;
 
             BigDecimal monto = s.getMontoReclamado().multiply(new BigDecimal("0.85"));
             indemnizacionRepository.save(Indemnizacion.builder()
                     .siniestro(s)
                     .montoAprobado(monto)
-                    .montoPagado(s.getEstadoResolucion() == Siniestro.EstadoResolucion.LIQUIDADO
+                    .montoPagado(s.getEstadoResolucion() == Siniestro.EstadoResolucion.FINALIZADO
                             ? monto
                             : BigDecimal.ZERO)
                     .medioPago(Indemnizacion.MedioPago.TRANSFERENCIA)
                     .observaciones("Indemnizacion demo generada por seeder")
-                    .fechaPago(s.getEstadoResolucion() == Siniestro.EstadoResolucion.LIQUIDADO
+                    .fechaPago(s.getEstadoResolucion() == Siniestro.EstadoResolucion.FINALIZADO
                             ? LocalDateTime.now().minusDays(5)
                             : null)
                     .build());

@@ -16,4 +16,6 @@ public interface EndosoPolizaRepository
     List<EndosoPoliza> findAllByOrderByFechaSolicitudDesc();
 
     List<EndosoPoliza> findByEstadoAprobacionOrderByFechaSolicitudDesc(EndosoPoliza.EstadoAprobacion estado);
+
+    List<EndosoPoliza> findByPoliza_ClienteOrderByFechaSolicitudDesc(com.serena.modules.seguridad.clientes.entity.Cliente cliente);
 }

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
@@ -18,7 +18,7 @@ import {
 import Image from 'next/image';
 import { apiGet, apiPatch, apiUploadFile } from '@/lib/api';
 import { estiloTipo } from '@/lib/tipoSeguroConfig';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADOS = {
   PENDIENTE: { label: 'Pendiente', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
@@ -203,60 +203,59 @@ function TablaGrupos({ cuotas, onVerCuotas }) {
   const lista = Object.values(grupos).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
   return (
-    <Table>
-      <TableHeader>
-        <TableHead>Póliza</TableHead>
-        <TableHead>Cuotas</TableHead>
-        <TableHead>Estado</TableHead>
-        <TableHead align="right">Monto Total</TableHead>
-        <TableHead align="right">Acciones</TableHead>
-      </TableHeader>
-      <TableBody>
-        {lista.map((g) => {
-          const tipoStyle = estiloTipo(g.tipo);
-          const pendientes = g.items.filter((c) => c.estado_pago !== 'PAGADO').length;
-          const totalMonto = g.items.reduce((acc, c) => acc + Number(c.monto || 0), 0);
+    <DataTable
+      data={lista}
+      columns={[
+        { label: 'Póliza' },
+        { label: 'Cuotas' },
+        { label: 'Estado' },
+        { label: 'Monto Total', align: 'right' },
+        { label: 'Acciones', align: 'right' }
+      ]}
+      renderRow={(g) => {
+        const tipoStyle = estiloTipo(g.tipo);
+        const pendientes = g.items.filter((c) => c.estado_pago !== 'PAGADO').length;
+        const totalMonto = g.items.reduce((acc, c) => acc + Number(c.monto || 0), 0);
 
-          return (
-            <TableRow key={g.id}>
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain w-10" />
+        return (
+          <TableRow key={g.id}>
+            <TableCell>
+              <div className="flex items-center gap-3">
+                <Image src={tipoStyle.imagen} width={20} height={20} alt="" className="object-contain w-10" />
 
-                  <div>
-                    <p className="text-sm font-bold text-text truncate max-w-[200px]">{g.nombre}</p>
-                    <p className="text-[11px] text-text-soft">POL-{String(g.id).padStart(6, '0')}</p>
-                  </div>
+                <div>
+                  <p className="text-sm font-bold text-text truncate max-w-[200px]">{g.nombre}</p>
+                  <p className="text-[11px] text-text-soft">POL-{String(g.id).padStart(6, '0')}</p>
                 </div>
-              </TableCell>
-              <TableCell>
-                <p className="text-sm font-semibold text-text">
-                  {g.items.length} cuota{g.items.length !== 1 ? 's' : ''}
-                </p>
-              </TableCell>
-              <TableCell>
-                <span
-                  className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase ${pendientes > 0 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}
-                >
-                  {pendientes} pendiente{pendientes !== 1 ? 's' : ''}
-                </span>
-              </TableCell>
-              <TableCell align="right">
-                <span className="text-sm font-bold text-emerald-600">{formatearMoneda(totalMonto)}</span>
-              </TableCell>
-              <TableCell align="right">
-                <button
-                  onClick={() => onVerCuotas(g)}
-                  className="px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors"
-                >
-                  Ver cuotas
-                </button>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+              </div>
+            </TableCell>
+            <TableCell>
+              <p className="text-sm font-semibold text-text">
+                {g.items.length} cuota{g.items.length !== 1 ? 's' : ''}
+              </p>
+            </TableCell>
+            <TableCell>
+              <span
+                className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase ${pendientes > 0 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}
+              >
+                {pendientes} pendiente{pendientes !== 1 ? 's' : ''}
+              </span>
+            </TableCell>
+            <TableCell align="right">
+              <span className="text-sm font-bold text-emerald-600">{formatearMoneda(totalMonto)}</span>
+            </TableCell>
+            <TableCell align="right">
+              <button
+                onClick={() => onVerCuotas(g)}
+                className="px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors"
+              >
+                Ver cuotas
+              </button>
+            </TableCell>
+          </TableRow>
+        );
+      }}
+    />
   );
 }
 

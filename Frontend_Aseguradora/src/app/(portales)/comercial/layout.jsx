@@ -13,6 +13,9 @@ import {
   MdAssignmentInd,
   MdCampaign,
   MdPieChart,
+  MdEditNote,
+  MdAutorenew,
+  MdSupportAgent,
 } from 'react-icons/md';
 import { CiMoneyBill } from 'react-icons/ci';
 import { GiProcessor } from 'react-icons/gi';
@@ -31,14 +34,18 @@ const employeeMenu = [
     items: [
       { label: 'Leads', icon: MdAssignmentInd, href: '/comercial/leads' },
       { label: 'Clientes', icon: MdPeople, href: '/comercial/clientes' },
-      { label: 'Siniestros', icon: MdWarning, href: '/comercial/siniestros' },
-      { label: 'Campañas', icon: MdCampaign, href: '/comercial/campanas' },
-      { label: 'Renovaciones y Endosos', icon: MdPieChart, href: '/comercial/renovaciones' },
+      { label: 'Siniestros',    icon: MdWarning,    href: '/comercial/siniestros' },
+      { label: 'Campañas',      icon: MdCampaign,   href: '/comercial/campanas' },
+      { label: 'Renovaciones',  icon: MdAutorenew,  href: '/comercial/renovaciones' },
+      { label: 'Endosos',       icon: MdEditNote,   href: '/comercial/endosos' },
     ],
   },
   {
     section: 'Herramientas',
-    items: [{ label: 'Simulador', icon: GiProcessor, href: '/comercial/simulador' }],
+    items: [
+      { label: 'Simulador', icon: GiProcessor, href: '/comercial/simulador' },
+      { label: 'Soporte', icon: MdSupportAgent, href: '/comercial/soporte' }
+    ],
   },
 ];
 

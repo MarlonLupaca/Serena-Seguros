@@ -16,12 +16,17 @@ import {
 } from 'react-icons/md';
 
 const ESTADOS = {
-  REPORTADO: { label: 'Reportado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
+  REGISTRADO: { label: 'Registrado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
   EN_REVISION: { label: 'En revisión', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
-  INSPECCION: { label: 'Inspección', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-400' },
+  DOCUMENTACION_PENDIENTE: { label: 'Doc. Pendiente', badge: 'bg-orange-100 text-orange-600', dot: 'bg-orange-400' },
+  EN_EVALUACION: { label: 'En evaluación', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-400' },
+  PROVEEDOR_ASIGNADO: { label: 'Proveedor', badge: 'bg-indigo-100 text-indigo-700', dot: 'bg-indigo-400' },
+  LIQUIDACION_CALCULADA: { label: 'Liq. Calculada', badge: 'bg-teal-100 text-teal-700', dot: 'bg-teal-400' },
   APROBADO: { label: 'Aprobado', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
   RECHAZADO: { label: 'Rechazado', badge: 'bg-rose-100 text-rose-600', dot: 'bg-rose-400' },
-  LIQUIDADO: { label: 'Liquidado', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+  PENDIENTE_ACEPTACION: { label: 'Pdte. Aceptación', badge: 'bg-fuchsia-100 text-fuchsia-700', dot: 'bg-fuchsia-400' },
+  PAGO_PROGRAMADO: { label: 'Pago Prog.', badge: 'bg-violet-100 text-violet-700', dot: 'bg-violet-400' },
+  FINALIZADO: { label: 'Finalizado', badge: 'bg-slate-100 text-slate-700', dot: 'bg-slate-500' },
 };
 
 const TIPO_STYLES = {

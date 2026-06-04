@@ -68,7 +68,7 @@ public class TecnicoAuditoriaSeeder implements CommandLineRunner {
                         .tipoIncidente("Choque o Incidente Menor")
                         .descripcion("Reporte de prueba generado por el sistema")
                         .fechaOcurrencia(LocalDate.now().minusDays(5))
-                        .estadoResolucion(Siniestro.EstadoResolucion.REPORTADO)
+                        .estadoResolucion(Siniestro.EstadoResolucion.REGISTRADO)
                         .montoReclamado(new BigDecimal("1500.00"))
                         .build());
             });

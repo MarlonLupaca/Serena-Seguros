@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { MdAdd, MdCalculate, MdClose, MdEdit, MdWarning } from 'react-icons/md';
 import { apiGet, apiPost, apiPut } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 function formatearMoneda(v) {
   if (v == null) return '—';
@@ -81,60 +81,59 @@ const totalAsignado = presupuestos.reduce((acc, p) => acc + Number(p.presupuesto
       ) : presupuestos.length === 0 ? (
         <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">Sin presupuestos</div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Área</TableHead>
-            <TableHead align="right">Ejecutado</TableHead>
-            <TableHead align="right">Asignado</TableHead>
-            <TableHead>Uso del Presupuesto</TableHead>
-            <TableHead align="right">Disponible</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {presupuestos.map((p) => {
-              const colorBarra = p.porcentaje_uso >= 100 ? 'bg-rose-500' : p.porcentaje_uso >= 80 ? 'bg-amber-500' : 'bg-primary';
-              return (
-                <TableRow key={p.id_presupuesto}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <MdCalculate size={18} className="text-primary" />
-                      </div>
-                      <span className="text-sm font-bold text-text truncate max-w-[200px]">{p.area}</span>
+        <DataTable
+          data={presupuestos}
+          columns={[
+            { label: 'Área' },
+            { label: 'Ejecutado', align: 'right' },
+            { label: 'Asignado', align: 'right' },
+            { label: 'Uso del Presupuesto' },
+            { label: 'Disponible', align: 'right' },
+            { label: 'Acciones', align: 'right' },
+          ]}
+          renderRow={(p) => {
+            const colorBarra = p.porcentaje_uso >= 100 ? 'bg-rose-500' : p.porcentaje_uso >= 80 ? 'bg-amber-500' : 'bg-primary';
+            return (
+              <TableRow key={p.id_presupuesto}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <MdCalculate size={18} className="text-primary" />
                     </div>
-                  </TableCell>
-                  <TableCell align="right">
-                    <span className="text-sm font-medium text-text">{formatearMoneda(p.monto_ejecutado)}</span>
-                  </TableCell>
-                  <TableCell align="right">
-                    <span className="text-sm font-medium text-text">{formatearMoneda(p.presupuesto_asignado)}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 w-full max-w-[150px]">
-                      <div className="flex-1 h-2 bg-bg-soft rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${colorBarra}`} style={{ width: `${Math.min(100, p.porcentaje_uso)}%` }} />
-                      </div>
-                      <span className="text-[11px] font-semibold text-text-soft w-8 text-right">{p.porcentaje_uso}%</span>
+                    <span className="text-sm font-bold text-text truncate max-w-[200px]">{p.area}</span>
+                  </div>
+                </TableCell>
+                <TableCell align="right">
+                  <span className="text-sm font-medium text-text">{formatearMoneda(p.monto_ejecutado)}</span>
+                </TableCell>
+                <TableCell align="right">
+                  <span className="text-sm font-medium text-text">{formatearMoneda(p.presupuesto_asignado)}</span>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2 w-full max-w-[150px]">
+                    <div className="flex-1 h-2 bg-bg-soft rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full ${colorBarra}`} style={{ width: `${Math.min(100, p.porcentaje_uso)}%` }} />
                     </div>
-                  </TableCell>
-                  <TableCell align="right">
-                    <span className={`text-sm font-bold ${Number(p.disponible) >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                      {formatearMoneda(p.disponible)}
-                    </span>
-                  </TableCell>
-                  <TableCell align="right">
-                    <button
-                      onClick={() => setModal({ modo: 'editar', data: { id_presupuesto: p.id_presupuesto, area: p.area, presupuesto_asignado: String(p.presupuesto_asignado), monto_ejecutado: String(p.monto_ejecutado), alertas_sobreconsumo: p.alertas_sobreconsumo } })}
-                      className="px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors flex items-center justify-center"
-                    >
-                      Editar
-                    </button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                    <span className="text-[11px] font-semibold text-text-soft w-8 text-right">{p.porcentaje_uso}%</span>
+                  </div>
+                </TableCell>
+                <TableCell align="right">
+                  <span className={`text-sm font-bold ${Number(p.disponible) >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                    {formatearMoneda(p.disponible)}
+                  </span>
+                </TableCell>
+                <TableCell align="right">
+                  <button
+                    onClick={() => setModal({ modo: 'editar', data: { id_presupuesto: p.id_presupuesto, area: p.area, presupuesto_asignado: String(p.presupuesto_asignado), monto_ejecutado: String(p.monto_ejecutado), alertas_sobreconsumo: p.alertas_sobreconsumo } })}
+                    className="px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors flex items-center justify-center"
+                  >
+                    Editar
+                  </button>
+                </TableCell>
+              </TableRow>
+            );
+          }}
+        />
       )}
 
       {modal && <ModalPresupuesto modo={modal.modo} dataInicial={modal.data} onClose={() => setModal(null)} onSuccess={() => { setModal(null); toast.success(modal.modo === 'crear' ? 'Creado' : 'Actualizado'); cargar(); }} />}

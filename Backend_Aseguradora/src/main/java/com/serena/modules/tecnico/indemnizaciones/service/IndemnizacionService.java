@@ -36,9 +36,11 @@ public class IndemnizacionService {
         Siniestro siniestro = siniestroRepository.findById(idSiniestro)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Siniestro", idSiniestro));
         if (siniestro.getEstadoResolucion() != Siniestro.EstadoResolucion.APROBADO
-                && siniestro.getEstadoResolucion() != Siniestro.EstadoResolucion.LIQUIDADO) {
+                && siniestro.getEstadoResolucion() != Siniestro.EstadoResolucion.PENDIENTE_ACEPTACION
+                && siniestro.getEstadoResolucion() != Siniestro.EstadoResolucion.PAGO_PROGRAMADO
+                && siniestro.getEstadoResolucion() != Siniestro.EstadoResolucion.FINALIZADO) {
             throw new IllegalStateException(
-                    "Solo se puede indemnizar un siniestro APROBADO o ya LIQUIDADO. Estado actual: "
+                    "Solo se puede indemnizar un siniestro APROBADO o en estados posteriores. Estado actual: "
                             + siniestro.getEstadoResolucion());
         }
         PolizaBeneficiario polben = request.idPolizaBeneficiario() != null
@@ -59,15 +61,15 @@ public class IndemnizacionService {
                 .build();
         Indemnizacion guardada = repository.save(indem);
 
-        siniestro.setEstadoResolucion(Siniestro.EstadoResolucion.LIQUIDADO);
+        siniestro.setEstadoResolucion(Siniestro.EstadoResolucion.PENDIENTE_ACEPTACION);
         siniestroRepository.save(siniestro);
 
         auditoriaService.registrar("REGISTRAR_INDEMNIZACION", "TECNICO",
                 "Siniestro " + idSiniestro + " indemnizado por S/ " + request.montoAprobado());
         var usuarioAsegurado = siniestro.getPoliza().getCliente().getPersona().getUsuario();
         notificacionService.crear(usuarioAsegurado, Notificacion.Tipo.SINIESTRO,
-                "Indemnizacion aprobada",
-                "Tu siniestro #" + idSiniestro + " fue liquidado por S/ " + request.montoAprobado(),
+                "Propuesta de liquidacion",
+                "Tu siniestro #" + idSiniestro + " tiene una propuesta de indemnizacion por S/ " + request.montoAprobado() + " pendiente de aceptacion.",
                 "/asegurado/reportar");
 
         notificacionService.crearParaPortal(Usuario.PortalAcceso.OPERATIVO,

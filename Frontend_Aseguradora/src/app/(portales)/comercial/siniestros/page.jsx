@@ -15,16 +15,21 @@ import {
   MdBusiness,
 } from 'react-icons/md';
 import { apiGet } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 import ModalDetalleSiniestro from './ModalDetalleSiniestro';
 
 const ESTADOS = {
-  REPORTADO: { label: 'Reportado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
-  EN_REVISION: { label: 'En revision', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
-  INSPECCION: { label: 'Inspeccion', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-400' },
+  REGISTRADO: { label: 'Registrado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
+  EN_REVISION: { label: 'En revisión', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
+  DOCUMENTACION_PENDIENTE: { label: 'Doc. Pendiente', badge: 'bg-orange-100 text-orange-600', dot: 'bg-orange-400' },
+  EN_EVALUACION: { label: 'En evaluación', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-400' },
+  PROVEEDOR_ASIGNADO: { label: 'Proveedor', badge: 'bg-indigo-100 text-indigo-700', dot: 'bg-indigo-400' },
+  LIQUIDACION_CALCULADA: { label: 'Liq. Calculada', badge: 'bg-teal-100 text-teal-700', dot: 'bg-teal-400' },
   APROBADO: { label: 'Aprobado', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
   RECHAZADO: { label: 'Rechazado', badge: 'bg-rose-100 text-rose-600', dot: 'bg-rose-400' },
-  LIQUIDADO: { label: 'Liquidado', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+  PENDIENTE_ACEPTACION: { label: 'Pdte. Aceptación', badge: 'bg-fuchsia-100 text-fuchsia-700', dot: 'bg-fuchsia-400' },
+  PAGO_PROGRAMADO: { label: 'Pago Prog.', badge: 'bg-violet-100 text-violet-700', dot: 'bg-violet-400' },
+  FINALIZADO: { label: 'Finalizado', badge: 'bg-slate-100 text-slate-700', dot: 'bg-slate-500' },
 };
 
 const TIPO_STYLES = {
@@ -130,60 +135,59 @@ export default function SiniestrosComercialPage() {
           <p className="text-xs text-text-soft max-w-xs">No hay siniestros que coincidan con los filtros.</p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>ID</TableHead>
-            <TableHead>Póliza</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Fecha reporte</TableHead>
-            <TableHead align="right">Monto reclamado</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtrados.map((s) => {
-              const est = ESTADOS[s.estado_resolucion] || { label: s.estado_resolucion, badge: 'bg-bg-soft text-text-soft', dot: 'bg-text-soft' };
-              const tipoStyle = estiloTipo(s.poliza_tipo);
-              const TipoIcon = tipoStyle.icon;
-              return (
-                <TableRow key={s.id_siniestro}>
-                  <TableCell className="text-sm font-bold text-text">
-                    SIN-{String(s.id_siniestro).padStart(6, '0')}
-                  </TableCell>
-                  <TableCell className="text-sm text-text">
-                    POL-{String(s.id_poliza).padStart(6, '0')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5 text-sm">
-                      <TipoIcon size={16} className={tipoStyle.accentText} />
-                      <span className="text-text font-medium">{s.poliza_tipo || '—'}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${est.badge}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-                      {est.label}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-sm text-text-soft">
-                    {formatearFecha(s.fecha_reporte)}
-                  </TableCell>
-                  <TableCell align="right" className="text-sm font-bold text-text">
-                    {formatearMoneda(s.monto_reclamado)}
-                  </TableCell>
-                  <TableCell align="right">
-                    <button
-                      onClick={() => setSiniestroSeleccionado(s)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
-                    >
-                      Ver detalle
-                    </button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={filtrados}
+          columns={[
+            { label: 'ID' },
+            { label: 'Póliza' },
+            { label: 'Tipo' },
+            { label: 'Estado' },
+            { label: 'Fecha reporte' },
+            { label: 'Monto reclamado', align: 'right' },
+            { label: 'Acciones', align: 'right' }
+          ]}
+          renderRow={(s) => {
+            const est = ESTADOS[s.estado_resolucion] || { label: s.estado_resolucion, badge: 'bg-bg-soft text-text-soft', dot: 'bg-text-soft' };
+            const tipoStyle = estiloTipo(s.poliza_tipo);
+            const TipoIcon = tipoStyle.icon;
+            return (
+              <TableRow key={s.id_siniestro}>
+                <TableCell className="text-sm font-bold text-text">
+                  SIN-{String(s.id_siniestro).padStart(6, '0')}
+                </TableCell>
+                <TableCell className="text-sm text-text">
+                  POL-{String(s.id_poliza).padStart(6, '0')}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <TipoIcon size={16} className={tipoStyle.accentText} />
+                    <span className="text-text font-medium">{s.poliza_tipo || '—'}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${est.badge}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+                    {est.label}
+                  </span>
+                </TableCell>
+                <TableCell className="text-sm text-text-soft">
+                  {formatearFecha(s.fecha_reporte)}
+                </TableCell>
+                <TableCell align="right" className="text-sm font-bold text-text">
+                  {formatearMoneda(s.monto_reclamado)}
+                </TableCell>
+                <TableCell align="right">
+                  <button
+                    onClick={() => setSiniestroSeleccionado(s)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors"
+                  >
+                    Ver detalle
+                  </button>
+                </TableCell>
+              </TableRow>
+            );
+          }}
+        />
       )}
 
       {siniestroSeleccionado && (

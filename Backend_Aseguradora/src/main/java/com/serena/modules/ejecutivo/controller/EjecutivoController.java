@@ -64,7 +64,7 @@ public class EjecutivoController {
                 .filter(p -> p.getEstadoPoliza() == Poliza.EstadoPoliza.ACTIVA)
                 .count();
         long siniestrosPendientes = siniestros.stream()
-                .filter(s -> s.getEstadoResolucion() != Siniestro.EstadoResolucion.LIQUIDADO
+                .filter(s -> s.getEstadoResolucion() != Siniestro.EstadoResolucion.FINALIZADO
                         && s.getEstadoResolucion() != Siniestro.EstadoResolucion.RECHAZADO)
                 .count();
         BigDecimal recaudacionMes = cuotas.stream()
@@ -167,15 +167,17 @@ public class EjecutivoController {
         long total = siniestros.size();
         long aprobados = siniestros.stream().filter(s -> s.getEstadoResolucion() == Siniestro.EstadoResolucion.APROBADO).count();
         long rechazados = siniestros.stream().filter(s -> s.getEstadoResolucion() == Siniestro.EstadoResolucion.RECHAZADO).count();
-        long liquidados = siniestros.stream().filter(s -> s.getEstadoResolucion() == Siniestro.EstadoResolucion.LIQUIDADO).count();
+        long liquidados = siniestros.stream().filter(s -> s.getEstadoResolucion() == Siniestro.EstadoResolucion.FINALIZADO || s.getEstadoResolucion() == Siniestro.EstadoResolucion.PAGO_PROGRAMADO).count();
         long enRevision = siniestros.stream().filter(s -> s.getEstadoResolucion() == Siniestro.EstadoResolucion.EN_REVISION).count();
-        long reportados = siniestros.stream().filter(s -> s.getEstadoResolucion() == Siniestro.EstadoResolucion.REPORTADO).count();
+        long reportados = siniestros.stream().filter(s -> s.getEstadoResolucion() == Siniestro.EstadoResolucion.REGISTRADO).count();
 
         BigDecimal montoReclamadoTotal = siniestros.stream()
                 .map(Siniestro::getMontoReclamado)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal montoLiquidado = siniestros.stream()
-                .filter(s -> s.getEstadoResolucion() == Siniestro.EstadoResolucion.LIQUIDADO
+                .filter(s -> s.getEstadoResolucion() == Siniestro.EstadoResolucion.FINALIZADO
+                        || s.getEstadoResolucion() == Siniestro.EstadoResolucion.PAGO_PROGRAMADO
+                        || s.getEstadoResolucion() == Siniestro.EstadoResolucion.PENDIENTE_ACEPTACION
                         || s.getEstadoResolucion() == Siniestro.EstadoResolucion.APROBADO)
                 .map(Siniestro::getMontoReclamado)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -188,11 +190,11 @@ public class EjecutivoController {
                 : BigDecimal.ZERO;
 
         Map<String, Long> porEstado = new LinkedHashMap<>();
-        porEstado.put("REPORTADO", reportados);
+        porEstado.put("REGISTRADO", reportados);
         porEstado.put("EN_REVISION", enRevision);
         porEstado.put("APROBADO", aprobados);
         porEstado.put("RECHAZADO", rechazados);
-        porEstado.put("LIQUIDADO", liquidados);
+        porEstado.put("FINALIZADO", liquidados);
 
         Map<String, Object> data = new HashMap<>();
         data.put("total_siniestros", total);

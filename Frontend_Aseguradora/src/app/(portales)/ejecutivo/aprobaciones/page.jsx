@@ -11,7 +11,7 @@ import {
   MdAdd,
 } from 'react-icons/md';
 import { apiGet, apiPost, apiPatch } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADOS = ['TODOS', 'PENDIENTE', 'APROBADO', 'RECHAZADO'];
 const MODULOS = ['SINIESTROS', 'REASEGURO', 'COMPRAS', 'CAMPANAS', 'COMISIONES', 'PRESUPUESTO', 'OTRO'];
@@ -139,55 +139,54 @@ export default function AprobacionesPage() {
       ) : aprobaciones.length === 0 ? (
         <div className="bg-bg rounded-xl border border-border p-10 text-center text-sm text-text-soft">No hay aprobaciones en este filtro.</div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Solicitud</TableHead>
-            <TableHead>Fecha</TableHead>
-            <TableHead>Comentarios</TableHead>
-            <TableHead align="right">Monto</TableHead>
-            <TableHead align="right">Estado</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {aprobaciones.map((a) => (
-              <TableRow key={a.id_aprobacion}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <MdCategory size={18} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-text truncate max-w-[150px]">{a.modulo_origen}</p>
-                      <p className="text-[11px] text-text-soft">APR-{String(a.id_aprobacion).padStart(6, '0')}</p>
-                    </div>
+        <DataTable
+          data={aprobaciones}
+          columns={[
+            { label: 'Solicitud' },
+            { label: 'Fecha' },
+            { label: 'Comentarios' },
+            { label: 'Monto', align: 'right' },
+            { label: 'Estado', align: 'right' },
+            { label: 'Acciones', align: 'right' }
+          ]}
+          renderRow={(a) => (
+            <TableRow key={a.id_aprobacion}>
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <MdCategory size={18} className="text-primary" />
                   </div>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-text-soft">{formatearFecha(a.fecha_solicitud)}</span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-text-soft truncate max-w-[200px] block">{a.comentarios_previos || 'Sin comentarios'}</span>
-                </TableCell>
-                <TableCell align="right">
-                  <span className="text-sm font-bold text-text">{formatearMoneda(a.monto_impacto)}</span>
-                </TableCell>
-                <TableCell align="right">
-                  <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${COLORES_ESTADO[a.estado_gerencial]}`}>
-                    {a.estado_gerencial}
-                  </span>
-                </TableCell>
-                <TableCell align="right">
-                  <button
-                    onClick={() => setDetalle(a)}
-                    className="px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors"
-                  >
-                    Ver detalle
-                  </button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  <div>
+                    <p className="text-sm font-bold text-text truncate max-w-[150px]">{a.modulo_origen}</p>
+                    <p className="text-[11px] text-text-soft">APR-{String(a.id_aprobacion).padStart(6, '0')}</p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className="text-sm text-text-soft">{formatearFecha(a.fecha_solicitud)}</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-sm text-text-soft truncate max-w-[200px] block">{a.comentarios_previos || 'Sin comentarios'}</span>
+              </TableCell>
+              <TableCell align="right">
+                <span className="text-sm font-bold text-text">{formatearMoneda(a.monto_impacto)}</span>
+              </TableCell>
+              <TableCell align="right">
+                <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${COLORES_ESTADO[a.estado_gerencial]}`}>
+                  {a.estado_gerencial}
+                </span>
+              </TableCell>
+              <TableCell align="right">
+                <button
+                  onClick={() => setDetalle(a)}
+                  className="px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors"
+                >
+                  Ver detalle
+                </button>
+              </TableCell>
+            </TableRow>
+          )}
+        />
       )}
 
       {detalle && (

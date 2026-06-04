@@ -18,7 +18,7 @@ import {
   MdMoreHoriz,
 } from 'react-icons/md';
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const RUBROS = [
   { value: 'CLINICA', label: 'Clínica', icon: MdLocalHospital, accentBg: 'bg-emerald-100', accentText: 'text-emerald-600' },
@@ -133,36 +133,35 @@ const suspender = async (id) => {
           <p className="text-sm font-medium text-text">Sin resultados</p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Proveedor</TableHead>
-            <TableHead>Ciudad</TableHead>
-            <TableHead>Rating</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtrados.map((p) => (
-              <ProveedorTableRow
-                key={p.id_proveedor}
-                p={p}
-                onEditar={() =>
-                  setModal({
-                    modo: 'editar',
-                    data: {
-                      id_proveedor: p.id_proveedor,
-                      rubro: p.rubro,
-                      nombre: p.nombre,
-                      ciudad: p.ciudad,
-                      rating_interno: String(p.rating_interno ?? '4.00'),
-                    },
-                  })
-                }
-                onSuspender={() => suspender(p.id_proveedor)}
-              />
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={filtrados}
+          columns={[
+            { label: 'Proveedor' },
+            { label: 'Ciudad' },
+            { label: 'Rating' },
+            { label: 'Estado' },
+            { label: 'Acciones', align: 'right' }
+          ]}
+          renderRow={(p) => (
+            <ProveedorTableRow
+              key={p.id_proveedor}
+              p={p}
+              onEditar={() =>
+                setModal({
+                  modo: 'editar',
+                  data: {
+                    id_proveedor: p.id_proveedor,
+                    rubro: p.rubro,
+                    nombre: p.nombre,
+                    ciudad: p.ciudad,
+                    rating_interno: String(p.rating_interno ?? '4.00'),
+                  },
+                })
+              }
+              onSuspender={() => suspender(p.id_proveedor)}
+            />
+          )}
+        />
       )}
 
       {modal && (

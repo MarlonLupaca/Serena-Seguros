@@ -99,7 +99,7 @@ public class SiniestroService {
                 .descripcion(request.getDescripcion())
                 .fechaOcurrencia(request.getFechaOcurrencia())
                 .montoReclamado(request.getMontoReclamado())
-                .estadoResolucion(Siniestro.EstadoResolucion.REPORTADO)
+                .estadoResolucion(Siniestro.EstadoResolucion.REGISTRADO)
                 .build();
         Siniestro guardado = siniestroRepository.save(siniestro);
         auditoria.registrar("siniestro_reportado", "siniestros",
@@ -113,6 +113,30 @@ public class SiniestroService {
                 "/core/siniestros");
 
         return SiniestroResponse.from(guardado);
+    }
+
+    @Transactional
+    public SiniestroResponse aceptarIndemnizacion(Usuario usuario, Integer idSiniestro) {
+        Cliente cliente = clienteDelUsuario(usuario);
+        Siniestro siniestro = buscar(idSiniestro);
+        if (!siniestro.getPoliza().getCliente().getIdCliente().equals(cliente.getIdCliente())) {
+            throw new AccessDeniedException("El siniestro no pertenece al usuario");
+        }
+        if (siniestro.getEstadoResolucion() != Siniestro.EstadoResolucion.PENDIENTE_ACEPTACION) {
+            throw new IllegalStateException("El siniestro no esta pendiente de aceptacion");
+        }
+
+        siniestro.setEstadoResolucion(Siniestro.EstadoResolucion.PAGO_PROGRAMADO);
+        auditoria.registrar("siniestro_aceptado", "siniestros",
+                "SIN-" + idSiniestro + " propuesta aceptada por el cliente");
+
+        notificaciones.crearParaPortal(Usuario.PortalAcceso.OPERATIVO,
+                Notificacion.Tipo.COBRANZA,
+                "Indemnizacion aceptada",
+                "El cliente acepto la propuesta para el SIN-" + idSiniestro + ". Programar pago.",
+                "/finanzas/tesoreria");
+
+        return SiniestroResponse.from(siniestroRepository.save(siniestro));
     }
 
     @Transactional(readOnly = true)
@@ -157,7 +181,7 @@ public class SiniestroService {
         Empleado analista = empleadoRepository.findById(request.idEmpleadoAnalista())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", request.idEmpleadoAnalista()));
         siniestro.setEmpleadoAnalista(analista);
-        if (siniestro.getEstadoResolucion() == Siniestro.EstadoResolucion.REPORTADO) {
+        if (siniestro.getEstadoResolucion() == Siniestro.EstadoResolucion.REGISTRADO) {
             siniestro.setEstadoResolucion(Siniestro.EstadoResolucion.EN_REVISION);
         }
         auditoria.registrar("siniestro_asignar", "siniestros",
@@ -196,9 +220,9 @@ public class SiniestroService {
         if (request.informeTecnico() != null) {
             siniestro.setInformeTecnico(request.informeTecnico());
         }
-        if (siniestro.getEstadoResolucion() == Siniestro.EstadoResolucion.REPORTADO
+        if (siniestro.getEstadoResolucion() == Siniestro.EstadoResolucion.REGISTRADO
                 || siniestro.getEstadoResolucion() == Siniestro.EstadoResolucion.EN_REVISION) {
-            siniestro.setEstadoResolucion(Siniestro.EstadoResolucion.INSPECCION);
+            siniestro.setEstadoResolucion(Siniestro.EstadoResolucion.EN_EVALUACION);
         }
 
         auditoria.registrar("siniestro_perito", "siniestros",

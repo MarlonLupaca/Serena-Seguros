@@ -48,7 +48,7 @@ public class Siniestro {
     @Enumerated(EnumType.STRING)
     @Column(name = "estado_resolucion", nullable = false)
     @Builder.Default
-    private EstadoResolucion estadoResolucion = EstadoResolucion.REPORTADO;
+    private EstadoResolucion estadoResolucion = EstadoResolucion.REGISTRADO;
 
     @Column(name = "monto_reclamado", nullable = false, precision = 10, scale = 2)
     private BigDecimal montoReclamado;
@@ -63,6 +63,16 @@ public class Siniestro {
     private String informeTecnico;
 
     public enum EstadoResolucion {
-        REPORTADO, EN_REVISION, INSPECCION, APROBADO, RECHAZADO, LIQUIDADO
+        REGISTRADO, 
+        EN_REVISION, 
+        DOCUMENTACION_PENDIENTE, 
+        EN_EVALUACION, 
+        PROVEEDOR_ASIGNADO, 
+        LIQUIDACION_CALCULADA, 
+        APROBADO, 
+        RECHAZADO, 
+        PENDIENTE_ACEPTACION, 
+        PAGO_PROGRAMADO, 
+        FINALIZADO
     }
 }

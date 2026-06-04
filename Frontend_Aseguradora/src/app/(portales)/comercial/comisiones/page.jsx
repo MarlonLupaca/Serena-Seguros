@@ -14,7 +14,7 @@ import {
 import Image from 'next/image';
 import { apiGet } from '@/lib/api';
 import { estiloTipo } from '@/lib/tipoSeguroConfig';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADO_CONFIG = {
   PAGADA: {
@@ -203,56 +203,55 @@ function KpiCard({ label, val, icon: Icon, bg, color }) {
 
 function TablaComisiones({ comisiones }) {
   return (
-    <Table>
-      <TableHeader>
-        <TableHead>ID Comisión</TableHead>
-        <TableHead>Póliza</TableHead>
-        <TableHead>Porcentaje</TableHead>
-        <TableHead>Estado</TableHead>
-        <TableHead align="right">Monto</TableHead>
-      </TableHeader>
-      <TableBody>
-        {comisiones.map((c) => {
-          const est = ESTADO_CONFIG[c.estado_pago] || ESTADO_CONFIG.PENDIENTE;
-          const tipoStyle = estiloTipo(c.poliza_tipo);
-          return (
-            <TableRow key={c.id_comision}>
-              <TableCell className="text-sm font-medium text-text">
-                COM-{String(c.id_comision).padStart(6, '0')}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  {tipoStyle?.imagen && (
-                    <Image
-                      src={tipoStyle.imagen}
-                      width={24}
-                      height={24}
-                      alt=""
-                      className="object-contain w-6 h-6 opacity-80"
-                    />
-                  )}
-                  <div>
-                    <p className="text-sm font-semibold text-text">{c.poliza_nombre || 'Sin póliza'}</p>
-                    <p className="text-xs text-text-soft mt-0.5">POL-{String(c.id_poliza).padStart(6, '0')}</p>
-                  </div>
+    <DataTable
+      data={comisiones}
+      columns={[
+        { label: 'ID Comisión' },
+        { label: 'Póliza' },
+        { label: 'Porcentaje' },
+        { label: 'Estado' },
+        { label: 'Monto', align: 'right' }
+      ]}
+      renderRow={(c) => {
+        const est = ESTADO_CONFIG[c.estado_pago] || ESTADO_CONFIG.PENDIENTE;
+        const tipoStyle = estiloTipo(c.poliza_tipo);
+        return (
+          <TableRow key={c.id_comision}>
+            <TableCell className="text-sm font-medium text-text">
+              COM-{String(c.id_comision).padStart(6, '0')}
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-3">
+                {tipoStyle?.imagen && (
+                  <Image
+                    src={tipoStyle.imagen}
+                    width={24}
+                    height={24}
+                    alt=""
+                    className="object-contain w-6 h-6 opacity-80"
+                  />
+                )}
+                <div>
+                  <p className="text-sm font-semibold text-text">{c.poliza_nombre || 'Sin póliza'}</p>
+                  <p className="text-xs text-text-soft mt-0.5">POL-{String(c.id_poliza).padStart(6, '0')}</p>
                 </div>
-              </TableCell>
-              <TableCell className="text-sm text-text-soft">{c.porcentaje}%</TableCell>
-              <TableCell>
-                <span
-                  className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${est.badge}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-                  {est.label}
-                </span>
-              </TableCell>
-              <TableCell align="right" className="text-sm font-bold text-text">
-                {formatearMoneda(c.monto_generado)}
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+              </div>
+            </TableCell>
+            <TableCell className="text-sm text-text-soft">{c.porcentaje}%</TableCell>
+            <TableCell>
+              <span
+                className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${est.badge}`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+                {est.label}
+              </span>
+            </TableCell>
+            <TableCell align="right" className="text-sm font-bold text-text">
+              {formatearMoneda(c.monto_generado)}
+            </TableCell>
+          </TableRow>
+        );
+      }}
+    />
   );
 }

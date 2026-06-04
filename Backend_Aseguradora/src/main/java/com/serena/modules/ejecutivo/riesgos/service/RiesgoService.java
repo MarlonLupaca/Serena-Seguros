@@ -134,10 +134,8 @@ public class RiesgoService {
         if (totalPolizas == 0) return java.util.Optional.empty();
 
         long siniestrosActivos = siniestroRepository.findAllByOrderByFechaReporteDesc().stream()
-                .filter(s -> s.getEstadoResolucion() == Siniestro.EstadoResolucion.REPORTADO
-                        || s.getEstadoResolucion() == Siniestro.EstadoResolucion.EN_REVISION
-                        || s.getEstadoResolucion() == Siniestro.EstadoResolucion.INSPECCION
-                        || s.getEstadoResolucion() == Siniestro.EstadoResolucion.APROBADO)
+                .filter(s -> s.getEstadoResolucion() != Siniestro.EstadoResolucion.FINALIZADO
+                        && s.getEstadoResolucion() != Siniestro.EstadoResolucion.RECHAZADO)
                 .count();
 
         BigDecimal indice = BigDecimal.valueOf(siniestrosActivos)

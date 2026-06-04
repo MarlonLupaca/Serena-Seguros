@@ -72,7 +72,9 @@ function Card({ children, onClick, className = '' }) {
   );
 }
 
-const SINIESTRO_EN_CURSO = ['REPORTADO', 'EN_REVISION', 'INSPECCION'];
+// Estados en curso
+const SINIESTRO_EN_CURSO = ['REGISTRADO', 'EN_REVISION', 'DOCUMENTACION_PENDIENTE', 'EN_EVALUACION', 'PROVEEDOR_ASIGNADO', 'LIQUIDACION_CALCULADA', 'APROBADO', 'PENDIENTE_ACEPTACION', 'PAGO_PROGRAMADO'];
+const SINIESTRO_RESUELTO = ['FINALIZADO', 'RECHAZADO'];
 
 export default function Home() {
   const router = useRouter();

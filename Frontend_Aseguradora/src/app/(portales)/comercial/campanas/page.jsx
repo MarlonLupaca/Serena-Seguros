@@ -14,7 +14,7 @@ import {
   MdTrendingUp,
 } from 'react-icons/md';
 import { apiGet, apiPatch, apiPost } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 import ModalDetalleCampana from './ModalDetalleCampana';
 
 function formatearFecha(iso) {
@@ -113,26 +113,25 @@ const filtradas = campanas.filter((c) =>
           </p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>ID</TableHead>
-            <TableHead>Campaña</TableHead>
-            <TableHead>Creación</TableHead>
-            <TableHead>Métricas</TableHead>
-            <TableHead>Rendimiento</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtradas.map((c) => (
-              <CampanaTableRow 
-                key={c.id_campana} 
-                c={c} 
-                onRegistrarEnvio={() => setModalEnvio(c)} 
-                onVerDetalle={() => setModalDetalle(c)}
-              />
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={filtradas}
+          columns={[
+            { label: 'ID' },
+            { label: 'Campaña' },
+            { label: 'Creación' },
+            { label: 'Métricas' },
+            { label: 'Rendimiento' },
+            { label: 'Acciones', align: 'right' }
+          ]}
+          renderRow={(c) => (
+            <CampanaTableRow 
+              key={c.id_campana} 
+              c={c} 
+              onRegistrarEnvio={() => setModalEnvio(c)} 
+              onVerDetalle={() => setModalDetalle(c)}
+            />
+          )}
+        />
       )}
 
       {modalNueva && (

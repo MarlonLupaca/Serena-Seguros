@@ -17,6 +17,7 @@ import {
   MdHistory,
   MdSettings,
   MdWarning,
+  MdSupportAgent,
 } from 'react-icons/md';
 
 // 1. Definimos el menú Ejecutivo (Nivel Gerencial / Directorios)
@@ -42,6 +43,7 @@ const adminMenu = [
     items: [
       { label: 'Reportes', icon: MdAssessment, href: '/ejecutivo/reportes' },
       { label: 'Auditoria', icon: MdHistory, href: '/ejecutivo/auditoria' },
+      { label: 'Soporte', icon: MdSupportAgent, href: '/ejecutivo/soporte' }
     ],
   },
 ];

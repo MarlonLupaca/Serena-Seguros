@@ -9,16 +9,22 @@ import {
   MdHandyman,
   MdEngineering,
   MdPaid,
-  MdEdit,
 } from 'react-icons/md';
 
+import ChatObservaciones from '@/components/chat/ChatObservaciones';
+
 const ESTADOS = {
-  REPORTADO: { label: 'Reportado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
+  REGISTRADO: { label: 'Registrado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
   EN_REVISION: { label: 'En revisión', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
-  INSPECCION: { label: 'Inspección', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-400' },
+  DOCUMENTACION_PENDIENTE: { label: 'Doc. Pendiente', badge: 'bg-orange-100 text-orange-600', dot: 'bg-orange-400' },
+  EN_EVALUACION: { label: 'En evaluación', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-400' },
+  PROVEEDOR_ASIGNADO: { label: 'Proveedor', badge: 'bg-indigo-100 text-indigo-700', dot: 'bg-indigo-400' },
+  LIQUIDACION_CALCULADA: { label: 'Liq. Calculada', badge: 'bg-teal-100 text-teal-700', dot: 'bg-teal-400' },
   APROBADO: { label: 'Aprobado', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
   RECHAZADO: { label: 'Rechazado', badge: 'bg-rose-100 text-rose-600', dot: 'bg-rose-400' },
-  LIQUIDADO: { label: 'Liquidado', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+  PENDIENTE_ACEPTACION: { label: 'Pdte. Aceptación', badge: 'bg-fuchsia-100 text-fuchsia-700', dot: 'bg-fuchsia-400' },
+  PAGO_PROGRAMADO: { label: 'Pago Prog.', badge: 'bg-violet-100 text-violet-700', dot: 'bg-violet-400' },
+  FINALIZADO: { label: 'Finalizado', badge: 'bg-slate-100 text-slate-700', dot: 'bg-slate-500' },
 };
 
 function formatearMoneda(v) {
@@ -50,8 +56,8 @@ export default function ModalGestionSiniestro({
   actualizando,
 }) {
   if (!siniestro) return null;
-  const [menuEstado, setMenuEstado] = useState(false);
-  const est = ESTADOS[siniestro.estado_resolucion] || ESTADOS.REPORTADO;
+
+  const est = ESTADOS[siniestro.estado_resolucion] || ESTADOS.REGISTRADO;
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
@@ -175,7 +181,7 @@ export default function ModalGestionSiniestro({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-border bg-bg-soft flex items-center justify-between gap-3 overflow-x-auto">
+        <div className="p-4 border-t border-border bg-bg-soft flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={onAsignar}
@@ -198,49 +204,44 @@ export default function ModalGestionSiniestro({
             >
               <MdEngineering size={14} className="text-text-soft" /> Perito
             </button>
-            {(siniestro.estado_resolucion === 'APROBADO' || siniestro.estado_resolucion === 'LIQUIDADO') && (
+            {['EN_EVALUACION', 'PROVEEDOR_ASIGNADO', 'LIQUIDACION_CALCULADA'].includes(siniestro.estado_resolucion) && (
+              <>
+                <button
+                  onClick={() => onCambiarEstado('APROBADO')}
+                  disabled={actualizando}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
+                >
+                  Aprobar
+                </button>
+                <button
+                  onClick={() => onCambiarEstado('RECHAZADO')}
+                  disabled={actualizando}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
+                >
+                  Rechazar
+                </button>
+              </>
+            )}
+            {(siniestro.estado_resolucion === 'APROBADO' || siniestro.estado_resolucion === 'PENDIENTE_ACEPTACION' || siniestro.estado_resolucion === 'PAGO_PROGRAMADO' || siniestro.estado_resolucion === 'FINALIZADO') && (
               <button
                 onClick={onIndemnizar}
                 disabled={actualizando}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-violet-500 hover:bg-violet-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
               >
-                <MdPaid size={14} /> Liquidar / Indemnizar
+                <MdPaid size={14} /> Propuesta / Liquidar
               </button>
             )}
           </div>
-
-          <div className="relative shrink-0">
-            <button
-              onClick={() => setMenuEstado((v) => !v)}
-              disabled={actualizando}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-bg hover:bg-bg-soft text-text-soft text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
-            >
-              {actualizando ? '...' : 'Cambiar estado'} <MdEdit size={14} />
-            </button>
-            {menuEstado && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setMenuEstado(false)} />
-                <div className="absolute right-0 bottom-full mb-2 w-44 bg-bg border border-border rounded-xl shadow-lg z-20 overflow-hidden">
-                  {Object.entries(ESTADOS)
-                    .filter(([k]) => k !== siniestro.estado_resolucion)
-                    .map(([key, cfg]) => (
-                      <button
-                        key={key}
-                        onClick={() => {
-                          setMenuEstado(false);
-                          onCambiarEstado(key);
-                        }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-text-soft hover:bg-bg-soft transition-colors"
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                        {cfg.label}
-                      </button>
-                    ))}
-                </div>
-              </>
-            )}
-          </div>
         </div>
+      </div>
+
+      {/* Side Panel para ChatObservaciones */}
+      <div className="w-80 ml-4 hidden md:flex flex-col">
+        <ChatObservaciones 
+          tipoReferencia="SINIESTRO"
+          idReferencia={siniestro.id_siniestro}
+          isAdmin={true}
+        />
       </div>
     </div>
   );

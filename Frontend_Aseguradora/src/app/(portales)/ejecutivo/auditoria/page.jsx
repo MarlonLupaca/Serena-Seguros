@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { MdHistory, MdRefresh, MdPerson, MdLogin, MdAssignmentTurnedIn, MdReport, MdAttachMoney } from 'react-icons/md';
 import { apiGet } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ICONO_POR_ACCION = {
   login_ok: MdLogin,
@@ -109,48 +109,47 @@ export default function AuditoriaPage() {
       ) : registros.length === 0 ? (
         <div className="bg-bg rounded-xl border border-border p-10 text-center text-sm text-text-soft">Sin registros para el filtro.</div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Acción</TableHead>
-            <TableHead>Módulo</TableHead>
-            <TableHead>Usuario</TableHead>
-            <TableHead>Detalle</TableHead>
-            <TableHead align="right">Fecha</TableHead>
-          </TableHeader>
-          <TableBody>
-            {registros.map((r) => {
-              const Icono = ICONO_POR_ACCION[r.accion] || MdHistory;
-              const claseModulo = COLOR_POR_MODULO[r.modulo] || 'bg-bg-soft text-text-soft';
-              const fail = r.accion?.endsWith('_fail');
-              return (
-                <TableRow key={r.id_auditoria}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${fail ? 'bg-rose-100 text-rose-600' : 'bg-primary/10 text-primary'}`}>
-                        <Icono size={16} />
-                      </div>
-                      <span className="text-sm font-bold text-text truncate max-w-[200px]">{r.accion}</span>
+        <DataTable
+          data={registros}
+          columns={[
+            { label: 'Acción' },
+            { label: 'Módulo' },
+            { label: 'Usuario' },
+            { label: 'Detalle' },
+            { label: 'Fecha', align: 'right' },
+          ]}
+          renderRow={(r) => {
+            const Icono = ICONO_POR_ACCION[r.accion] || MdHistory;
+            const claseModulo = COLOR_POR_MODULO[r.modulo] || 'bg-bg-soft text-text-soft';
+            const fail = r.accion?.endsWith('_fail');
+            return (
+              <TableRow key={r.id_auditoria}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${fail ? 'bg-rose-100 text-rose-600' : 'bg-primary/10 text-primary'}`}>
+                      <Icono size={16} />
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${claseModulo}`}>
-                      {r.modulo}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-text-soft">{r.username || '—'}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-text-soft truncate max-w-[300px] block">{r.detalle || '—'}</span>
-                  </TableCell>
-                  <TableCell align="right">
-                    <span className="text-xs text-text-soft">{formatearFecha(r.fecha)}</span>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                    <span className="text-sm font-bold text-text truncate max-w-[200px]">{r.accion}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${claseModulo}`}>
+                    {r.modulo}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm text-text-soft">{r.username || '—'}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm text-text-soft truncate max-w-[300px] block">{r.detalle || '—'}</span>
+                </TableCell>
+                <TableCell align="right">
+                  <span className="text-xs text-text-soft">{formatearFecha(r.fecha)}</span>
+                </TableCell>
+              </TableRow>
+            );
+          }}
+        />
       )}
     </div>
   );

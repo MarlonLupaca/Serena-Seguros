@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { MdAdd, MdClose, MdDomain, MdEdit, MdSearch, MdBlock } from 'react-icons/md';
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADOS = {
   OPERATIVO: { label: 'Operativo', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
@@ -91,25 +91,24 @@ const baja = async (id) => {
       ) : filtrados.length === 0 ? (
         <div className="bg-bg rounded-2xl border border-border p-12 text-center"><MdDomain size={32} className="text-text-soft mx-auto mb-3 opacity-40" /><p className="text-sm font-medium text-text">Sin activos</p></div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Activo</TableHead>
-            <TableHead>Asignado a</TableHead>
-            <TableHead align="right">Depreciación</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtrados.map((a) => (
-              <ActivoTableRow
-                key={a.id_activo}
-                a={a}
-                onEditar={() => setModal({ modo: 'editar', data: { id_activo: a.id_activo, tipo: a.tipo, marca: a.marca, valor_depreciacion: String(a.valor_depreciacion ?? '0'), estado: a.estado, id_empleado_asignado: a.id_empleado_asignado ? String(a.id_empleado_asignado) : '' } })}
-                onBaja={() => baja(a.id_activo)}
-              />
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={filtrados}
+          columns={[
+            { label: 'Activo' },
+            { label: 'Asignado a' },
+            { label: 'Depreciación', align: 'right' },
+            { label: 'Estado' },
+            { label: 'Acciones', align: 'right' }
+          ]}
+          renderRow={(a) => (
+            <ActivoTableRow
+              key={a.id_activo}
+              a={a}
+              onEditar={() => setModal({ modo: 'editar', data: { id_activo: a.id_activo, tipo: a.tipo, marca: a.marca, valor_depreciacion: String(a.valor_depreciacion ?? '0'), estado: a.estado, id_empleado_asignado: a.id_empleado_asignado ? String(a.id_empleado_asignado) : '' } })}
+              onBaja={() => baja(a.id_activo)}
+            />
+          )}
+        />
       )}
 
       {modal && (

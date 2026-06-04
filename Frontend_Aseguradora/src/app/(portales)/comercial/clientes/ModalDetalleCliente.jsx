@@ -38,12 +38,17 @@ const ESTADO_CUOTA_BADGE = {
 };
 
 const ESTADO_SINIESTRO_BADGE = {
-  REPORTADO: 'bg-sky-100 text-sky-700',
+  REGISTRADO: 'bg-primary/10 text-primary',
   EN_REVISION: 'bg-amber-100 text-amber-700',
-  INSPECCION: 'bg-violet-100 text-violet-700',
+  DOCUMENTACION_PENDIENTE: 'bg-orange-100 text-orange-600',
+  EN_EVALUACION: 'bg-sky-100 text-sky-700',
+  PROVEEDOR_ASIGNADO: 'bg-indigo-100 text-indigo-700',
+  LIQUIDACION_CALCULADA: 'bg-teal-100 text-teal-700',
   APROBADO: 'bg-emerald-100 text-emerald-700',
   RECHAZADO: 'bg-rose-100 text-rose-700',
-  LIQUIDADO: 'bg-emerald-100 text-emerald-700',
+  PENDIENTE_ACEPTACION: 'bg-fuchsia-100 text-fuchsia-700',
+  PAGO_PROGRAMADO: 'bg-violet-100 text-violet-700',
+  FINALIZADO: 'bg-slate-100 text-slate-700',
 };
 
 const ESTADO_LEAD_BADGE = {

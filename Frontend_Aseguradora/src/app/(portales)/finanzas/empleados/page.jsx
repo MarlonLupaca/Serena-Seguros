@@ -12,7 +12,7 @@ import {
   MdPeopleOutline,
 } from 'react-icons/md';
 import { apiGet } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const AREA_COLORS = {
   COMERCIAL: 'bg-primary/10 text-primary',
@@ -108,20 +108,19 @@ export default function EmpleadosPage() {
           <p className="text-sm font-medium text-text">Sin resultados</p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Empleado</TableHead>
-            <TableHead>Área / Cargo</TableHead>
-            <TableHead>DNI</TableHead>
-            <TableHead>Contacto</TableHead>
-            <TableHead align="right">Sueldo Base</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtrados.map((e) => (
-              <EmpleadoTableRow key={e.id_empleado} e={e} />
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={filtrados}
+          columns={[
+            { label: 'Empleado' },
+            { label: 'Área / Cargo' },
+            { label: 'DNI' },
+            { label: 'Contacto' },
+            { label: 'Sueldo Base', align: 'right' },
+          ]}
+          renderRow={(e) => (
+            <EmpleadoTableRow key={e.id_empleado} e={e} />
+          )}
+        />
       )}
     </div>
   );

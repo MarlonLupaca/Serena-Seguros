@@ -36,6 +36,9 @@
   --color-info: #3b82f6;
   --color-info-soft: #dbeafe;
   --color-info-text: #1e40af;
+
+  /* Typography */
+  --font-sans: var(--font-roboto), 'Roboto', ui-sans-serif, system-ui, sans-serif;
 }
 
 ::-webkit-scrollbar {

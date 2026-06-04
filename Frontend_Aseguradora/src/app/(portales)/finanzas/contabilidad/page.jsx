@@ -10,7 +10,7 @@ import {
   MdTrendingDown,
 } from 'react-icons/md';
 import { apiGet } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const TIPO_FACTURA = {
   FACTURA: 'bg-primary/10 text-primary',
@@ -143,44 +143,43 @@ function TabFacturas({ facturas }) {
         <Kpi label="Total cobrado" val={formatearMoneda(totalPagado)} accent="emerald" />
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableHead>Tipo</TableHead>
-          <TableHead>Serie-Número</TableHead>
-          <TableHead>Cliente</TableHead>
-          <TableHead>Fecha</TableHead>
-          <TableHead align="right">Total</TableHead>
-          <TableHead align="right">Estado</TableHead>
-        </TableHeader>
-        <TableBody>
-          {facturas.map((f) => (
-            <TableRow key={f.id_factura}>
-              <TableCell>
-                <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${TIPO_FACTURA[f.tipo] || 'bg-bg-soft'}`}>
-                  {f.tipo}
-                </span>
-              </TableCell>
-              <TableCell>
-                <span className="font-semibold text-text">{f.serie}-{f.numero}</span>
-              </TableCell>
-              <TableCell>
-                <span className="text-sm font-medium text-text">{f.cliente_nombre || '—'}</span>
-              </TableCell>
-              <TableCell>
-                <span className="text-sm text-text-soft">{formatearFecha(f.fecha_emision)}</span>
-              </TableCell>
-              <TableCell align="right">
-                <span className="text-sm font-bold text-text">{formatearMoneda(f.total)}</span>
-              </TableCell>
-              <TableCell align="right">
-                <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${ESTADO_FACTURA[f.estado]}`}>
-                  {f.estado}
-                </span>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable
+        data={facturas}
+        columns={[
+          { label: 'Tipo' },
+          { label: 'Serie-Número' },
+          { label: 'Cliente' },
+          { label: 'Fecha' },
+          { label: 'Total', align: 'right' },
+          { label: 'Estado', align: 'right' },
+        ]}
+        renderRow={(f) => (
+          <TableRow key={f.id_factura}>
+            <TableCell>
+              <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${TIPO_FACTURA[f.tipo] || 'bg-bg-soft'}`}>
+                {f.tipo}
+              </span>
+            </TableCell>
+            <TableCell>
+              <span className="font-semibold text-text">{f.serie}-{f.numero}</span>
+            </TableCell>
+            <TableCell>
+              <span className="text-sm font-medium text-text">{f.cliente_nombre || '—'}</span>
+            </TableCell>
+            <TableCell>
+              <span className="text-sm text-text-soft">{formatearFecha(f.fecha_emision)}</span>
+            </TableCell>
+            <TableCell align="right">
+              <span className="text-sm font-bold text-text">{formatearMoneda(f.total)}</span>
+            </TableCell>
+            <TableCell align="right">
+              <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${ESTADO_FACTURA[f.estado]}`}>
+                {f.estado}
+              </span>
+            </TableCell>
+          </TableRow>
+        )}
+      />
     </div>
   );
 }
@@ -212,31 +211,16 @@ function TabDiario({ asientos }) {
               {a.estado}
             </span>
           </div>
-          <Table>
-            <TableHeader>
-              <TableHead>Código</TableHead>
-              <TableHead>Cuenta</TableHead>
-              <TableHead align="right">Debe</TableHead>
-              <TableHead align="right">Haber</TableHead>
-            </TableHeader>
-            <TableBody>
-              {a.movimientos.map((m) => (
-                <TableRow key={m.id_movimiento}>
-                  <TableCell>
-                    <span className="text-text-soft font-mono text-xs">{m.cuenta_codigo}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm font-medium text-text">{m.cuenta_nombre}</span>
-                  </TableCell>
-                  <TableCell align="right">
-                    <span className="text-sm font-medium text-text">{Number(m.debe) > 0 ? formatearMoneda(m.debe) : '—'}</span>
-                  </TableCell>
-                  <TableCell align="right">
-                    <span className="text-sm font-medium text-text">{Number(m.haber) > 0 ? formatearMoneda(m.haber) : '—'}</span>
-                  </TableCell>
-                </TableRow>
-              ))}
-              <TableRow className="bg-bg-soft">
+          <DataTable
+            data={[...a.movimientos, { _isTotal: true }]}
+            columns={[
+              { label: 'Código' },
+              { label: 'Cuenta' },
+              { label: 'Debe', align: 'right' },
+              { label: 'Haber', align: 'right' }
+            ]}
+            renderRow={(m) => m._isTotal ? (
+              <TableRow key="total" className="bg-bg-soft">
                 <TableCell>
                   <span className="text-sm font-bold text-text-soft">Totales</span>
                 </TableCell>
@@ -248,8 +232,23 @@ function TabDiario({ asientos }) {
                   <span className="text-sm font-bold text-text">{formatearMoneda(a.total_haber)}</span>
                 </TableCell>
               </TableRow>
-            </TableBody>
-          </Table>
+            ) : (
+              <TableRow key={m.id_movimiento}>
+                <TableCell>
+                  <span className="text-text-soft font-mono text-xs">{m.cuenta_codigo}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm font-medium text-text">{m.cuenta_nombre}</span>
+                </TableCell>
+                <TableCell align="right">
+                  <span className="text-sm font-medium text-text">{Number(m.debe) > 0 ? formatearMoneda(m.debe) : '—'}</span>
+                </TableCell>
+                <TableCell align="right">
+                  <span className="text-sm font-medium text-text">{Number(m.haber) > 0 ? formatearMoneda(m.haber) : '—'}</span>
+                </TableCell>
+              </TableRow>
+            )}
+          />
         </div>
       ))}
     </div>

@@ -11,18 +11,13 @@ import {
   MdAttachMoney,
   MdPerson,
   MdShield,
-  MdEditNote,
-  MdCheck,
-  MdClose,
-  MdDownload,
 } from 'react-icons/md';
-import { apiGet, apiPatch, apiDownloadFile } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { apiGet, apiPatch } from '@/lib/api';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 import ModalConfirm from '../../componentsMain/ModalConfirm';
-import ModalDetalleEndoso from '../../componentsMain/ModalDetalleEndoso';
 
 const RANGOS = [
-  { dias: 7, label: '7 días' },
+  { dias: 7,  label: '7 días' },
   { dias: 15, label: '15 días' },
   { dias: 30, label: '30 días' },
   { dias: 60, label: '60 días' },
@@ -30,19 +25,10 @@ const RANGOS = [
 ];
 
 const ESTADO_POLIZA_BADGE = {
-  ACTIVA: 'bg-emerald-100 text-emerald-700',
+  ACTIVA:    'bg-emerald-100 text-emerald-700',
   PENDIENTE: 'bg-amber-100 text-amber-700',
-  VENCIDA: 'bg-rose-100 text-rose-600',
+  VENCIDA:   'bg-rose-100 text-rose-600',
   CANCELADA: 'bg-slate-100 text-slate-600',
-};
-
-const ESTADO_ENDOSO_BADGE = {
-  PENDIENTE: 'bg-amber-100 text-amber-700',
-  EN_REVISION_TECNICA: 'bg-indigo-100 text-indigo-700',
-  EN_REVISION_FINANZAS: 'bg-purple-100 text-purple-700',
-  APROBADO: 'bg-emerald-100 text-emerald-700',
-  RECHAZADO: 'bg-rose-100 text-rose-600',
-  OBSERVADO: 'bg-orange-100 text-orange-700',
 };
 
 function formatearMoneda(v) {
@@ -67,48 +53,37 @@ function diasHasta(iso) {
 }
 
 export default function RenovacionesPage() {
-  const [tab, setTab] = useState('renovaciones');
   const [renovaciones, setRenovaciones] = useState([]);
-  const [endosos, setEndosos] = useState([]);
   const [rango, setRango] = useState(30);
-  const [busqRen, setBusqRen] = useState('');
-  const [busqEnd, setBusqEnd] = useState('');
+  const [busq, setBusq] = useState('');
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [actualizando, setActualizando] = useState(null);
   const [confirmacion, setConfirmacion] = useState(null);
-  const [endosoSeleccionado, setEndosoSeleccionado] = useState(null);
-  const [descargandoEndoso, setDescargandoEndoso] = useState(false);
 
-  useEffect(() => {
-    cargar();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rango]);
+  useEffect(() => { cargar(); }, [rango]);
 
   const cargar = async () => {
     setCargando(true);
     setError('');
     try {
-      const [ren, end] = await Promise.all([
-        apiGet(`/polizas/renovaciones?dias=${rango}`).catch(() => []),
-        apiGet('/endosos').catch(() => []),
-      ]);
-      setRenovaciones(ren || []);
-      setEndosos(end || []);
+      const data = await apiGet(`/polizas/renovaciones?dias=${rango}`);
+      setRenovaciones(data || []);
     } catch (e) {
-      setError(e.mensaje || 'No se pudieron cargar los datos');
+      setError(e.mensaje || 'No se pudieron cargar las renovaciones');
     } finally {
       setCargando(false);
     }
   };
-const marcarNoRenovada = async (idPoliza) => {
+
+  const marcarNoRenovada = async (idPoliza) => {
     setConfirmacion({
-      mensaje: '¿Marcar la poliza como cancelada/no renovada?',
+      mensaje: '¿Marcar la póliza como cancelada / no renovada?',
       accion: async () => {
         setActualizando('poliza-' + idPoliza);
         try {
           await apiPatch(`/polizas/${idPoliza}/estado`, { estado_poliza: 'CANCELADA' });
-          toast.success('Poliza marcada como cancelada');
+          toast.success('Póliza marcada como cancelada');
           cargar();
         } catch (e) {
           toast.error(e.mensaje || 'No se pudo actualizar');
@@ -119,269 +94,105 @@ const marcarNoRenovada = async (idPoliza) => {
     });
   };
 
-  const cambiarEstadoEndoso = async (idEndoso, nuevo) => {
-    setActualizando('endoso-' + idEndoso);
-    try {
-      await apiPatch(`/endosos/${idEndoso}/estado`, { estado_aprobacion: nuevo });
-      toast.success(`Endoso ${nuevo.toLowerCase()}`);
-      cargar();
-      if (endosoSeleccionado?.id_endoso === idEndoso) {
-        setEndosoSeleccionado(null);
-      }
-    } catch (e) {
-      toast.error(e.mensaje || 'No se pudo actualizar');
-    } finally {
-      setActualizando(null);
-    }
-  };
-
-  const handleDescargarEndoso = async (endoso) => {
-    if (!endoso?.archivo_url) return;
-    setDescargandoEndoso(true);
-    try {
-      const urlDescarga = endoso.archivo_url.startsWith('/') 
-        ? endoso.archivo_url 
-        : `/mis-documentos/${endoso.archivo_url}/archivo`;
-      await apiDownloadFile(urlDescarga, `documento-endoso-${endoso.id_endoso}.pdf`);
-    } catch (e) {
-      toast.error('No se pudo descargar el documento');
-    } finally {
-      setDescargandoEndoso(false);
-    }
-  };
-
-  const renFiltradas = renovaciones.filter((p) => {
-    const texto = busqRen.toLowerCase();
+  const filtradas = renovaciones.filter((p) => {
+    const q = busq.toLowerCase();
     return (
-      texto === '' ||
-      String(p.id_poliza).includes(texto) ||
-      (p.producto?.nombre || '').toLowerCase().includes(texto) ||
-      (p.cliente_nombre || '').toLowerCase().includes(texto)
+      q === '' ||
+      String(p.id_poliza).includes(q) ||
+      (p.producto?.nombre || '').toLowerCase().includes(q) ||
+      (p.cliente_nombre || '').toLowerCase().includes(q)
     );
   });
 
-  const endFiltrados = endosos.filter((e) => {
-    const texto = busqEnd.toLowerCase();
-    return (
-      texto === '' ||
-      String(e.id_endoso).includes(texto) ||
-      (e.tipo_cambio || '').toLowerCase().includes(texto) ||
-      (e.descripcion_cambio || '').toLowerCase().includes(texto)
-    );
-  });
-
-  const endosoPendientes = endosos.length;
+  const urgentes = renovaciones.filter((p) => {
+    const d = diasHasta(p.vigencia_fin);
+    return d != null && d <= 7;
+  }).length;
 
   return (
     <div className="py-4 flex flex-col gap-4 pb-8">
-
       <div>
-        <h1 className="text-base font-bold text-text">Renovaciones y endosos</h1>
+        <h1 className="text-base font-bold text-text">Renovaciones</h1>
         <p className="text-xs text-text-soft mt-0.5">
-          Mantén la cartera vigente: renueva próximas a vencer y gestiona los cambios solicitados.
+          Pólizas próximas a vencer que requieren gestión de renovación.
         </p>
       </div>
 
+      {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Kpi
-          label="Próximas a renovar"
-          val={renovaciones.length}
-          icon={MdAutorenew}
-          bg="bg-amber-100"
-          color="text-amber-600"
-        />
-        <Kpi
-          label="Endosos pendientes"
-          val={endosoPendientes}
-          icon={MdEditNote}
-          bg="bg-primary/10"
-          color="text-primary"
-        />
-        <Kpi
-          label="Endosos totales"
-          val={endosos.length}
-          icon={MdShield}
-          bg="bg-sky-100"
-          color="text-sky-600"
-        />
-        <Kpi
-          label="Rango actual"
-          val={`${rango} días`}
-          icon={MdCalendarToday}
-          bg="bg-bg-soft"
-          color="text-text"
-        />
+        <Kpi label="Próximas a renovar" val={renovaciones.length} icon={MdAutorenew} bg="bg-amber-100" color="text-amber-600" />
+        <Kpi label="Urgentes (≤ 7 días)" val={urgentes} icon={MdShield} bg="bg-rose-100" color="text-rose-600" />
+        <Kpi label="Rango actual" val={`${rango} días`} icon={MdCalendarToday} bg="bg-bg-soft" color="text-text" />
+        <Kpi label="Filtradas" val={filtradas.length} icon={MdSearch} bg="bg-primary/10" color="text-primary" />
       </div>
 
-      <div className="flex border-b border-border gap-2">
-        <TabButton activo={tab === 'renovaciones'} onClick={() => setTab('renovaciones')}>
-          <MdAutorenew size={14} /> Renovaciones
-        </TabButton>
-        <TabButton activo={tab === 'endosos'} onClick={() => setTab('endosos')}>
-          <MdEditNote size={14} /> Endosos
-        </TabButton>
-      </div>
-
-      {tab === 'renovaciones' && (
-        <div className="flex flex-col gap-3">
-          <div className="flex gap-2 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
-              <MdSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
-              <input
-                placeholder="Buscar por cliente o producto..."
-                value={busqRen}
-                onChange={(e) => setBusqRen(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary"
-              />
-            </div>
-            <select
-              value={rango}
-              onChange={(e) => setRango(Number(e.target.value))}
-              className="px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary appearance-none"
-            >
-              {RANGOS.map((r) => (
-                <option key={r.dias} value={r.dias}>
-                  Próximas {r.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {cargando ? (
-            <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
-              Cargando renovaciones...
-            </div>
-          ) : error ? (
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-600 text-center">
-              {error}
-            </div>
-          ) : renFiltradas.length === 0 ? (
-            <div className="bg-bg rounded-2xl border border-border p-12 text-center">
-              <MdAutorenew size={32} className="text-text-soft mx-auto mb-3 opacity-40" />
-              <p className="text-sm font-medium text-text">Sin renovaciones en el rango seleccionado</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableHead>Póliza</TableHead>
-                <TableHead>Producto & Cliente</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Vencimiento</TableHead>
-                <TableHead align="right">Prima</TableHead>
-                <TableHead align="right">Acciones</TableHead>
-              </TableHeader>
-              <TableBody>
-                {renFiltradas.map((p) => (
-                  <RenovacionTableRow
-                    key={p.id_poliza}
-                    poliza={p}
-                    actualizando={actualizando === 'poliza-' + p.id_poliza}
-                    onEnviarPropuesta={() => toast.success('Propuesta enviada al cliente')}
-                    onMarcarNoRenovada={() => marcarNoRenovada(p.id_poliza)}
-                    onRenovar={() => toast.success('Renovacion iniciada. Confirma con el cliente.')}
-                    onRecalcular={() => toast.success('Nueva prima estimada solicitada al area tecnica.')}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          )}
+      {/* Filters */}
+      <div className="flex gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <MdSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
+          <input
+            placeholder="Buscar por cliente o producto..."
+            value={busq}
+            onChange={(e) => setBusq(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary"
+          />
         </div>
-      )}
+        <select
+          value={rango}
+          onChange={(e) => setRango(Number(e.target.value))}
+          className="px-3 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary appearance-none"
+        >
+          {RANGOS.map((r) => (
+            <option key={r.dias} value={r.dias}>Próximas {r.label}</option>
+          ))}
+        </select>
+      </div>
 
-      {tab === 'endosos' && (
-        <div className="flex flex-col gap-3">
-          <div className="relative">
-            <MdSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft" />
-            <input
-              placeholder="Buscar por tipo o descripción..."
-              value={busqEnd}
-              onChange={(e) => setBusqEnd(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-border outline-none bg-bg text-text focus:border-primary"
+      {cargando ? (
+        <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
+          Cargando renovaciones...
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-sm text-red-600 text-center">{error}</div>
+      ) : filtradas.length === 0 ? (
+        <div className="bg-bg rounded-2xl border border-border p-12 text-center">
+          <MdAutorenew size={32} className="text-text-soft mx-auto mb-3 opacity-40" />
+          <p className="text-sm font-medium text-text">Sin renovaciones en el rango seleccionado</p>
+        </div>
+      ) : (
+        <DataTable
+          data={filtradas}
+          columns={[
+            { label: 'Póliza' },
+            { label: 'Producto & Cliente' },
+            { label: 'Estado' },
+            { label: 'Vencimiento' },
+            { label: 'Prima', align: 'right' },
+            { label: 'Acciones', align: 'right' },
+          ]}
+          renderRow={(p) => (
+            <RenovacionRow
+              key={p.id_poliza}
+              poliza={p}
+              actualizando={actualizando === 'poliza-' + p.id_poliza}
+              onEnviarPropuesta={() => toast.success('Propuesta enviada al cliente')}
+              onMarcarNoRenovada={() => marcarNoRenovada(p.id_poliza)}
+              onRenovar={() => toast.success('Renovación iniciada. Confirma con el cliente.')}
+              onRecalcular={() => toast.success('Nueva prima estimada solicitada al área técnica.')}
             />
-          </div>
-
-          {cargando ? (
-            <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">
-              Cargando endosos...
-            </div>
-          ) : endFiltrados.length === 0 ? (
-            <div className="bg-bg rounded-2xl border border-border p-12 text-center">
-              <MdEditNote size={32} className="text-text-soft mx-auto mb-3 opacity-40" />
-              <p className="text-sm font-medium text-text">No hay endosos para mostrar</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableHead>Endoso</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Solicitado</TableHead>
-                <TableHead>Adjunto</TableHead>
-                <TableHead align="right">Acciones</TableHead>
-              </TableHeader>
-              <TableBody>
-                {endFiltrados.map((e) => (
-                  <EndosoTableRow
-                    key={e.id_endoso}
-                    endoso={e}
-                    actualizando={actualizando === 'endoso-' + e.id_endoso}
-                    onCambiarEstado={(estado) => cambiarEstadoEndoso(e.id_endoso, estado)}
-                    onVerDetalle={() => setEndosoSeleccionado(e)}
-                    onDescargar={() => handleDescargarEndoso(e)}
-                    descargando={descargandoEndoso}
-                  />
-                ))}
-              </TableBody>
-            </Table>
           )}
-        </div>
+        />
       )}
 
       <ModalConfirm
         abierto={!!confirmacion}
-        titulo="Confirmar eliminacion"
+        titulo="Confirmar acción"
         mensaje={confirmacion?.mensaje}
-        textoConfirmar="Eliminar"
+        textoConfirmar="Confirmar"
         variante="danger"
         onConfirmar={confirmacion?.accion}
         onCancelar={() => setConfirmacion(null)}
       />
-
-      {endosoSeleccionado && (
-        <ModalDetalleEndoso
-          abierto={!!endosoSeleccionado}
-          onClose={() => setEndosoSeleccionado(null)}
-          endoso={endosoSeleccionado}
-          onDescargar={() => handleDescargarEndoso(endosoSeleccionado)}
-          acciones={
-            endosoSeleccionado.estado_aprobacion === 'PENDIENTE' ? (
-              <>
-                <button
-                  onClick={() => cambiarEstadoEndoso(endosoSeleccionado.id_endoso, 'RECHAZADO')}
-                  disabled={!!actualizando}
-                  className="px-4 py-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-sm font-medium transition-colors disabled:opacity-50"
-                >
-                  Rechazar Solicitud
-                </button>
-                <button
-                  onClick={() => cambiarEstadoEndoso(endosoSeleccionado.id_endoso, 'EN_REVISION_TECNICA')}
-                  disabled={!!actualizando}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold transition-colors disabled:opacity-50"
-                >
-                  <MdSend size={16} /> Derivar a Operaciones
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setEndosoSeleccionado(null)}
-                className="px-4 py-2 rounded-xl bg-bg-soft hover:bg-border text-text text-sm font-semibold transition-colors"
-              >
-                Cerrar
-              </button>
-            )
-          }
-        />
-      )}
     </div>
   );
 }
@@ -400,23 +211,9 @@ function Kpi({ label, val, icon: Icon, bg, color }) {
   );
 }
 
-function TabButton({ activo, onClick, children }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-        activo ? 'border-primary text-primary' : 'border-transparent text-text-soft hover:text-text'
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function RenovacionTableRow({ poliza, actualizando, onEnviarPropuesta, onMarcarNoRenovada, onRenovar, onRecalcular }) {
+function RenovacionRow({ poliza, actualizando, onEnviarPropuesta, onMarcarNoRenovada, onRenovar, onRecalcular }) {
   const dias = diasHasta(poliza.vigencia_fin);
-  const urgencia =
-    dias != null && dias <= 7 ? 'rose' : dias != null && dias <= 30 ? 'amber' : 'sky';
+  const urgencia = dias != null && dias <= 7 ? 'rose' : dias != null && dias <= 30 ? 'amber' : 'sky';
 
   return (
     <TableRow>
@@ -439,11 +236,7 @@ function RenovacionTableRow({ poliza, actualizando, onEnviarPropuesta, onMarcarN
         </div>
       </TableCell>
       <TableCell>
-        <span
-          className={`inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-            ESTADO_POLIZA_BADGE[poliza.estado_poliza] || 'bg-bg-soft text-text-soft'
-          }`}
-        >
+        <span className={`inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${ESTADO_POLIZA_BADGE[poliza.estado_poliza] || 'bg-bg-soft text-text-soft'}`}>
           {poliza.estado_poliza}
         </span>
       </TableCell>
@@ -453,15 +246,7 @@ function RenovacionTableRow({ poliza, actualizando, onEnviarPropuesta, onMarcarN
             <MdCalendarToday size={11} /> {formatearFecha(poliza.vigencia_fin)}
           </span>
           {dias != null && (
-            <span
-              className={`inline-flex items-center justify-center text-[10px] font-medium px-2 py-0.5 rounded-full self-start ${
-                urgencia === 'rose'
-                  ? 'bg-rose-100 text-rose-600'
-                  : urgencia === 'amber'
-                    ? 'bg-amber-100 text-amber-600'
-                    : 'bg-sky-100 text-sky-600'
-              }`}
-            >
+            <span className={`inline-flex items-center justify-center text-[10px] font-medium px-2 py-0.5 rounded-full self-start ${urgencia === 'rose' ? 'bg-rose-100 text-rose-600' : urgencia === 'amber' ? 'bg-amber-100 text-amber-600' : 'bg-sky-100 text-sky-600'}`}>
               Vence en {dias} d
             </span>
           )}
@@ -472,112 +257,18 @@ function RenovacionTableRow({ poliza, actualizando, onEnviarPropuesta, onMarcarN
       </TableCell>
       <TableCell align="right">
         <div className="flex flex-wrap gap-2 justify-end">
-          <button
-            onClick={onRenovar}
-            disabled={actualizando}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors disabled:opacity-50"
-          >
+          <button onClick={onRenovar} disabled={actualizando} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-text-inverse text-xs font-semibold transition-colors disabled:opacity-50">
             <MdAutorenew size={13} /> Renovar
           </button>
-          <button
-            onClick={onRecalcular}
-            disabled={actualizando}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
-          >
+          <button onClick={onRecalcular} disabled={actualizando} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50">
             <MdAttachMoney size={13} /> Recalcular
           </button>
-          <button
-            onClick={onEnviarPropuesta}
-            disabled={actualizando}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50"
-          >
+          <button onClick={onEnviarPropuesta} disabled={actualizando} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-medium transition-colors disabled:opacity-50">
             <MdSend size={13} /> Enviar propuesta
           </button>
-          <button
-            onClick={onMarcarNoRenovada}
-            disabled={actualizando}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-medium transition-colors disabled:opacity-50"
-          >
+          <button onClick={onMarcarNoRenovada} disabled={actualizando} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-medium transition-colors disabled:opacity-50">
             <MdCancel size={13} /> Cancelar
           </button>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-}
-
-function EndosoTableRow({ endoso, actualizando, onCambiarEstado, onVerDetalle, onDescargar, descargando }) {
-  return (
-    <TableRow>
-      <TableCell>
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-            <MdEditNote size={18} className="text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-text">{endoso.tipo_cambio}</p>
-            <p className="text-xs text-text-soft mt-0.5">
-              END-{String(endoso.id_endoso).padStart(6, '0')} · POL-{String(endoso.id_poliza).padStart(6, '0')}
-            </p>
-          </div>
-        </div>
-      </TableCell>
-      <TableCell>
-        <p className="text-xs text-text-soft line-clamp-2 max-w-[200px]">{endoso.descripcion_cambio}</p>
-      </TableCell>
-      <TableCell>
-        <span
-          className={`inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-            ESTADO_ENDOSO_BADGE[endoso.estado_aprobacion] || 'bg-bg-soft text-text-soft'
-          }`}
-        >
-          {endoso.estado_aprobacion?.replace(/_/g, ' ')}
-        </span>
-      </TableCell>
-      <TableCell>
-        <span className="flex items-center gap-1 text-xs text-text-soft">
-          <MdCalendarToday size={11} /> {formatearFecha(endoso.fecha_solicitud)}
-        </span>
-      </TableCell>
-      <TableCell>
-        {endoso.archivo_url ? (
-          <button
-            onClick={onDescargar}
-            disabled={descargando}
-            className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline disabled:opacity-50"
-          >
-            <MdDownload size={14} /> {descargando ? '...' : 'Descargar'}
-          </button>
-        ) : (
-          <span className="text-xs text-text-soft italic">Ninguno</span>
-        )}
-      </TableCell>
-      <TableCell align="right">
-        <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={onVerDetalle}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bg-soft border border-border hover:bg-border/50 text-text text-xs font-semibold transition-colors"
-          >
-            Ver detalle
-          </button>
-          {endoso.estado_aprobacion === 'PENDIENTE' && (
-            <>
-              <button
-                onClick={() => onCambiarEstado('EN_REVISION_TECNICA')}
-                disabled={actualizando}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
-              >
-                <MdSend size={13} /> Derivar
-              </button>
-              <button
-                onClick={() => onCambiarEstado('RECHAZADO')}
-                disabled={actualizando}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 text-xs font-medium transition-colors disabled:opacity-50"
-              >
-                <MdClose size={13} /> Rechazar
-              </button>
-            </>
-          )}
         </div>
       </TableCell>
     </TableRow>

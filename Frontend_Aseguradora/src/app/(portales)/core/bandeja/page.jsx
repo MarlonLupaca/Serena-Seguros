@@ -125,7 +125,7 @@ export default function BandejaPage() {
         emisiones: pol || [],
         endosos: end || [],
         siniestros: (sin || []).filter((s) =>
-          ['REPORTADO', 'EN_REVISION', 'INSPECCION', 'APROBADO'].includes(s.estado_resolucion)
+          ['REGISTRADO', 'EN_REVISION', 'DOCUMENTACION_PENDIENTE', 'EN_EVALUACION', 'PROVEEDOR_ASIGNADO', 'LIQUIDACION_CALCULADA', 'APROBADO'].includes(s.estado_resolucion)
         ),
         validaciones: val || [],
         renovaciones: ren || [],

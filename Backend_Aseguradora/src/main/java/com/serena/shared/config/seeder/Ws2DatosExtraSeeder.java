@@ -240,11 +240,11 @@ public class Ws2DatosExtraSeeder implements CommandLineRunner {
                 {"Robo total vehiculo", "Vehiculo sustraido en zona comercial",
                         Siniestro.EstadoResolucion.EN_REVISION, "18500.00", 10},
                 {"Choque por alcance", "Daño en parachoques trasero",
-                        Siniestro.EstadoResolucion.INSPECCION, "3200.00", 6},
+                        Siniestro.EstadoResolucion.EN_EVALUACION, "3200.00", 6},
                 {"Hospitalizacion", "Emergencia medica - apendicitis",
                         Siniestro.EstadoResolucion.APROBADO, "5400.00", 14},
                 {"Incendio menor", "Daños por fuga de gas en cocina",
-                        Siniestro.EstadoResolucion.LIQUIDADO, "8900.00", 20},
+                        Siniestro.EstadoResolucion.FINALIZADO, "8900.00", 20},
                 {"Daños a terceros", "Choque con motocicleta",
                         Siniestro.EstadoResolucion.RECHAZADO, "1200.00", 25},
         };

@@ -27,7 +27,7 @@ import {
 import { apiGet, apiPatch, apiPost } from '@/lib/api';
 import FormularioRiesgo from '@/components/riesgo/FormularioRiesgo';
 import { valoresIniciales, validarCampos } from '@/lib/riesgo/camposPorTipo';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADOS = {
   NUEVO: { label: 'Nuevo', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-500' },
@@ -166,25 +166,24 @@ export default function LeadsPage() {
           <p className="text-xs text-text-soft max-w-xs">No hay leads que coincidan con los filtros.</p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>ID Lead</TableHead>
-            <TableHead>Producto</TableHead>
-            <TableHead>Agente & Fecha</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead align="right">Prima Estimada</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtrados.map((lead) => (
-              <LeadTableRow
-                key={lead.id_cotizacion}
-                lead={lead}
-                onVerDetalle={() => setLeadSeleccionado(lead)}
-              />
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={filtrados}
+          columns={[
+            { label: 'ID Lead' },
+            { label: 'Producto' },
+            { label: 'Agente & Fecha' },
+            { label: 'Estado' },
+            { label: 'Prima Estimada', align: 'right' },
+            { label: 'Acciones', align: 'right' }
+          ]}
+          renderRow={(lead) => (
+            <LeadTableRow
+              key={lead.id_cotizacion}
+              lead={lead}
+              onVerDetalle={() => setLeadSeleccionado(lead)}
+            />
+          )}
+        />
       )}
 
       {leadSeleccionado && (

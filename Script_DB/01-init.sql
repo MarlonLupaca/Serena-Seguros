@@ -201,7 +201,7 @@ CREATE TABLE siniestro (
     descripcion TEXT NOT NULL,
     fecha_ocurrencia DATE NOT NULL,
     fecha_reporte DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    estado_resolucion ENUM('REPORTADO', 'EN_REVISION', 'INSPECCION', 'APROBADO', 'RECHAZADO', 'LIQUIDADO') DEFAULT 'REPORTADO' NOT NULL,
+    estado_resolucion ENUM('REGISTRADO', 'EN_REVISION', 'DOCUMENTACION_PENDIENTE', 'EN_EVALUACION', 'PROVEEDOR_ASIGNADO', 'LIQUIDACION_CALCULADA', 'APROBADO', 'RECHAZADO', 'PENDIENTE_ACEPTACION', 'PAGO_PROGRAMADO', 'FINALIZADO') DEFAULT 'REGISTRADO' NOT NULL,
     monto_reclamado DECIMAL(10,2) NOT NULL,
     observaciones_perito TEXT NULL,
     monto_estimado_perito DECIMAL(12,2) NULL,
@@ -571,3 +571,19 @@ ALTER TABLE propuesta_poliza
 ALTER TABLE indemnizacion
     ADD CONSTRAINT fk_indem_polben
     FOREIGN KEY (id_poliza_beneficiario) REFERENCES poliza_beneficiario(id_poliza_beneficiario) ON DELETE SET NULL;
+
+-- ========================================================
+-- 14. SOPORTE - OBSERVACIONES (CHAT / HISTORIAL)
+-- ========================================================
+
+CREATE TABLE observacion (
+    id_observacion INT AUTO_INCREMENT PRIMARY KEY,
+    tipo_referencia VARCHAR(50) NOT NULL,
+    id_referencia INT NOT NULL,
+    id_usuario_autor INT NULL,
+    autor_rol VARCHAR(50) NOT NULL,
+    comentario TEXT NOT NULL,
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (id_usuario_autor) REFERENCES usuario(id_usuario) ON DELETE SET NULL,
+    INDEX idx_observacion_referencia (tipo_referencia, id_referencia)
+) ENGINE=InnoDB;

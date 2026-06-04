@@ -47,4 +47,12 @@ public class MisSiniestrosController {
                 .status(HttpStatus.CREATED)
                 .body(siniestroService.reportar(usuario, request));
     }
+
+    @PostMapping("/{id}/aceptar")
+    public ResponseEntity<SiniestroResponse> aceptarPropuesta(
+            @AuthenticationPrincipal Usuario usuario,
+            @PathVariable Integer id
+    ) {
+        return ResponseEntity.ok(siniestroService.aceptarIndemnizacion(usuario, id));
+    }
 }

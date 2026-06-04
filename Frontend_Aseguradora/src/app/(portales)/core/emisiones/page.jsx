@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import toast from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
@@ -18,7 +18,7 @@ import {
   MdPets,
 } from 'react-icons/md';
 import { apiGet, apiPatch, apiPost } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const TIPO_STYLES = {
   VEHICULAR: { icon: MdDirectionsCar, accentBg: 'bg-primary/10', accentText: 'text-primary' },
@@ -158,26 +158,25 @@ export default function EmisionesPage() {
           <p className="text-sm font-medium text-text">Sin resultados</p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Póliza</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Producto</TableHead>
-            <TableHead>Vigencia</TableHead>
-            <TableHead align="right">Prima Total</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtradas.map((p) => (
-              <PolizaTableRow
-                key={p.id_poliza}
-                p={p}
-                actualizando={actualizandoId === p.id_poliza}
-                onCambiarEstado={(estado) => cambiarEstado(p.id_poliza, estado)}
-              />
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={filtradas}
+          columns={[
+            { label: 'Póliza' },
+            { label: 'Estado' },
+            { label: 'Producto' },
+            { label: 'Vigencia' },
+            { label: 'Prima Total', align: 'right' },
+            { label: 'Acciones', align: 'right' }
+          ]}
+          renderRow={(p) => (
+            <PolizaTableRow
+              key={p.id_poliza}
+              p={p}
+              actualizando={actualizandoId === p.id_poliza}
+              onCambiarEstado={(estado) => cambiarEstado(p.id_poliza, estado)}
+            />
+          )}
+        />
       )}
 
       {modalNueva && (

@@ -14,7 +14,7 @@ import {
 } from 'react-icons/md';
 import { apiGet, apiPatch } from '@/lib/api';
 import ModalDetalleCliente from './ModalDetalleCliente';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADO_CRM = {
   NUEVO: { label: 'Nuevo', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-500' },
@@ -141,26 +141,25 @@ export default function ClientesPage() {
           <p className="text-xs text-text-soft">Prueba con otro filtro o búsqueda.</p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Cliente</TableHead>
-            <TableHead>Contacto</TableHead>
-            <TableHead>Registro</TableHead>
-            <TableHead>Estado CRM</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtrados.map((c) => (
-              <ClienteTableRow
-                key={c.id_cliente}
-                cliente={c}
-                actualizando={actualizandoId === c.id_cliente}
-                onCambiarEstado={(estado) => cambiarEstado(c.id_cliente, estado)}
-                onVerDetalle={() => setDetalleId(c.id_cliente)}
-              />
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={filtrados}
+          columns={[
+            { label: 'Cliente' },
+            { label: 'Contacto' },
+            { label: 'Registro' },
+            { label: 'Estado CRM' },
+            { label: 'Acciones', align: 'right' }
+          ]}
+          renderRow={(c) => (
+            <ClienteTableRow
+              key={c.id_cliente}
+              cliente={c}
+              actualizando={actualizandoId === c.id_cliente}
+              onCambiarEstado={(estado) => cambiarEstado(c.id_cliente, estado)}
+              onVerDetalle={() => setDetalleId(c.id_cliente)}
+            />
+          )}
+        />
       )}
 
       {detalleId && <ModalDetalleCliente idCliente={detalleId} onClose={() => setDetalleId(null)} />}

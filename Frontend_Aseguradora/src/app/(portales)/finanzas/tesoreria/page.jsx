@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { MdAdd, MdAccountBalanceWallet, MdArrowDownward, MdArrowUpward, MdCalendarToday, MdClose, MdEdit, MdSearch } from 'react-icons/md';
 import { apiGet, apiPatch, apiPost } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const ESTADOS = {
   PENDIENTE: { label: 'Pendiente', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
@@ -108,61 +108,60 @@ const cambiarEstado = async (id, estado) => {
       ) : filtrados.length === 0 ? (
         <div className="bg-bg rounded-2xl border border-border p-12 text-center text-sm text-text-soft">Sin movimientos</div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Movimiento</TableHead>
-            <TableHead>Tipo / Fecha</TableHead>
-            <TableHead align="right">Monto</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtrados.map((m) => {
-              const est = ESTADOS[m.estado_aprobacion] || ESTADOS.PENDIENTE;
-              const esIngreso = m.tipo_flujo === 'INGRESO';
-              const Icon = esIngreso ? MdArrowUpward : MdArrowDownward;
-              const color = esIngreso ? 'text-emerald-600' : 'text-rose-500';
-              const bg = esIngreso ? 'bg-emerald-100' : 'bg-rose-100';
-              
-              return (
-                <TableRow key={m.id_movimiento}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${bg}`}>
-                        <Icon size={18} className={color} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-text truncate max-w-[250px]">{m.concepto}</p>
-                        <p className="text-[11px] text-text-soft">MOV-{String(m.id_movimiento).padStart(6, '0')}</p>
-                      </div>
+        <DataTable
+          data={filtrados}
+          columns={[
+            { label: 'Movimiento' },
+            { label: 'Tipo / Fecha' },
+            { label: 'Monto', align: 'right' },
+            { label: 'Estado' },
+            { label: 'Acciones', align: 'right' },
+          ]}
+          renderRow={(m) => {
+            const est = ESTADOS[m.estado_aprobacion] || ESTADOS.PENDIENTE;
+            const esIngreso = m.tipo_flujo === 'INGRESO';
+            const Icon = esIngreso ? MdArrowUpward : MdArrowDownward;
+            const color = esIngreso ? 'text-emerald-600' : 'text-rose-500';
+            const bg = esIngreso ? 'bg-emerald-100' : 'bg-rose-100';
+            
+            return (
+              <TableRow key={m.id_movimiento}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${bg}`}>
+                      <Icon size={18} className={color} />
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-sm font-semibold text-text">{m.tipo_flujo}</p>
-                    <p className="text-[11px] text-text-soft flex items-center gap-1 mt-0.5"><MdCalendarToday size={11} /> {formatearFecha(m.fecha_programada)}</p>
-                  </TableCell>
-                  <TableCell align="right">
-                    <span className={`text-sm font-bold ${color}`}>{esIngreso ? '+' : '-'}{formatearMoneda(m.monto)}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${est.badge}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
-                      {est.label}
-                    </span>
-                  </TableCell>
-                  <TableCell align="right">
-                    <button
-                      onClick={() => setDetalle(m)}
-                      className="px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors"
-                    >
-                      Ver detalle
-                    </button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                    <div>
+                      <p className="text-sm font-bold text-text truncate max-w-[250px]">{m.concepto}</p>
+                      <p className="text-[11px] text-text-soft">MOV-{String(m.id_movimiento).padStart(6, '0')}</p>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <p className="text-sm font-semibold text-text">{m.tipo_flujo}</p>
+                  <p className="text-[11px] text-text-soft flex items-center gap-1 mt-0.5"><MdCalendarToday size={11} /> {formatearFecha(m.fecha_programada)}</p>
+                </TableCell>
+                <TableCell align="right">
+                  <span className={`text-sm font-bold ${color}`}>{esIngreso ? '+' : '-'}{formatearMoneda(m.monto)}</span>
+                </TableCell>
+                <TableCell>
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${est.badge}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${est.dot}`} />
+                    {est.label}
+                  </span>
+                </TableCell>
+                <TableCell align="right">
+                  <button
+                    onClick={() => setDetalle(m)}
+                    className="px-3 py-1.5 rounded-xl border border-border hover:bg-bg-soft text-text-soft text-xs font-semibold transition-colors"
+                  >
+                    Ver detalle
+                  </button>
+                </TableCell>
+              </TableRow>
+            );
+          }}
+        />
       )}
 
       {modal && <ModalMovimiento onClose={() => setModal(false)} onSuccess={() => { setModal(false); toast.success('Movimiento creado'); cargar(); }} />}

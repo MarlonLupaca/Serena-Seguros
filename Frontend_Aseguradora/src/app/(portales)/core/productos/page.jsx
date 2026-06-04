@@ -21,7 +21,7 @@ import {
 } from 'react-icons/md';
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api';
 import ModalConfirm from '../../componentsMain/ModalConfirm';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 const TIPOS = ['VEHICULAR', 'SALUD', 'VIDA', 'HOGAR', 'VIAJE', 'EMPRESA'];
 
@@ -163,27 +163,26 @@ const eliminar = (p) => {
           <p className="text-sm font-medium text-text">No hay productos</p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Producto</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead align="right">Prima Base</TableHead>
-            <TableHead align="right">Tasa</TableHead>
-            <TableHead align="right">Edad min.</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtrados.map((p) => (
-              <ProductoTableRow
-                key={p.id_producto}
-                producto={p}
-                onEditar={() => setModal({ producto: p })}
-                onEliminar={() => eliminar(p)}
-              />
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={filtrados}
+          columns={[
+            { label: 'Producto' },
+            { label: 'Tipo' },
+            { label: 'Prima Base', align: 'right' },
+            { label: 'Tasa', align: 'right' },
+            { label: 'Edad min.', align: 'right' },
+            { label: 'Estado' },
+            { label: 'Acciones', align: 'right' }
+          ]}
+          renderRow={(p) => (
+            <ProductoTableRow
+              key={p.id_producto}
+              producto={p}
+              onEditar={() => setModal({ producto: p })}
+              onEliminar={() => eliminar(p)}
+            />
+          )}
+        />
       )}
 
       <ModalConfirm

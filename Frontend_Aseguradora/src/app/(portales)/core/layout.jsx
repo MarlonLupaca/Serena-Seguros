@@ -20,6 +20,7 @@ import {
   MdMonetizationOn,
   MdCategory,
   MdEditNote,
+  MdSupportAgent,
 } from 'react-icons/md';
 
 const segurosMenu = [
@@ -60,7 +61,10 @@ const segurosMenu = [
   },
   {
     section: 'Configuración',
-    items: [{ label: 'Productos', icon: MdCategory, href: '/core/productos' }],
+    items: [
+      { label: 'Productos', icon: MdCategory, href: '/core/productos' },
+      { label: 'Soporte', icon: MdSupportAgent, href: '/core/soporte' }
+    ],
   },
 ];
 

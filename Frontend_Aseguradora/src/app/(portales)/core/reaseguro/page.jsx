@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
 import { MdAdd, MdAssuredWorkload, MdClose, MdDelete, MdEdit, MdSearch } from 'react-icons/md';
 import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 
 function formatearMoneda(v) {
   if (v == null) return '—';
@@ -105,37 +105,36 @@ const eliminar = async (id) => {
           <p className="text-sm font-medium text-text">Sin contratos</p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Contrato</TableHead>
-            <TableHead>Reaseguradora</TableHead>
-            <TableHead>Póliza</TableHead>
-            <TableHead align="right">Retenido</TableHead>
-            <TableHead align="right">Cedido</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtrados.map((r) => (
-              <ReaseguroTableRow
-                key={r.id_reaseguro}
-                r={r}
-                onEditar={() =>
-                  setModal({
-                    modo: 'editar',
-                    data: {
-                      id_reaseguro: r.id_reaseguro,
-                      id_poliza: String(r.id_poliza),
-                      riesgo_retenido: String(r.riesgo_retenido),
-                      riesgo_cedido: String(r.riesgo_cedido),
-                      reaseguradora_asociada: r.reaseguradora_asociada,
-                    },
-                  })
-                }
-                onEliminar={() => eliminar(r.id_reaseguro)}
-              />
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={filtrados}
+          columns={[
+            { label: 'Contrato' },
+            { label: 'Reaseguradora' },
+            { label: 'Póliza' },
+            { label: 'Retenido', align: 'right' },
+            { label: 'Cedido', align: 'right' },
+            { label: 'Acciones', align: 'right' }
+          ]}
+          renderRow={(r) => (
+            <ReaseguroTableRow
+              key={r.id_reaseguro}
+              r={r}
+              onEditar={() =>
+                setModal({
+                  modo: 'editar',
+                  data: {
+                    id_reaseguro: r.id_reaseguro,
+                    id_poliza: String(r.id_poliza),
+                    riesgo_retenido: String(r.riesgo_retenido),
+                    riesgo_cedido: String(r.riesgo_cedido),
+                    reaseguradora_asociada: r.reaseguradora_asociada,
+                  },
+                })
+              }
+              onEliminar={() => eliminar(r.id_reaseguro)}
+            />
+          )}
+        />
       )}
 
       {modal && (

@@ -29,16 +29,21 @@ import {
 } from 'react-icons/md';
 import { apiGet, apiPatch, apiPost, apiDelete, apiDownloadFile } from '@/lib/api';
 import ModalConfirm from '../../componentsMain/ModalConfirm';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '../../componentsMain/DataTable';
+import { DataTable, TableRow, TableCell } from '../../componentsMain/DataTable';
 import ModalGestionSiniestro from './ModalGestionSiniestro';
 
 const ESTADOS = {
-  REPORTADO: { label: 'Reportado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
+  REGISTRADO: { label: 'Registrado', badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
   EN_REVISION: { label: 'En revisión', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
-  INSPECCION: { label: 'Inspección', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-400' },
+  DOCUMENTACION_PENDIENTE: { label: 'Doc. Pendiente', badge: 'bg-orange-100 text-orange-600', dot: 'bg-orange-400' },
+  EN_EVALUACION: { label: 'En evaluación', badge: 'bg-sky-100 text-sky-700', dot: 'bg-sky-400' },
+  PROVEEDOR_ASIGNADO: { label: 'Proveedor', badge: 'bg-indigo-100 text-indigo-700', dot: 'bg-indigo-400' },
+  LIQUIDACION_CALCULADA: { label: 'Liq. Calculada', badge: 'bg-teal-100 text-teal-700', dot: 'bg-teal-400' },
   APROBADO: { label: 'Aprobado', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
   RECHAZADO: { label: 'Rechazado', badge: 'bg-rose-100 text-rose-600', dot: 'bg-rose-400' },
-  LIQUIDADO: { label: 'Liquidado', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+  PENDIENTE_ACEPTACION: { label: 'Pdte. Aceptación', badge: 'bg-fuchsia-100 text-fuchsia-700', dot: 'bg-fuchsia-400' },
+  PAGO_PROGRAMADO: { label: 'Pago Prog.', badge: 'bg-violet-100 text-violet-700', dot: 'bg-violet-400' },
+  FINALIZADO: { label: 'Finalizado', badge: 'bg-slate-100 text-slate-700', dot: 'bg-slate-500' },
 };
 
 const TIPO_STYLES = {
@@ -171,22 +176,19 @@ export default function SiniestrosCorePage() {
           <p className="text-sm font-medium text-text">Sin siniestros</p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableHead>Siniestro</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Póliza</TableHead>
-            <TableHead>Cliente</TableHead>
-            <TableHead>Fecha Reporte</TableHead>
-            <TableHead align="right">Monto Reclamado</TableHead>
-            <TableHead align="right">Acciones</TableHead>
-          </TableHeader>
-          <TableBody>
-            {filtrados.map((s) => (
-              <SiniestroTableRow key={s.id_siniestro} s={s} onGestionar={() => setModalGestion(s)} />
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={filtrados}
+          columns={[
+            { label: 'Siniestro' },
+            { label: 'Estado' },
+            { label: 'Póliza' },
+            { label: 'Cliente' },
+            { label: 'Fecha Reporte' },
+            { label: 'Monto Reclamado', align: 'right' },
+            { label: 'Acciones', align: 'right' },
+          ]}
+          renderRow={(s) => <SiniestroTableRow key={s.id_siniestro} s={s} onGestionar={() => setModalGestion(s)} />}
+        />
       )}
 
       {modalGestion && (
@@ -252,7 +254,7 @@ export default function SiniestrosCorePage() {
 function SiniestroTableRow({ s, onGestionar }) {
   const tipoStyle = estiloTipo(s.poliza_tipo);
   const Icon = tipoStyle.icon;
-  const est = ESTADOS[s.estado_resolucion] || ESTADOS.REPORTADO;
+  const est = ESTADOS[s.estado_resolucion] || ESTADOS.REGISTRADO;
 
   return (
     <TableRow>
@@ -332,8 +334,8 @@ function ModalAsignar({ siniestro, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-bg w-full max-w-sm rounded-2xl border border-border shadow-xl overflow-hidden">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 ">
+      <div className="bg-bg w-full max-w-sm rounded-2xl border border-border shadow-xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <p className="text-sm font-bold text-text">Asignar analista</p>
           <button onClick={onClose} className="text-text-soft hover:text-text">
@@ -715,7 +717,7 @@ function ModalPerito({ siniestro, onClose, onSuccess }) {
           )}
 
           <p className="text-[11px] text-text-soft">
-            Al guardar, el caso pasa automaticamente al estado <strong>INSPECCION</strong> si estaba en REPORTADO o
+            Al guardar, el caso pasa automaticamente al estado <strong>EN_EVALUACION</strong> si estaba en REGISTRADO o
             EN_REVISION.
           </p>
 
