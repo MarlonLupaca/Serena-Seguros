@@ -1,0 +1,157 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Serena Seguros - Alertas de Capacidad
+    folder: Serena Seguros
+    interval: 1m
+    rules:
+
+      # ── ALERTA 1: Memoria alta en cualquier contenedor ──
+      - uid: alerta-memoria-alta
+        title: "ALERTA: Memoria alta en contenedor"
+        condition: umbral_memoria
+        data:
+          - refId: mem_pct
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: >
+                sum by (container_name) (docker_container_mem_usage{container_name!=""})
+                / sum by (container_name) (docker_container_mem_limit{container_name!=""})
+                * 100
+              refId: mem_pct
+              instant: true
+          - refId: umbral_memoria
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              refId: umbral_memoria
+              expression: mem_pct
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [80]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  query:
+                    params: [umbral_memoria]
+        noDataState: OK
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "Memoria crítica en {{ $labels.container_name }}"
+          description: >
+            El contenedor {{ $labels.container_name }} lleva más de 2 minutos
+            con uso de memoria superior al 80% del límite asignado.
+            Valor actual: {{ $values.mem_pct.Value | printf "%.1f" }}%
+        labels:
+          severity: warning
+          sistema: serena-seguros
+        isPaused: false
+
+      # ── ALERTA 2: CPU sostenida alta ──
+      - uid: alerta-cpu-alta
+        title: "ALERTA: CPU sostenida alta en contenedor"
+        condition: umbral_cpu
+        data:
+          - refId: cpu_pct
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: >
+                sum by (container_name) (
+                  rate(docker_container_cpu_usage_total{container_name!=""}[2m])
+                ) / 1e9 * 100
+              refId: cpu_pct
+              instant: true
+          - refId: umbral_cpu
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              refId: umbral_cpu
+              expression: cpu_pct
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [85]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  query:
+                    params: [umbral_cpu]
+        noDataState: OK
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: "CPU crítico en {{ $labels.container_name }}"
+          description: >
+            El contenedor {{ $labels.container_name }} lleva más de 3 minutos
+            con uso de CPU superior al 85%.
+            Valor actual: {{ $values.cpu_pct.Value | printf "%.1f" }}%
+        labels:
+          severity: critical
+          sistema: serena-seguros
+        isPaused: false
+
+      # ── ALERTA 3: Contenedor caído ──
+      - uid: alerta-contenedor-caido
+        title: "ALERTA: Contenedor sin datos (posible caída)"
+        condition: umbral_caida
+        data:
+          - refId: contenedor_activo
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: >
+                count by (container_name) (
+                  docker_container_mem_usage{container_name!=""}
+                )
+              refId: contenedor_activo
+              instant: true
+          - refId: umbral_caida
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              refId: umbral_caida
+              expression: contenedor_activo
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+                  operator:
+                    type: and
+                  reducer:
+                    type: last
+                  query:
+                    params: [umbral_caida]
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 1m
+        annotations:
+          summary: "Posible caída de contenedor"
+          description: >
+            Un contenedor del sistema Serena Seguros ha dejado de reportar
+            métricas por más de 1 minuto. Verificar estado con: docker compose ps
+        labels:
+          severity: critical
+          sistema: serena-seguros
+        isPaused: false

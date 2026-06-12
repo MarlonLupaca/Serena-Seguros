@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   # ----------------------------------------
   # 1. BD MAESTRO
@@ -20,7 +19,15 @@ services:
       - master_data:/var/lib/mysql
       # Scripts iniciales
       - ./Script_DB:/docker-entrypoint-initdb.d
-
+    # ── Límites de capacidad ──
+    deploy:
+      resources:
+        limits:
+          cpus: '0.70'      # máximo 70% de un núcleo
+          memory: 768M      # máximo 768 MB RAM
+        reservations:
+          cpus: '0.20'
+          memory: 256M
   # ----------------------------------------
   # 2. BD RÉPLICA
   # ----------------------------------------
@@ -37,7 +44,15 @@ services:
     command: --server-id=2 --enforce-gtid-consistency=ON --gtid-mode=ON --read-only=1
     volumes:
       - replica_data:/var/lib/mysql
-
+    # ── Límites de capacidad ──
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.10'
+          memory: 128M
   # ----------------------------------------
   # 3. BACKUP AUTOMATIZADO (Sidecar)
   # ----------------------------------------
@@ -53,15 +68,20 @@ services:
       echo 'Esperando a que la base de datos réplica inicie...';
       sleep 30;
       while true; do
-        FECHA=\$$(date +'%Y-%m-%d_%H-%M-%S');
-        ARCHIVO=/backups/backup_\$$FECHA.sql.gz;
-        echo 'Iniciando backup en: '\$$ARCHIVO;
-        mysqldump -h serena-mysql-replica -u root -proot bd_seguros_pacifico | gzip > \$$ARCHIVO;
+        FECHA=$$(date +'%Y-%m-%d_%H-%M-%S');
+        ARCHIVO=/backups/backup_$$FECHA.sql.gz;
+        echo 'Iniciando backup en: '$$ARCHIVO;
+        mysqldump -h serena-mysql-replica -u root -proot bd_seguros_pacifico | gzip > $$ARCHIVO;
         echo 'Backup completado exitosamente.';
         sleep 86400;
       done
       "
-
+    # ── Límites de capacidad ──
+    deploy:
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: 128M
   # ----------------------------------------
   # 4. BACKEND
   # ----------------------------------------
@@ -80,7 +100,15 @@ services:
       - serena_network
     depends_on:
       - serena-mysql-master
-
+    # ── Límites de capacidad ──
+    deploy:
+      resources:
+        limits:
+          cpus: '0.80'
+          memory: 512M
+        reservations:
+          cpus: '0.20'
+          memory: 256M
   # ----------------------------------------
   # 5. FRONTEND
   # ----------------------------------------
@@ -95,8 +123,15 @@ services:
       - serena_network
     depends_on:
       - backend
-
-  # ----------------------------------------
+    # ── Límites de capacidad ──
+    deploy:
+      resources:
+        limits:
+          cpus: '0.30'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
   # ----------------------------------------
   # 6. TELEGRAF (Monitor Compatible con Windows/WSL2)
   # ----------------------------------------
@@ -114,7 +149,12 @@ services:
       - "host.docker.internal:host-gateway"
     networks:
       - serena_network
-
+    # ── Límites de capacidad ──
+    deploy:
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: 128M
   # ----------------------------------------
   # 7. PROMETHEUS (Base de datos métricas)
   # ----------------------------------------
@@ -130,7 +170,12 @@ services:
       - serena_network
     depends_on:
       - telegraf
-
+    # ── Límites de capacidad ──
+    deploy:
+      resources:
+        limits:
+          cpus: '0.30'
+          memory: 256M
   # ----------------------------------------
   # 8. GRAFANA (Panel visual)
   # ----------------------------------------
@@ -142,6 +187,8 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/serena_monitoring.json
+      - GF_UNIFIED_ALERTING_ENABLED=true
+      - GF_ALERTING_ENABLED=false
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
@@ -149,11 +196,15 @@ services:
       - serena_network
     depends_on:
       - prometheus
-
+    # ── Límites de capacidad ──
+    deploy:
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: 384M
 networks:
   serena_network:
     driver: bridge
-
 volumes:
   master_data:
   replica_data:
